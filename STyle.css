@@ -4054,9 +4054,17 @@ section{
 
 @media (max-width:768px){
 
-#header{
-    padding:12px 15px;
-}
+    #header{
+        height:70px;
+        padding:0 15px;
+        flex-direction:row;
+        justify-content:space-between;
+        align-items:center;
+    }
+
+    nav{
+        display:none;
+    }
 
 }
 
