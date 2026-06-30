@@ -19,17 +19,25 @@
 
 <body>
 
+
+
 <header class="header">
 
     <div class="logo-section">
 
-        <img src="logo b.png" class="logo">
+        <a href="#home22" class="logo-link">
 
-        <div class="company-name">
+            <img src="logo b.png" alt="Logo" class="logo">
 
-            <h2>مؤسسات الفقي العالمية</h2>
+            <div class="company">
 
-        </div>
+                <h1>مؤسسات الفقي العالمية</h1>
+
+                <p>AL FEKI GLOBAL FOUNDATION</p>
+
+            </div>
+
+        </a>
 
     </div>
 
@@ -37,14 +45,13 @@
 
         <a href="#home22">الرئيسية</a>
 
-        <a href="#workk">البرامج</a>
+        <a href="#workerss">المدربين و المراكز المعتمدة</a>
 
         <a href="#contactss">تواصل</a>
 
     </nav>
 
 </header>
-
 <section id="home22">
 
     <img src="CONFINTEA conference room.png" id="img1" alt="Hero Background">
@@ -765,15 +772,21 @@ revealOnScroll();
 
 <script>
 
-const menu = document.getElementById("menu-btn");
+const header=document.querySelector(".header");
 
-const nav = document.getElementById("nav");
+window.addEventListener("scroll",()=>{
 
-menu.onclick = function(){
+    if(window.scrollY>40){
 
-    nav.classList.toggle("active");
+        header.classList.add("scrolled");
 
-}
+    }else{
+
+        header.classList.remove("scrolled");
+
+    }
+
+});
 
 </script>
 
