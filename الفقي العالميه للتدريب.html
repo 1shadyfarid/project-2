@@ -18,32 +18,24 @@
 
 
 <body>
-<div class="red-decoration">
-    <span></span>
-    <span></span>
-    <span></span>
-</div>
 
-    <article>
-       <header id="header">
+<header class="header">
 
-    <div class="logo">
+    <div class="logo-section">
 
-        <img src="WhatsApp_Image_2026-06-18_at_11.58.08_PM-removebg-preview (1).png" id="logo1">
+        <img src="logo b.png" alt="Logo" class="logo">
 
-        <h2>مؤسسات الفقي العالمية</h2>
+        <div class="company-name">
+            <h2>مؤسسات الفقي العالمية</h2>
+        </div>
 
     </div>
 
-    <nav>
+    <nav class="nav">
 
         <a href="#home22">الرئيسية</a>
 
-        <a href="#uss">من نحن</a>
-
-        <a href="#workk">برامجنا</a>
-
-        <a href="#workerss">المدربين و المراكز المعتمدة</a>
+        <a href="#workk">البرامج</a>
 
         <a href="#contactss">تواصل</a>
 
@@ -769,7 +761,19 @@ revealOnScroll();
 
 
 
+<script>
 
+const menu = document.getElementById("menu-btn");
+
+const nav = document.getElementById("nav");
+
+menu.onclick = function(){
+
+    nav.classList.toggle("active");
+
+}
+
+</script>
 
 </body>
 </html

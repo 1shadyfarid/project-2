@@ -143,27 +143,6 @@ overflow-x: hidden;
 HEADER
 ==========================*/
 
-#header{
-
-      position:fixed;
-    top:0;
-    right:0;
-    left:0;
-
-    height:90px;
-
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-
-    padding:0 5%;
-
-    box-sizing:border-box;
-
-    background:white;
-    border-bottom:4px solid #c41212;
-    z-index:9999;
-}
 
 
 /*==========================
@@ -465,103 +444,134 @@ transform:scale(1.1);
 
 }
 
+/* HEADER */
 
-/*==========================
-LOGO
-==========================*/
+/* ==========================
+   RESET
+========================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    overflow-x:hidden;
+}
+
+/* ==========================
+   HEADER
+========================== */
+
+.header{
+
+    position:fixed;
+
+    top:0;
+    left:0;
+
+    width:100%;
+
+    height:85px;
+
+    background:#ffffff;
+
+    border-bottom:3px solid #c41212;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:0 60px;
+
+    box-shadow:0 5px 20px rgba(0,0,0,.08);
+
+    z-index:9999;
+
+}
+
+/* ==========================
+   LOGO
+========================== */
+
+.logo-section{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+}
 
 .logo{
-display:flex;
-    align-items:center;
-    gap:15px
 
- 
+    width:60px;
+
+    transition:.3s;
 
 }
 
-@media (max-width: 768px) {
-    header {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
+.logo:hover{
 
-    .logo {
-        margin: 0 auto;
-    }
+    transform:scale(1.05);
 
-    nav {
-        justify-content: center;
-        flex-wrap: wrap;
-    }
 }
 
-.logo h2{
+.company-name h2{
 
-    
-
-font-size:22px;
-    white-space:nowrap;
+    font-size:30px;
 
     color:#222;
 
     font-weight:800;
 
-}
-
-#logo1{
-
-    width:75px;
-
-    transition:.4s;
+    white-space:nowrap;
 
 }
 
-#logo1:hover{
+/* ==========================
+   NAVIGATION
+========================== */
 
-    transform:rotate(-5deg) scale(1.08);
-
-}
-
-/*==========================
-NAVIGATION
-==========================*/
-
-nav{
+.nav{
 
     display:flex;
 
-    gap: 25px;
+    align-items:center;
 
-    align-items: center;
+    gap:30px;
 
 }
 
-nav a{
+.nav a{
+
+    text-decoration:none;
 
     color:#222;
 
-    font-size:19px;
+    font-size:18px;
 
     font-weight:700;
 
+    transition:.3s;
+
     position:relative;
-
-    transition:.35s;
-
- 
 
 }
 
-nav a::after{
+.nav a::after{
 
     content:"";
 
     position:absolute;
 
-    bottom:-10px;
-
     left:50%;
+
+    bottom:-8px;
 
     transform:translateX(-50%);
 
@@ -569,33 +579,120 @@ nav a::after{
 
     height:3px;
 
-    border-radius:20px;
-
     background:#c41212;
 
-    transition:.35s;
+    transition:.3s;
 
 }
 
-nav a:hover{
+.nav a:hover{
 
     color:#c41212;
 
 }
 
-nav a:hover::after{
+.nav a:hover::after{
 
     width:100%;
 
 }
 
-/*==========================
-HERO
-==========================*/
+/* ==========================
+   MOBILE
+========================== */
 
+@media(max-width:768px){
+
+    .header{
+
+        height:auto;
+
+        flex-direction:column;
+
+        justify-content:center;
+
+        align-items:center;
+
+        padding:15px;
+
+        gap:15px;
+
+    }
+
+    .logo-section{
+
+        justify-content:center;
+
+    }
+
+    .logo{
+
+        width:50px;
+
+    }
+
+    .company-name h2{
+
+        font-size:20px;
+
+        text-align:center;
+
+    }
+
+    .nav{
+
+        width:100%;
+
+        justify-content:center;
+
+        flex-wrap:wrap;
+
+        gap:20px;
+
+    }
+
+    .nav a{
+
+        font-size:15px;
+
+    }
+
+}
+
+/* ==========================
+   VERY SMALL PHONES
+========================== */
+
+@media(max-width:420px){
+
+    .company-name h2{
+
+        font-size:18px;
+
+    }
+
+    .nav{
+
+        gap:15px;
+
+    }
+
+    .nav a{
+
+        font-size:14px;
+
+    }
+
+    .logo{
+
+        width:45px;
+
+    }
+
+}
 #home22{
 
-    padding-top:90px;
+    padding-top:85px;
 
 }
 
