@@ -2537,23 +2537,27 @@ padding:16px 40px;
     position:absolute;
     bottom:20px;
     left:20px;
+
     background:white;
     border:2px solid red;
-    border-radius:15px;
-    padding:15px 20px;
+    border-radius:12px;
+
+    padding:6px 8px;
+
     text-align:center;
-    box-shadow:0 10px 20px rgba(0,0,0,.1);
+
+    box-shadow:0 8px 15px rgba(0,0,0,.1);
 }
 
 .badge h2{
     color:red;
     margin:0;
-    font-size:28px;
+    font-size:12px;
 }
 
 .badge p{
-    margin:0;
-    font-size:14px;
+    margin-top:3px;
+    font-size:8px;
 }
 
 /* RIGHT CONTENT */
@@ -3594,8 +3598,12 @@ section{
 @media(max-width:768px){
 
 .story-image img{
-    height:280px;
-    object-fit:cover;
+    
+   
+width:100%;
+
+ height:auto;
+    object-fit:contain;
 }
 
 }
