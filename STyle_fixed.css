@@ -454,9 +454,8 @@ body{
     overflow-x:hidden;
 }
 
-/* ==========================
-   HEADER
-========================== */
+
+/* ================= HEADER ================= */
 
 .header{
 
@@ -467,9 +466,9 @@ body{
 
     width:100%;
 
-    height:85px;
+    height:80px;
 
-    background:#ffffff;
+    background:#fff;
 
     border-bottom:3px solid #c41212;
 
@@ -479,17 +478,13 @@ body{
 
     align-items:center;
 
-    padding:0 60px;
+    padding:0 30px;
 
-    box-shadow:0 5px 20px rgba(0,0,0,.08);
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
 
     z-index:9999;
 
 }
-
-/* ==========================
-   LOGO
-========================== */
 
 .logo-section{
 
@@ -497,45 +492,30 @@ body{
 
     align-items:center;
 
-    gap:15px;
+    gap:12px;
 
 }
 
 .logo{
 
-    width:60px;
-
-    transition:.3s;
-
-}
-
-.logo:hover{
-
-    transform:scale(1.05);
+    width:55px;
+    height:55px;
+    object-fit:contain;
 
 }
 
 .company-name h2{
 
-    font-size:30px;
-
+    font-size:26px;
     color:#222;
-
     font-weight:800;
-
-    white-space:nowrap;
+    margin:0;
 
 }
-
-/* ==========================
-   NAVIGATION
-========================== */
 
 .nav{
 
     display:flex;
-
-    align-items:center;
 
     gap:30px;
 
@@ -549,31 +529,7 @@ body{
 
     font-size:18px;
 
-    font-weight:700;
-
-    transition:.3s;
-
-    position:relative;
-
-}
-
-.nav a::after{
-
-    content:"";
-
-    position:absolute;
-
-    left:50%;
-
-    bottom:-8px;
-
-    transform:translateX(-50%);
-
-    width:0;
-
-    height:3px;
-
-    background:#c41212;
+    font-weight:bold;
 
     transition:.3s;
 
@@ -585,171 +541,62 @@ body{
 
 }
 
-.nav a:hover::after{
+/* ================= PHONE ================= */
+
+@media(max-width:768px){
+
+.header{
+
+    height:auto;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    padding:12px;
+
+}
+
+.logo-section{
+
+    justify-content:center;
+
+}
+
+.logo{
+
+    width:38px;
+    height:38px;
+
+}
+
+.company-name h2{
+
+    font-size:18px;
+
+    text-align:center;
+
+}
+
+.nav{
 
     width:100%;
 
-}
+    justify-content:center;
 
-/* ==========================
-   MOBILE
-========================== */
+    gap:18px;
 
-@media (max-width:768px){
-
-    .header{
-        position:fixed;
-        top:0;
-        left:0;
-        width:100%;
-
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        justify-content:center;
-
-        padding:8px 12px;
-        gap:12px;
-
-        height:auto;
-    }
-
-    .logo-section{
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        gap:8px;
-    }
-
-    .logo{
-        width:35px;
-height: 35px;
-
-    }
-
-    .company-name h2{
-        font-size:18px;
-        text-align:center;
-        white-space:normal;
-        line-height:1.2;
-    }
-
-    .nav{
-        display:flex;
-        justify-content:center;
-        gap:12px;
-        flex-wrap:wrap;
-        width:100%;
-    }
-
-    .nav a{
-        font-size:15px;
-    }
+    margin-top:10px;
 
 }
 
-#home22{
+.nav a{
 
-    padding-top:120px;
-
-}
-
-/*==========================
-SCROLL EFFECT
-==========================*/
-
-.scrolled{
-
-    height:75px;
-
-    box-shadow:0 10px 35px rgba(0,0,0,.15);
-
-}
-
-
-/* Tablet */
-@media (max-width:1000px){
-
-    #header{
-        padding:15px 30px;
-    }
-
-    .logo h2{
-        font-size:18px;
-    }
-
-    nav{
-        gap:20px;
-    }
-
-    nav a{
-        font-size:16px;
-    }
-
-    #logo1{
-        width:55px;
-    }
-
-}
-
-/* Mobile */
-@media (max-width:768px){
-
-    #header{
-        flex-direction:column;
-        height:auto;
-        padding:15px;
-    }
-
-    .logo{
-        margin-bottom:15px;
-    }
-
-    nav{
-        flex-wrap:wrap;
-        justify-content:center;
-        gap:15px;
-    }
-
-    nav a{
-        font-size:16px;
-    }
-
-}
-
-@media (max-width:1100px){
-
-nav{
-
-    gap:15px;
-
-}
-
-nav a{
-
-    font-size:15px;
+    font-size:14px;
 
 }
 
 }
-@media (max-width:1100px){
-
-.logo h2{
-    display:none;
-}
-
-}
-
-@media (max-width:1100px){
-
-    .logo h2{
-        display:none;
-    }
-
-}
-
-/* LINKS */
-
 a{
     text-decoration:none;
     color:black;
