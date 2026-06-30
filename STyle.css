@@ -10,6 +10,11 @@ html{
 html, body{
     overflow-x:hidden;
     width:100%;
+
+      margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
 }
 @media (max-width:768px){
 
@@ -4059,4 +4064,12 @@ img{
     max-width:100%;
     height:auto;
     display:block;
+}
+
+.container{
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
 }
