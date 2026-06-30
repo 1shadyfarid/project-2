@@ -144,9 +144,9 @@ HEADER
     justify-content:space-between;
 
    text-align: center;
-    padding: 20px;
+   
 
-    padding:0 7%;
+    padding:0 5%;
 
     box-shadow:0 8px 25px rgba(0,0,0,.08);
 
@@ -471,7 +471,7 @@ LOGO
 
     gap:15px;
 
-    justify-content: center;
+ 
 
 }
 
@@ -527,7 +527,7 @@ nav{
 
     display:flex;
 
-    gap:40px;
+    gap: 25px;
 
     align-items: center;
 
