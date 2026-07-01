@@ -3998,7 +3998,7 @@ NAVIGATION
 
 .nav a{
 
-    color:white;
+    color:rgb(224, 29, 29);
 
     text-decoration:none;
 
@@ -4014,7 +4014,7 @@ NAVIGATION
 
 .header.scrolled .nav a{
 
-    color:#222;
+    color:#f81919;
 
 }
 
