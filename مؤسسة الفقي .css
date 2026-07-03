@@ -4,6 +4,7 @@ body{
 }
 
 
+
 .header {
     width: 100%;
     background: rgba(255, 255, 255, 0.95);
@@ -14,19 +15,23 @@ body{
     top: 0;
     z-index: 1000;
     box-sizing: border-box;
+
+    display: flex;
+    justify-content: center;   /* Centers horizontally */
+    align-items: center;       /* Centers vertically */
+}
+
+.logo-link {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
 }
 
 .logo-container {
     display: flex;
-    justify-content: center;
     align-items: center;
-}
-
-.logo-link {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    text-decoration: none;
+    gap: 10px;
 }
 
 .logo {
@@ -37,14 +42,14 @@ body{
 
 .company-text h1 {
     margin: 0;
-    color: rgb(0, 0, 0);
+    color: #000;
     font-size: 30px;
     font-weight: 700;
 }
 
 .company-text p {
     margin: 4px 0 0;
-    color: #000000;
+    color: #000;
     font-size: 14px;
     letter-spacing: 1px;
 }
@@ -532,7 +537,11 @@ body{
 
 .arrow{
 
-    font-size:28px;
+    font-size:30px;
+
+    display:inline-block;
+
+    margin-right:4px;
 
     animation:arrowMove 1.2s infinite ease-in-out;
 
@@ -548,7 +557,7 @@ body{
 
     50%{
 
-        transform:translateX(8px);
+        transform:translateX(10px);
 
     }
 
@@ -749,5 +758,10 @@ body{
         font-size:24px;
 
     }
+
+}
+
+a{
+text-decoration: none;
 
 }

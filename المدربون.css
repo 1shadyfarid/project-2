@@ -17,19 +17,23 @@ body{
     top: 0;
     z-index: 1000;
     box-sizing: border-box;
+
+    display: flex;
+    justify-content: center;   /* Centers horizontally */
+    align-items: center;       /* Centers vertically */
+}
+
+.logo-link {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
 }
 
 .logo-container {
     display: flex;
-    justify-content: center;
     align-items: center;
-}
-
-.logo-link {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    text-decoration: none;
+    gap: 10px;
 }
 
 .logo {
@@ -40,14 +44,14 @@ body{
 
 .company-text h1 {
     margin: 0;
-    color: rgb(0, 0, 0);
+    color: #000;
     font-size: 30px;
     font-weight: 700;
 }
 
 .company-text p {
     margin: 4px 0 0;
-    color: #000000;
+    color: #000;
     font-size: 14px;
     letter-spacing: 1px;
 }
@@ -108,7 +112,7 @@ body{
 
     background:#f7f7f7;
 
-    padding:100px 10%;
+    padding:70px 8%;
 
 }
 
@@ -146,7 +150,7 @@ body{
 
     align-items:center;
 
-    gap:60px;
+    gap:30px;
 
     background:white;
 
@@ -158,6 +162,9 @@ body{
 
     transition:.4s;
 
+
+     max-width:800px;   /* Try 900px or 1000px */
+    margin:0 auto;
 }
 
 .trainer-card:hover{
@@ -340,33 +347,72 @@ body{
 
 /* RESPONSIVE */
 
-@media(max-width:900px){
+@media (max-width:900px){
 
-.trainer-card{
+    .trainer-section{
+        padding:40px 15px;
+    }
 
-    flex-direction:column;
+    .trainer-card{
+        flex-direction:column;
+        max-width:420px;
+        width:90%;
+        margin:0 auto;
+        gap:15px;
+        border-radius:18px;
+        
+    }
 
-}
+    .trainer-image{
+        width:100%;
+    }
 
-.trainer-info{
+    .trainer-image img{
+        width:100%;
+        height:260px;
+        object-fit:cover;
+    }
 
-    text-align:center;
+    .trainer-info{
+        padding:20px;
+        text-align:center;
+    }
 
-}
+    .trainer-name{
+        justify-content:center;
+        text-align:center;
+        gap:10px;
+    }
 
-.trainer-info li{
+    .trainer-name h2{
+        font-size:28px;
+    }
 
-    text-align:right;
+    .trainer-name h4{
+        font-size:16px;
+    }
 
-}
+    .trainer-details p,
+    .trainer-info li{
+        font-size:15px;
+    }
 
-.trainer-buttons{
+    .trainer-buttons{
+        justify-content:center;
+        gap:10px;
+        margin-top:20px;
+        flex-wrap:wrap;
+    }
 
-    justify-content:center;
+    .btn-red,
+    .btn-white{
+        padding:12px 24px;
+        font-size:14px;
+    }
 
-    flex-wrap:wrap;
-
-}
+    .trainer-icons{
+        justify-content:center;
+    }
 
 }
 
@@ -535,4 +581,16 @@ body{
 
 .cards-container{
     gap:5px;
+}
+
+.trainer-image{
+    flex:1;
+    overflow:hidden;
+}
+
+.trainer-image img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
 }
