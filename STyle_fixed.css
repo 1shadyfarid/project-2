@@ -39,6 +39,8 @@ html, body{
         max-width:100%;
         height:auto;
     }
+
+    
 }
 body{
 
@@ -135,12 +137,23 @@ overflow-x: hidden;
 
 #home22{
 
-    position:relative;
+   
 
-    height:100vh;
+     position:relative;
 
-    overflow:hidden;
-padding-top:20px;
+    min-height:100vh;
+
+    margin-top:0;
+
+    padding-top:0;
+
+  
+
+
+   clip-path:none;
+    border-radius:0;
+    
+
 
 
 
@@ -156,7 +169,9 @@ padding-top:20px;
 
     height:100%;
 
+
     object-fit:cover;
+ object-position:center top;
 
     
 
@@ -168,8 +183,7 @@ padding-top:20px;
 /* Glass Card */
 
 .hero-content{
-
-    position:absolute;
+position:absolute;
 
     top:50%;
     left:50%;
@@ -184,7 +198,39 @@ padding-top:20px;
     color:white;
 
 }
+@media(max-width:768px){
 
+.hero-content{
+
+    position:relative;
+
+    top:auto;
+    left:auto;
+
+    transform:none;
+
+    width:90%;
+
+    margin:auto;
+
+    padding-top:120px;
+    padding-bottom:80px;
+
+}
+
+#home22{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    min-height:100vh;
+
+}
+
+}
 /* Small title */
 
 .hero-content h3{
@@ -201,7 +247,7 @@ padding-top:20px;
 
 .hero-content h1{
 
-    font-size:72px;
+    font-size:52px;
 
     margin-bottom:25px;
 
@@ -214,15 +260,20 @@ padding-top:20px;
 
 .hero-content p{
 
-    font-size:24px;
+   
 
-    line-height:2;
+    
 
     max-width:850px;
 
     margin:auto;
 
     color:#f2f2f2;
+
+    font-size:16px;
+
+    line-height:1.7;
+
 
 }
 
@@ -254,7 +305,7 @@ padding-top:20px;
 
 .hero-content h1{
 
-    font-size:42px;
+    font-size:18px;
 
 }
 
@@ -338,7 +389,17 @@ padding-top:20px;
     animation:float 1.6s infinite;
 
 }
+@media(max-width:768px){
 
+.hero-content{
+
+    top:54%;
+
+    width:92%;
+
+}
+
+}
 /* Animations */
 
 @keyframes float{
@@ -448,8 +509,8 @@ body{
 }
 
 .logo {
-    width: 65px;
-    height: 65px;
+    width: 120px;
+    height: 130px;
     object-fit: contain;
 }
 
@@ -4002,7 +4063,7 @@ NAVIGATION
 
     text-decoration:none;
 
-    font-size:18px;
+    font-size:25px;
 
     font-weight:700;
 
@@ -4116,7 +4177,7 @@ PHONE
 
 .nav a{
 
-    font-size:14px;
+    font-size:18px;
 
 }
 
@@ -4150,8 +4211,36 @@ PHONE
 
 .nav a{
 
-    font-size:13px;
+    font-size:14px;
 
 }
+
+}
+
+.arrow{
+
+    font-size:30px;
+
+    display:inline-block;
+
+    margin-right:4px;
+
+    animation:arrowMove 1.2s infinite ease-in-out;
+
+}
+
+@keyframes arrowMove{
+
+    0%,100%{
+
+        transform:translateX(0);
+
+    }
+
+    50%{
+
+        transform:translateX(10px);
+
+    }
 
 }
