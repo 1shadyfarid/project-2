@@ -102,10 +102,40 @@ body{
 
 }
 
+@media (max-width:768px){
 
+    .text-icon{
+        display: flex;
+        flex-direction: row;   /* Keep icon beside the text */
+        align-items: center;
+        justify-content: center; /* Optional: center them together */
+        gap: 8px;
+    }
 
+    .text-icon img{
+        width: 22px;
+        height: 22px;
+    }
 
+}
 
+.heading{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+}
+
+.heading img{
+    width: 30px;
+    height: 30px;
+}
+.text-icon{
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 10px;
+}
 
 
 .trainer-section{

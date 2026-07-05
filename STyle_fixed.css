@@ -41,6 +41,11 @@ html, body{
     }
 
     
+
+
+
+
+
 }
 body{
 
@@ -49,6 +54,12 @@ body{
     margin:0;
     overflow-x:hidden;
     background-color:rgb(236,237,238);
+
+
+
+
+
+
 
      margin:0;
     padding:0;
@@ -76,6 +87,10 @@ overflow-x: hidden;
     pointer-events:none;
 
     z-index:-1;
+
+
+
+
 
 }
 
@@ -167,10 +182,10 @@ overflow-x: hidden;
 
     width:100%;
 
-    height:100%;
-
+    height: 100%;
 
     object-fit:cover;
+
  object-position:center top;
 
     
@@ -226,7 +241,7 @@ position:absolute;
 
     align-items:center;
 
-    min-height:100vh;
+    min-height:30vh;
 
 }
 
@@ -600,7 +615,7 @@ width:100%;
     object-fit:cover;
     filter:brightness(40%);
 
-    clip-path: ellipse(100% 85% at 50% 0%);
+    
 }
 
 
@@ -4244,3 +4259,143 @@ PHONE
     }
 
 }
+
+
+
+
+
+.floating-panel:hover{
+    transform: translateY(-5px);
+    box-shadow: 0 16px 35px rgba(0,0,0,.45);
+}
+
+.panel-text h3{
+    margin: 0;
+    color: #ff0000;      /* Gold */
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.panel-text p{
+    margin-top: 6px;
+    color: #ddd;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.panel-icon{
+    width: 60px;
+    height: 60px;
+
+    background: #b30000;
+    border-radius: 50%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    flex-shrink: 0;
+}
+
+.panel-icon i{
+    color: white;
+    font-size: 26px;
+}
+
+.panel-icon img{
+    width: 28px;
+    height: 28px;
+}
+
+@media (max-width: 600px){
+
+    .floating-panel{
+        left: 15px;
+        right: 15px;
+        width: auto;
+        bottom: 15px;
+        padding: 15px 18px;
+    }
+
+    .panel-text h3{
+        font-size: 18px;
+    }
+
+    .panel-text p{
+        font-size: 13px;
+    }
+
+    .panel-icon{
+        width: 50px;
+        height: 50px;
+    }
+}
+
+.floating-panel{
+    position: fixed;
+    bottom: 25px;
+    left: 25px;
+
+    width: 340px;
+    height: 90px;
+
+    background: #000000;
+    border-left: 5px solid #ff0000;
+    border-radius: 18px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 18px 22px;
+
+    text-decoration: none;
+    box-shadow: 0 12px 30px rgba(0,0,0,.35);
+    z-index: 9999;
+}
+.panel-title{
+    display: inline-block;      /* Important */
+    margin: 0;
+
+    padding: 10px 20px;
+
+    color: white;
+    font-size: 22px;
+    font-weight: 700;
+
+    border: 2px solid #ff0000;
+    border-radius: 50px;
+
+    background: transparent;
+}
+.panel-icon{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+ background: transparent; 
+    animation: floatIcon 2.5s ease-in-out infinite;
+}
+
+.panel-icon i{
+    color: #D4AF37;      /* Gold icon (change to white if you prefer) */
+    font-size: 42px;     /* Increase size */
+}
+
+@keyframes floatIcon{
+    0%, 100%{
+        transform: translateY(0);
+    }
+
+    50%{
+        transform: translateY(-8px);
+    }
+}
+.panel-icon img{
+    width: 42px;
+    height: 42px;
+
+    animation: floatIcon 2.5s ease-in-out infinite;
+}
+
+
+

@@ -544,3 +544,16 @@ body{
 .trainer-card{
     margin-bottom:0;
 }
+
+
+.heading{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+}
+
+.heading img{
+    width: 30px;
+    height: 30px;
+}

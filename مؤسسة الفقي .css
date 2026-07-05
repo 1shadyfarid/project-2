@@ -483,7 +483,7 @@ body{
 
 .promo-social a:hover{
 
-    background:#c41212;
+  
 
     transform:translateY(-5px);
 
@@ -764,4 +764,34 @@ body{
 a{
 text-decoration: none;
 
+}
+
+.heading{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+}
+
+.heading img{
+    width: 30px;
+    height: 30px;
+}
+
+
+.text-icon{
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between the icon and text */
+}
+
+.text-icon img{
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+.text-icon span{
+    font-size: 18px;
+    color: white;
 }
