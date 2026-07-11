@@ -27,6 +27,64 @@
 </header>
 
 
+<div class="graduate-search">
+
+    <h2 style="color: black;"> ابحث عن المدرب المعتمد</h2>
+
+    <div class="graduate-search-box">
+
+        <input
+            type="text"
+            id="graduateSearch"
+            placeholder=" ابحث بالاسم..."
+        >
+
+        <img src="search.png" alt="Search">
+
+    </div>
+
+    <div id="searchResults" class="search-results"></div>
+
+</div>
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const searchInput = document.getElementById("graduateSearch");
+    const results = document.getElementById("searchResults");
+    const cards = document.querySelectorAll(".trainer-card");
+
+    searchInput.addEventListener("input", () => {
+
+        const value = searchInput.value.toLowerCase().trim();
+
+        results.innerHTML = "";
+
+        if (value === "") return;
+
+        cards.forEach(card => {
+
+            if (card.innerText.toLowerCase().includes(value)) {
+
+                const clone = card.cloneNode(true);
+
+                results.appendChild(clone);
+
+            }
+
+        });
+
+    });
+
+});
+</script>
+
+
+
+
+
 
 
 

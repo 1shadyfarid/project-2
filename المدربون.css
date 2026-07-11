@@ -624,3 +624,139 @@ body{
     object-fit:cover;
     display:block;
 }
+
+
+
+
+
+
+
+/*=========================
+    GRADUATE SEARCH
+=========================*/
+
+.graduate-search{
+    width:100%;
+    max-width:700px;
+    margin:50px auto;
+    padding:0 15px;
+    box-sizing:border-box;
+}
+
+.graduate-search h2{
+    text-align:center;
+    color:#c41212;
+    font-size:32px;
+    margin-bottom:20px;
+    font-weight:700;
+}
+
+.graduate-search-box{
+    position:relative;
+    width:100%;
+    box-sizing:border-box;
+}
+
+.graduate-search-box input{
+    width:100%;
+    height:58px;
+    border:2px solid #c41212;
+    border-radius:50px;
+    outline:none;
+    background:#fff;
+    font-size:17px;
+    padding:0 60px 0 20px;
+    direction:rtl;
+    transition:.3s;
+    box-sizing:border-box;
+}
+
+.graduate-search-box input:focus{
+    border-color:#d81f1f;
+    box-shadow:0 0 15px rgba(196,18,18,.2);
+}
+
+.graduate-search-box img{
+    position:absolute;
+    right:20px;
+    top:50%;
+    transform:translateY(-50%);
+    width:22px;
+    height:22px;
+    pointer-events:none;
+}
+
+.search-results{
+    width:100%;
+    margin-top:20px;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+/*=========================
+        TABLET
+=========================*/
+
+@media (max-width:768px){
+
+    .graduate-search{
+        max-width:500px;
+        padding:0 12px;
+        margin:40px auto;
+    }
+
+    .graduate-search h2{
+        font-size:24px;
+    }
+
+    .graduate-search-box input{
+        height:50px;
+        font-size:15px;
+        padding:0 50px 0 15px;
+    }
+
+    .graduate-search-box img{
+        width:18px;
+        height:18px;
+        right:16px;
+    }
+
+}
+
+/*=========================
+      SMALL PHONES
+=========================*/
+
+@media (max-width:480px){
+
+    .graduate-search{
+        width:100%;
+        max-width:100%;
+        padding:0 10px;
+        margin:30px auto;
+    }
+
+    .graduate-search h2{
+        font-size:20px;
+    }
+
+    .graduate-search-box{
+        width:100%;
+    }
+
+    .graduate-search-box input{
+        width:100%;
+        height:46px;
+        font-size:14px;
+        padding:0 45px 0 15px;
+        border-radius:30px;
+    }
+
+    .graduate-search-box img{
+        width:16px;
+        height:16px;
+        right:14px;
+    }
+
+}
