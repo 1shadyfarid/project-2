@@ -43,50 +43,49 @@
 
     </div>
 
+
+
     <div id="searchResults" class="search-results"></div>
+
+
+    
 
 </div>
 
 
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
 
-    const searchInput = document.getElementById("graduateSearch");
-    const results = document.getElementById("searchResults");
+<script>
+
+const searchInput = document.getElementById("graduateSearch");
+const results = document.getElementById("searchResults");
+
+searchInput.addEventListener("input", function () {
+
+    const value = this.value.toLowerCase().trim();
+
+    results.innerHTML = "";
+
+    if(value === ""){
+        return;
+    }
+
     const cards = document.querySelectorAll(".trainer-card");
 
-    searchInput.addEventListener("input", () => {
+    cards.forEach(card => {
 
-        const value = searchInput.value.toLowerCase().trim();
+        if(card.innerText.toLowerCase().includes(value)){
 
-        results.innerHTML = "";
+            const clone = card.cloneNode(true);
 
-        if (value === "") return;
+            results.appendChild(clone);
 
-        cards.forEach(card => {
-
-            if (card.innerText.toLowerCase().includes(value)) {
-
-                const clone = card.cloneNode(true);
-
-                results.appendChild(clone);
-
-            }
-
-        });
+        }
 
     });
 
 });
 </script>
-
-
-
-
-
-
-
 
 
 
@@ -152,6 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             </div>
 
+            
             <h3>متخصصه في</h3>
 
             <ul>
@@ -168,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             </ul>
 
-    
+   
     <div class="image-description">
 
     <h4></h4>
@@ -1042,6 +1042,11 @@ Al nuaimi </h4>
     </div>
 
 </section>
+
+
+
+
+
 
 
 <section class="trainer-section" id="workerss">
@@ -4247,7 +4252,7 @@ Al nuaimi </h4>
 
         <div class="trainer-image">
 
-            <img src="هيفاء.jpeg" alt="Trainer">
+            <img src="هيفاء2.jpeg" alt="Trainer">
 
         </div>
 
@@ -4270,7 +4275,9 @@ Al nuaimi </h4>
 
     <div class="trainer-icons">
 
-       
+        <a href="https://www.instagram.com/coach_haifa.eid?igsh=d2dpbWN0bnF5bDA4">
+            <img src="instagram (1).png" class="social-icon" alt="Facebook">
+        </a>
 
         <a href="https://wa.me/96178817248">
             <img src="whatsapp (2).png" class="social-icon" alt="WhatsAp">
@@ -4324,5 +4331,14 @@ Al nuaimi </h4>
     </div>
 
 </section>
+
+
+
+
+
+
+
+
+
 </body>
 </html>
