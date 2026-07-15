@@ -4399,3 +4399,66 @@ PHONE
 
 
 
+
+
+.whatsapp-btn,
+
+#topBtn{
+
+    position:fixed;
+
+    width:60px;
+
+    height:60px;
+
+    border-radius:50%;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    color:#fff;
+
+    font-size:24px;
+
+    box-shadow:var(--shadow);
+
+    z-index:999;
+
+    transition:.35s;
+
+}
+
+.whatsapp-btn{
+
+    bottom:25px;
+
+    left:25px;
+
+    background:#25D366;
+
+}
+
+#topBtn{
+
+    bottom:100px;
+
+    right:25px;
+
+    background:var(--primary);
+
+    border:none;
+
+    cursor:pointer;
+
+}
+
+.whatsapp-btn:hover,
+
+#topBtn:hover{
+
+    transform:translateY(-8px) scale(1.08);
+
+}
