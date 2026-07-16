@@ -760,3 +760,112 @@ body{
     }
 
 }
+
+
+
+
+
+
+
+.pagination-info{
+
+    text-align:center;
+
+    font-size:20px;
+
+    font-weight:600;
+
+    color:#333;
+
+    margin:35px 0 20px;
+
+}
+
+.pagination-info span{
+
+    color:#c41212;
+
+    font-weight:700;
+
+}
+
+.load-more-container{
+
+    display:flex;
+
+    justify-content:center;
+
+    margin-bottom:60px;
+
+}
+
+.load-more-btn{
+
+    width:220px;
+
+    height:55px;
+
+    background:#c41212;
+
+    color:#fff;
+
+    border:none;
+
+    border-radius:50px;
+
+    cursor:pointer;
+
+    font-size:18px;
+
+    font-weight:600;
+
+    transition:.3s;
+
+    box-shadow:0 12px 30px rgba(196,18,18,.25);
+
+}
+
+.load-more-btn:hover{
+
+    transform:translateY(-4px);
+
+    background:#a80000;
+
+}
+
+@media(max-width:768px){
+
+    .pagination-info{
+
+        font-size:16px;
+
+    }
+
+    .load-more-btn{
+
+        width:180px;
+
+        height:48px;
+
+        font-size:16px;
+
+    }
+
+}
+
+.trainer-section{
+    margin-bottom:0;
+    padding-bottom:20px;
+}
+
+.search-results{
+    display:flex;
+    flex-direction:column;
+    gap:30px;
+    margin-top:30px;
+}
+
+.search-results .trainer-section{
+    padding:0;
+    background:transparent;
+}
