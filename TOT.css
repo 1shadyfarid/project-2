@@ -14,7 +14,25 @@ body{
 
 
 
+.hero-subtitle{
+    max-width: 750px;
+    margin: 20px auto 35px;
+    color: rgba(255,255,255,.95);
+    font-size: 22px;
+    line-height: 1.8;
+    font-weight: 400;
+}
 
+@media (max-width:768px){
+
+    .hero-subtitle{
+        font-size: 17px;
+        line-height: 1.7;
+        padding: 0 10px;
+        margin: 15px auto 30px;
+    }
+
+}
 
 body{
     font-family: "Cairo", sans-serif;
@@ -137,12 +155,15 @@ body{
 /* HERO */
 .hero{
 
-    height:45vh;
-    min-height:350px;
 
     background-image:
     linear-gradient(rgba(0,0,0,.80), rgba(0,0,0,.80)),
     url("CONFINTEA\ conference\ room.png");
+
+    min-height: 45vh;
+
+
+
 
      background-size:cover;      /* Zoom in */
     background-position:center;
@@ -1529,3 +1550,163 @@ body{
 *{
     max-width:100%;
 }
+
+
+
+.benefits{
+    width: 90%;
+    max-width: 1100px;
+    margin: 70px auto;
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+}
+
+.benefit-card{
+    text-align: center;
+    padding: 25px;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 10px 25px rgba(0,0,0,.08);
+    transition: .3s;
+}
+
+.benefit-card:hover{
+    transform: translateY(-8px);
+}
+
+.benefit-card img{
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #b30000;
+    margin-bottom: 15px;
+}
+
+.benefit-card h3{
+    font-size: 22px;
+    color: #222;
+    margin-bottom: 8px;
+}
+
+.benefit-card p{
+    color: #b30000;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+@media (max-width:768px){
+
+    .benefits{
+        gap: 12px;
+    }
+
+    .benefit-card{
+        padding: 15px 8px;
+    }
+
+    .benefit-card img{
+        width: 60px;
+        height: 60px;
+    }
+
+    .benefit-card h3{
+        font-size: 15px;
+    }
+
+    .benefit-card p{
+        font-size: 12px;
+    }
+
+}
+
+
+
+
+
+
+
+
+.why-us{
+    width:90%;
+    max-width:1200px;
+    margin:80px auto;
+    text-align:center;
+}
+
+.why-us-title h2{
+    font-size:38px;
+    color:#b30000;
+    margin-bottom:15px;
+}
+
+.why-us-title p{
+    color:#555;
+    font-size:18px;
+    margin-bottom:45px;
+}
+
+.why-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:25px;
+}
+
+.why-card{
+    display:flex;
+    align-items:center;
+    gap:15px;
+
+    padding:22px;
+
+    background:#fff;
+
+    border-radius:18px;
+
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+
+    transition:.3s;
+}
+
+.why-card:hover{
+    transform:translateY(-6px);
+}
+
+.why-card i{
+    font-size:28px;
+    color:#b30000;
+}
+
+.why-card span{
+    font-size:20px;
+    font-weight:700;
+    color:#222;
+}
+@media(max-width:768px){
+
+    .why-grid{
+        grid-template-columns:1fr;
+    }
+
+    .why-us-title h2{
+        font-size:28px;
+    }
+
+    .why-card{
+        padding:18px;
+    }
+
+    .why-card span{
+        font-size:18px;
+    }
+
+}
+
+
+
+
+
+
+
