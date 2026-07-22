@@ -869,3 +869,28 @@ body{
     padding:0;
     background:transparent;
 }
+
+
+
+
+
+
+@media (max-width:900px){
+
+    .trainer-card{
+        flex-direction: column;
+        max-width: 360px;   /* Smaller card */
+        width: 85%;
+        margin: 0 auto;
+        gap: 15px;
+        border-radius: 18px;
+    }
+
+    .trainer-info{
+        padding: 15px;
+    }
+
+.trainer-info{
+    padding:15px; /* Instead of 20px */
+}
+}
