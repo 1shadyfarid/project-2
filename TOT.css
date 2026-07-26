@@ -1828,3 +1828,243 @@ body{
     }
 
 }
+
+
+.pricing{
+
+    padding:80px 20px;
+    background:#f7f7f7;
+    text-align:center;
+
+}
+
+.pricing-title{
+
+    font-size:2.5rem;
+    margin-bottom:60px;
+    color:#111;
+
+}
+
+.pricing-container{
+
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:30px;
+    max-width:1200px;
+    margin:auto;
+
+}
+
+.pricing-card{
+
+    background:#fff;
+    padding:35px;
+    border-radius:20px;
+    box-shadow:0 10px 30px rgba(0,0,0,.12);
+    transition:.35s;
+    position:relative;
+
+}
+
+.pricing-card:hover{
+
+    transform:translateY(-10px);
+
+}
+
+.featured{
+
+    border:3px solid #d60000;
+
+}
+
+.badge{
+
+    position:absolute;
+    top:-15px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#d60000;
+    color:#fff;
+    padding:8px 20px;
+    border-radius:30px;
+    font-size:.9rem;
+
+}
+
+.pricing-card h3{
+
+    margin:15px 0 25px;
+    color:#111;
+    font-size:1.6rem;
+
+}
+
+.pricing-card ul{
+
+    list-style:none;
+    padding:0;
+    margin:0 0 30px;
+
+}
+
+.pricing-card ul li{
+
+    padding:12px 0;
+    border-bottom:1px solid #eee;
+    color:#555;
+
+}
+
+.price{
+
+    font-size:3rem;
+    color:#d60000;
+    font-weight:bold;
+    margin:30px 0;
+
+}
+
+.price span{
+
+    font-size:1rem;
+    color:#555;
+
+}
+
+.price-btn{
+
+    display:inline-block;
+    text-decoration:none;
+    background:#d60000;
+    color:#fff;
+    padding:15px 40px;
+    border-radius:50px;
+    transition:.3s;
+
+}
+
+.price-btn:hover{
+
+    background:#b80000;
+
+}
+
+@media(max-width:900px){
+
+    .pricing-container{
+
+        grid-template-columns:1fr;
+        max-width:450px;
+
+    }
+
+    .pricing-title{
+
+        font-size:2rem;
+
+    }
+
+    .price{
+
+        font-size:2.5rem;
+
+    }
+
+}
+
+.price{
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+
+}
+.price{
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    margin:30px 0;
+
+}
+
+.discount{
+
+    background:#d60000;
+    color:#fff;
+    padding:6px 18px;
+    border-radius:30px;
+    font-size:.9rem;
+    font-weight:600;
+
+}
+
+.old-price{
+
+    font-size:1.4rem;
+    color:#999;
+    text-decoration:line-through;
+    text-decoration-thickness:3px;
+
+}
+
+.new-price{
+
+    font-size:3rem;
+    color:#d60000;
+    font-weight:700;
+
+}
+.course-info{
+
+    margin:25px 0;
+    padding:18px;
+    background:#f8f8f8;
+    border-radius:12px;
+
+    text-align:center;
+
+    line-height:2;
+    color:#000000;
+    font-size:26px;
+
+}
+
+.course-info strong{
+
+    color:#111;
+    display:block;
+    margin-bottom:5px;
+
+}
+
+.program-info{
+
+    margin:25px 0;
+    padding:18px 25px;
+
+    border:2px solid #d60000;
+    border-radius:15px;
+
+    background:#fff;
+
+    text-align:center;
+
+    color:#000000;
+    font-size:26px;
+    line-height:2;
+
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+
+}
+
+.program-info strong{
+
+    color:#d60000;
+    font-weight:700;
+
+}
