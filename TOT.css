@@ -2265,3 +2265,40 @@ body{
     }
 
 }
+
+#topBtn{
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    width: 55px;
+    height: 55px;
+    border: none;
+    border-radius: 50%;
+    background: #d40000;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,.25);
+    transition: .3s;
+    z-index: 9999;
+}
+
+#topBtn:hover{
+    background: #a50000;
+    transform: translateY(-3px);
+}
+
+@media (max-width:768px){
+
+    #topBtn{
+        width:50px;
+        height:50px;
+        left:20px;
+        bottom:20px;
+        font-size:20px;
+    }
+
+}
