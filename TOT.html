@@ -374,6 +374,142 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 
 
+<!-- Lead Form Overlay -->
+
+<div class="lead-overlay" id="leadOverlay">
+
+    <div class="lead-card">
+
+        <div class="logo-area">
+
+            <h2>🎓 مؤسسة الفقي العالمية</h2>
+
+            <p>
+                سجل بياناتك للحصول على جميع تفاصيل البرامج
+                والشهادات المعتمدة.
+            </p>
+
+        </div>
+
+        <form id="leadForm">
+
+            <div class="input-group">
+
+                <label>الاسم بالكامل</label>
+
+                <input
+                    type="text"
+                    id="name"
+                    placeholder="اكتب اسمك"
+                    required>
+
+            </div>
+
+            <div class="input-group">
+
+                <label>رقم الهاتف</label>
+
+                <input
+                    type="tel"
+                    id="phone"
+                    placeholder="+20xxxxxxxxxx"
+                    required>
+
+            </div>
+
+            <div class="input-group">
+
+                <label>الدولة</label>
+
+                <input
+                    type="text"
+                    id="country"
+                    placeholder="مثال: العراق"
+                    required>
+
+            </div>
+
+
+
+
+
+<div class="input-group">
+
+<label>البرنامج المطلوب</label>
+
+<select id="program">
+
+<option value="">اختر البرنامج</option>
+
+<option> مدرب دولي محترف </option>
+
+<option>شرح برنامج باحث ماستر التدريبي فى التنمية البشرية   </option>
+
+<option> الارشاد الأسري والتأهيل التربوي </option>
+
+<option> الصحة النفسية </option>
+
+<option> برمجه لغوية عصبية</option>
+
+<option> البرنامج الشامل يشمل كل ما سبق 79دولار</option>
+
+</select>
+
+</div>
+
+
+
+
+
+
+
+
+            <button type="submit" class="lead-btn">
+
+                متابعة
+
+            </button>
+
+        </form>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -449,5 +585,304 @@ topBtn.addEventListener("click", function () {
 
 
 
+
+
+
+
+
+<script>
+    const chatToggle = document.getElementById("chatToggle");
+const chatBox = document.getElementById("chatBox");
+const closeChat = document.getElementById("closeChat");
+const chatBody = document.getElementById("chatBody");
+const userInput = document.getElementById("userInput");
+
+/* Open Chat */
+
+chatToggle.onclick = () => {
+
+    chatBox.classList.add("active");
+
+};
+
+/* Close Chat */
+
+closeChat.onclick = () => {
+
+    chatBox.classList.remove("active");
+
+};
+
+/* Send when pressing Enter */
+
+userInput.addEventListener("keypress",function(e){
+
+    if(e.key==="Enter"){
+
+        sendMessage();
+
+    }
+
+});
+
+function sendMessage(){
+
+    let text=userInput.value.trim();
+
+    if(text==="") return;
+
+    addUser(text);
+
+    userInput.value="";
+
+    botReply(text);
+
+}
+
+/* Quick Buttons */
+
+function quickReply(text){
+
+    addUser(text);
+
+    botReply(text);
+
+}
+
+/* User Bubble */
+
+function addUser(text){
+
+    const div=document.createElement("div");
+
+    div.className="user-message";
+
+    div.innerHTML=text;
+
+    chatBody.appendChild(div);
+
+    scrollBottom();
+
+}
+
+/* Typing */
+
+function typing(){
+
+    const div=document.createElement("div");
+
+    div.className="bot-message";
+
+    div.id="typing";
+
+    div.innerHTML="⌛ جاري الكتابة...";
+
+    chatBody.appendChild(div);
+
+    scrollBottom();
+
+}
+
+function removeTyping(){
+
+    const t=document.getElementById("typing");
+
+    if(t) t.remove();
+
+}
+
+/* Bot Reply */
+
+function botReply(msg){
+
+    typing();
+
+    setTimeout(function(){
+
+        removeTyping();
+
+        const div=document.createElement("div");
+
+        div.className="bot-message";
+
+        let m=msg.toLowerCase();
+
+        if(
+
+            m.includes("سعر") ||
+            m.includes("الاسعار") ||
+            m.includes("الأسعار")
+
+        ){
+
+            div.innerHTML="💰 تبدأ البرامج من <b>49$</b> حسب البرنامج المختار.";
+
+        }
+
+        else if(
+
+            m.includes("مدة") ||
+            m.includes("كم شهر")
+
+        ){
+
+            div.innerHTML="📅 مدة الدراسة حوالي <b>4 أشهر ونصف</b> مع متابعة مستمرة.";
+
+        }
+
+        else if(
+
+            m.includes("شهادة") ||
+            m.includes("معتمد")
+
+        ){
+
+            div.innerHTML="🎓 نعم، يحصل المتدرب على شهادة معتمدة من مؤسسة الفقي العالمية.";
+
+        }
+
+        else if(
+
+            m.includes("برنامج") ||
+            m.includes("دورات") ||
+            m.includes("كورسات")
+
+        ){
+
+            div.innerHTML="📚 لدينا برامج في التنمية البشرية، TOT، الموارد البشرية، القيادة، البرمجة اللغوية العصبية، وغيرها.";
+
+        }
+
+        else if(
+
+            m.includes("واتساب") ||
+            m.includes("تواصل") ||
+            m.includes("رقم")
+
+        ){
+
+            div.innerHTML=`
+            📱 يمكنك التواصل معنا مباشرة.
+
+            <br><br>
+
+            <a href="https://wa.me/2001212787878"
+               target="_blank"
+               style="
+               display:inline-block;
+               background:#25D366;
+               color:white;
+               padding:12px 20px;
+               border-radius:10px;
+               text-decoration:none;
+               ">
+               فتح واتساب
+            </a>
+            `;
+
+        }
+
+        else{
+
+            div.innerHTML="😊 شكراً لسؤالك.<br>يمكنك التواصل معنا عبر واتساب للحصول على جميع التفاصيل.";
+
+        }
+
+        chatBody.appendChild(div);
+
+        scrollBottom();
+
+    },1200);
+
+}
+
+/* Scroll */
+
+function scrollBottom(){
+
+    chatBody.scrollTop=chatBody.scrollHeight;
+
+}
+
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const overlay = document.getElementById("leadOverlay");
+    const form = document.getElementById("leadForm");
+    const skip = document.getElementById("skipForm");
+
+    function closePopup() {
+        overlay.style.opacity = "0";
+        overlay.style.pointerEvents = "none";
+
+        setTimeout(function () {
+            overlay.style.display = "none";
+        }, 400);
+    }
+
+    // Skip button
+    if (skip) {
+        skip.addEventListener("click", function (e) {
+            e.preventDefault();
+            closePopup();
+        });
+    }
+
+    // Submit form
+    form.addEventListener("submit", function (e) {
+
+        e.preventDefault();
+
+        const name = document.getElementById("name").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+        const country = document.getElementById("country").value.trim();
+
+        // Check empty fields
+        if (name === "" || phone === "" || country === "") {
+            alert("يرجى إدخال جميع البيانات.");
+            return;
+        }
+
+        fetch("https://script.google.com/macros/s/AKfycbyFSbYl6b3HR2gbsqynZLdaD3a4nQUNpa0DVjwO_mydlnqpM4Fvtl-e3tWkeT-LfBPcwg/exec", {
+            method: "POST",
+            body: JSON.stringify({
+                name: name,
+                phone: phone,
+                country: country
+            })
+        })
+        .then(response => response.text())
+        .then(() => {
+
+            const card = document.querySelector(".lead-card");
+
+            card.innerHTML = `
+                <div style="padding:40px;text-align:center;">
+                    <h2 style="color:#c40000;">✅ تم تسجيل بياناتك بنجاح</h2>
+                    <p style="margin-top:15px;font-size:18px;line-height:1.8;">
+                        يمكنك الآن استعراض البرامج.
+                    </p>
+                </div>
+            `;
+
+            setTimeout(function () {
+                closePopup();
+            }, 1200);
+
+        })
+        .catch(error => {
+
+            console.error(error);
+
+            alert("حدث خطأ أثناء إرسال البيانات.");
+
+        });
+
+    });
+
+});
+</script>
 </body>
 </html>
