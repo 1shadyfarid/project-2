@@ -3103,6 +3103,75 @@ transform:translateY(0);
 
 
 
+.banner-section{
+    width:100%;
+    padding:70px 20px;
+    background:#fff;
+}
+
+.banner-container{
+    max-width:1100px;
+    margin:auto;
+    text-align:center;
+}
+
+.banner-container h2{
+    font-size:42px;
+    color:#b80000;
+    margin-bottom:15px;
+    font-weight:700;
+}
+
+.banner-container p{
+    font-size:20px;
+    color:#555;
+    margin-bottom:35px;
+    line-height:1.8;
+}
+
+.banner-container img{
+    width:100%;
+    max-width:600px;
+    height:auto;
+    border-radius:22px;
+    display:block;
+    margin:auto;
+    box-shadow:0 15px 40px rgba(0,0,0,.15);
+}
+
+
+@media(max-width:768px){
+
+.banner-section{
+    padding:45px 15px;
+}
+
+.banner-container h2{
+    font-size:30px;
+}
+
+.banner-container p{
+    font-size:17px;
+}
+
+.banner-container img{
+    border-radius:15px;
+}
+
+}
+
+@media(max-width:768px){
+
+.banner-container img{
+    width:60%;
+    max-width:500px;
+    margin:auto;
+}
+
+}
+
+
+
 
 
 
