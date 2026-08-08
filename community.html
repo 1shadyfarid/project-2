@@ -755,28 +755,25 @@ body{
 
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 
 /* =====================================================
-   SUPABASE
+   SUPABASE CONNECTION
 ===================================================== */
 
-const SUPABASE_URL = "https://ghhkigchdjhcayemwmdo.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_-Z2vD_Y-UomxWje05uy0qA_SpizyYY3";
+const SUPABASE_URL =
+    "https://ghhkigchdjhcayemwmdo.supabase.co";
 
-const supabase = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY,
-    {
-        auth: {
-            persistSession: true,
-            autoRefreshToken: true
-        }
-    }
-);
+const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_-Z2vD_Y-UomxWje05uy0qA_SpizyYY3";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+    );
 
 
 /* =====================================================
@@ -799,64 +796,89 @@ const $ = id => document.getElementById(id);
 
 
 /* =====================================================
-   SECURITY
+   ESCAPE HTML
 ===================================================== */
 
-const escapeHTML = value => {
+function escapeHTML(value) {
+
     return String(value ?? "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-};
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
 
 
 /* =====================================================
-   FIRST LETTER
+   FIRST LETTER AVATAR
 ===================================================== */
 
-const initial = name => {
-    const cleanName = (name || "؟").trim();
+function initial(name) {
+
+    const cleanName =
+        (name || "؟").trim();
+
     return cleanName.charAt(0) || "؟";
-};
+
+}
 
 
 /* =====================================================
    TIME
 ===================================================== */
 
-function ago(timestamp){
-    const ms = Date.now() - new Date(timestamp).getTime();
-    const seconds = Math.max(0, Math.floor(ms / 1000));
+function ago(timestamp) {
 
-    if(seconds < 60){
+    const seconds =
+        Math.max(
+            0,
+            Math.floor(
+                (Date.now() -
+                new Date(timestamp).getTime()) / 1000
+            )
+        );
+
+    if (seconds < 60) {
         return "الآن";
     }
 
-    if(seconds < 3600){
+    if (seconds < 3600) {
         return `منذ ${Math.floor(seconds / 60)} دقيقة`;
     }
 
-    if(seconds < 86400){
+    if (seconds < 86400) {
         return `منذ ${Math.floor(seconds / 3600)} ساعة`;
     }
 
-    return new Date(timestamp).toLocaleDateString("ar-EG");
+    return new Date(timestamp)
+        .toLocaleDateString("ar-EG");
+
 }
 
 
 /* =====================================================
-   AVATAR HTML
+   AVATAR
 ===================================================== */
 
-function avatar(photo, name, className = "smallavatar"){
-    if(photo){
+function avatar(
+    photo,
+    name,
+    className = "smallavatar"
+) {
+
+    if (photo) {
+
         return `
             <div class="${className}">
-                <img src="${escapeHTML(photo)}" alt="">
+                <img
+                    src="${escapeHTML(photo)}"
+                    alt=""
+                >
             </div>
         `;
+
     }
 
     return `
@@ -864,50 +886,80 @@ function avatar(photo, name, className = "smallavatar"){
             ${escapeHTML(initial(name))}
         </div>
     `;
+
 }
 
 
 /* =====================================================
-   ERROR HANDLING
+   ERROR
 ===================================================== */
 
-function showError(message, error = null){
-    console.error(message, error || "");
-    alert(message);
+function showError(message, error) {
+
+    console.error(message, error);
+
+    alert(
+        message +
+        (error?.message
+            ? "\n\n" + error.message
+            : "")
+    );
+
 }
 
 
 /* =====================================================
-   AUTH
+   AUTHENTICATION
 ===================================================== */
 
-async function initAuth(){
+async function initAuth() {
 
     const {
-        data: { session }
-    } = await supabase.auth.getSession();
+        data: {
+            session
+        }
+    } =
+        await supabaseClient
+            .auth
+            .getSession();
 
-    if(session?.user){
-        currentUser = session.user;
+
+    if (session?.user) {
+
+        currentUser =
+            session.user;
+
         return true;
+
     }
+
 
     const {
         data,
         error
-    } = await supabase.auth.signInAnonymously();
+    } =
+        await supabaseClient
+            .auth
+            .signInAnonymously();
 
-    if(error){
-        console.error(error);
+
+    if (error) {
+
         showError(
-            "تعذر إنشاء جلسة المستخدم. تأكد أن Anonymous Sign-Ins مفعّل في Supabase."
+            "تعذر إنشاء جلسة المستخدم. تأكد من تفعيل Anonymous Sign-Ins في Supabase.",
+            error
         );
+
         return false;
+
     }
 
-    currentUser = data.user;
+
+    currentUser =
+        data.user;
 
     return true;
+
 }
 
 
@@ -915,399 +967,655 @@ async function initAuth(){
    LOAD PROFILE
 ===================================================== */
 
-async function loadProfile(){
+async function loadProfile() {
 
-    if(!currentUser){
+    if (!currentUser) {
         return;
     }
+
 
     const {
         data,
         error
-    } = await supabase
-        .from("profiles")
-        .select("id,name,avatar_url")
-        .eq("id", currentUser.id)
-        .maybeSingle();
+    } =
+        await supabaseClient
+            .from("profiles")
+            .select(
+                "id,name,avatar_url"
+            )
+            .eq(
+                "id",
+                currentUser.id
+            )
+            .maybeSingle();
 
-    if(error){
-        showError("حدث خطأ أثناء تحميل الملف الشخصي.", error);
+
+    if (error) {
+
+        showError(
+            "حدث خطأ أثناء تحميل الملف الشخصي.",
+            error
+        );
+
         return;
+
     }
 
-    profile = data || null;
+
+    profile =
+        data || null;
+
+
+    updateProfileUI();
+
 }
 
 
 /* =====================================================
-   LOAD COMMUNITY DATA
+   PROFILE UI
 ===================================================== */
 
-async function loadCommunity(){
+function updateProfileUI() {
+
+    if ($("profileName")) {
+
+        $("profileName")
+            .textContent =
+            profile?.name || "زائر";
+
+    }
+
+
+    if ($("profileAvatar")) {
+
+        $("profileAvatar")
+            .innerHTML =
+            profile?.avatar_url
+
+            ?
+
+            `
+                <img
+                    src="${escapeHTML(profile.avatar_url)}"
+                    alt="الصورة الشخصية"
+                >
+            `
+
+            :
+
+            escapeHTML(
+                initial(profile?.name)
+            );
+
+    }
+
+
+    const currentName =
+        $("name")?.value ||
+        profile?.name ||
+        "";
+
+
+    if ($("bigAvatar")) {
+
+        $("bigAvatar")
+            .innerHTML =
+
+            pendingPhoto
+
+            ?
+
+            `
+                <img
+                    src="${escapeHTML(pendingPhoto)}"
+                    alt=""
+                >
+            `
+
+            :
+
+            profile?.avatar_url
+
+            ?
+
+            `
+                <img
+                    src="${escapeHTML(profile.avatar_url)}"
+                    alt=""
+                >
+            `
+
+            :
+
+            escapeHTML(
+                initial(currentName)
+            );
+
+    }
+
+}
+
+
+/* =====================================================
+   LOAD POSTS / COMMENTS / LIKES
+===================================================== */
+
+async function loadCommunity() {
 
     const [
         postsResult,
         commentsResult,
         likesResult,
         profilesResult
-    ] = await Promise.all([
+    ] =
+        await Promise.all([
 
-        supabase
-            .from("posts")
-            .select("id,user_id,content,created_at")
-            .order("created_at", { ascending:false }),
+            supabaseClient
+                .from("posts")
+                .select(
+                    "id,user_id,content,created_at"
+                )
+                .order(
+                    "created_at",
+                    {
+                        ascending: false
+                    }
+                ),
 
-        supabase
-            .from("comments")
-            .select("id,post_id,user_id,content,created_at")
-            .order("created_at", { ascending:true }),
+            supabaseClient
+                .from("comments")
+                .select(
+                    "id,post_id,user_id,content,created_at"
+                )
+                .order(
+                    "created_at",
+                    {
+                        ascending: true
+                    }
+                ),
 
-        supabase
-            .from("likes")
-            .select("id,post_id,user_id,created_at"),
+            supabaseClient
+                .from("likes")
+                .select(
+                    "id,post_id,user_id,created_at"
+                ),
 
-        supabase
-            .from("profiles")
-            .select("id,name,avatar_url")
-    ]);
+            supabaseClient
+                .from("profiles")
+                .select(
+                    "id,name,avatar_url"
+                )
 
-    const firstError =
+        ]);
+
+
+    const error =
         postsResult.error ||
         commentsResult.error ||
         likesResult.error ||
         profilesResult.error;
 
-    if(firstError){
-        console.error(firstError);
+
+    if (error) {
+
         showError(
-            "حدث خطأ أثناء تحميل المجتمع. إذا ظهرت رسالة Permission denied أرسلها لي."
+            "تعذر تحميل المجتمع.",
+            error
         );
+
         return;
+
     }
 
-    const profileMap = new Map(
-        (profilesResult.data || [])
-            .map(p => [p.id, p])
-    );
 
-    posts = (postsResult.data || []).map(post => {
+    const profileMap =
+        new Map(
+            (profilesResult.data || [])
+                .map(
+                    p => [
+                        p.id,
+                        p
+                    ]
+                )
+        );
 
-        const p = profileMap.get(post.user_id);
 
-        return {
-            ...post,
-            name: p?.name || "عضو",
-            photo: p?.avatar_url || null
-        };
-    });
+    posts =
+        (postsResult.data || [])
+            .map(post => {
 
-    comments = (commentsResult.data || []).map(comment => {
+                const p =
+                    profileMap.get(
+                        post.user_id
+                    );
 
-        const p = profileMap.get(comment.user_id);
+                return {
 
-        return {
-            ...comment,
-            name: p?.name || "عضو",
-            photo: p?.avatar_url || null
-        };
-    });
+                    ...post,
 
-    likes = likesResult.data || [];
+                    name:
+                        p?.name ||
+                        "عضو",
+
+                    photo:
+                        p?.avatar_url ||
+                        null
+
+                };
+
+            });
+
+
+    comments =
+        (commentsResult.data || [])
+            .map(comment => {
+
+                const p =
+                    profileMap.get(
+                        comment.user_id
+                    );
+
+                return {
+
+                    ...comment,
+
+                    name:
+                        p?.name ||
+                        "عضو",
+
+                    photo:
+                        p?.avatar_url ||
+                        null
+
+                };
+
+            });
+
+
+    likes =
+        likesResult.data || [];
+
 
     render();
+
 }
 
 
 /* =====================================================
-   UPDATE PROFILE UI
+   RENDER
 ===================================================== */
 
-function updateProfile(){
+function render() {
 
-    $("profileName").textContent =
-        profile?.name || "زائر";
-
-    $("profileAvatar").innerHTML =
-        profile?.avatar_url
-        ?
-        `
-            <img
-                src="${escapeHTML(profile.avatar_url)}"
-                alt="الصورة الشخصية"
-            >
-        `
-        :
-        escapeHTML(initial(profile?.name));
-
-    const currentName =
-        $("name").value ||
-        profile?.name ||
-        "";
-
-    $("bigAvatar").innerHTML =
-        pendingPhoto
-        ?
-        `
-            <img
-                src="${escapeHTML(pendingPhoto)}"
-                alt=""
-            >
-        `
-        :
-        escapeHTML(initial(currentName));
-}
-
-
-/* =====================================================
-   RENDER POSTS
-===================================================== */
-
-function render(){
-
-    if(!posts.length){
+    if (!posts.length) {
 
         $("feed").innerHTML = `
+
             <div class="card empty">
+
                 لا توجد منشورات بعد.
+
+                <br>
+
                 كن أول من يشارك شيئاً 👋
+
             </div>
+
         `;
 
         return;
+
     }
 
-    const sortedPosts =
-        posts
-        .slice()
-        .sort(
-            (a,b) =>
-                new Date(b.created_at) -
-                new Date(a.created_at)
-        );
 
     $("feed").innerHTML =
-        sortedPosts
-        .map(post => {
 
-            const postComments =
-                comments.filter(
-                    c => c.post_id === post.id
-                );
+        posts
+            .map(post => {
 
-            const postLikes =
-                likes.filter(
-                    like => like.post_id === post.id
-                );
+                const postComments =
+                    comments.filter(
+                        comment =>
+                            comment.post_id ===
+                            post.id
+                    );
 
-            const liked =
-                postLikes.some(
-                    like => like.user_id === currentUser?.id
-                );
 
-            const canDeletePost =
-                post.user_id === currentUser?.id;
+                const postLikes =
+                    likes.filter(
+                        like =>
+                            like.post_id ===
+                            post.id
+                    );
 
-            return `
-                <article class="card post">
 
-                    <div class="posthead">
+                const liked =
+                    postLikes.some(
+                        like =>
+                            like.user_id ===
+                            currentUser?.id
+                    );
 
-                        ${avatar(
-                            post.photo,
-                            post.name
-                        )}
 
-                        <div>
+                const canDelete =
+                    post.user_id ===
+                    currentUser?.id;
 
-                            <b>
-                                ${escapeHTML(post.name)}
-                            </b>
 
-                            <div class="time">
-                                ${ago(post.created_at)}
+                return `
+
+                    <article
+                        class="card post"
+                    >
+
+                        <div class="posthead">
+
+                            ${avatar(
+                                post.photo,
+                                post.name
+                            )}
+
+                            <div>
+
+                                <b>
+                                    ${escapeHTML(
+                                        post.name
+                                    )}
+                                </b>
+
+                                <div class="time">
+
+                                    ${ago(
+                                        post.created_at
+                                    )}
+
+                                </div>
+
                             </div>
 
                         </div>
 
-                    </div>
 
+                        <div class="text">
 
-                    <div class="text">
-                        ${escapeHTML(post.content)}
-                    </div>
-
-
-                    <div class="actions">
-
-                        <button
-                            class="action ${liked ? "liked" : ""}"
-                            onclick="likePost('${post.id}')"
-                        >
-                            ${liked ? "❤️" : "🤍"}
-                            ${postLikes.length}
-                            إعجاب
-                        </button>
-
-
-                        <button
-                            class="action"
-                            onclick="
-                                document
-                                .getElementById('c-${post.id}')
-                                .focus()
-                            "
-                        >
-                            💬
-                            ${postComments.length}
-                            تعليق
-                        </button>
-
-
-                        ${
-                            canDeletePost
-                            ?
-                            `
-                                <button
-                                    class="action"
-                                    onclick="deletePost('${post.id}')"
-                                >
-                                    🗑️ حذف
-                                </button>
-                            `
-                            :
-                            ""
-                        }
-
-                    </div>
-
-
-                    <div class="comments">
-
-                        ${
-                            postComments
-                            .map(comment => {
-
-                                const canDeleteComment =
-                                    comment.user_id === currentUser?.id;
-
-                                return `
-                                    <div class="comment">
-
-                                        <div class="commenthead">
-
-                                            ${avatar(
-                                                comment.photo,
-                                                comment.name,
-                                                "cavatar"
-                                            )}
-
-                                            <b style="font-size:12px;">
-                                                ${escapeHTML(comment.name)}
-                                            </b>
-
-                                            <span class="time">
-                                                ${ago(comment.created_at)}
-                                            </span>
-
-                                        </div>
-
-
-                                        <div class="ctext">
-                                            ${escapeHTML(comment.content)}
-                                        </div>
-
-
-                                        ${
-                                            canDeleteComment
-                                            ?
-                                            `
-                                                <button
-                                                    class="action"
-                                                    onclick="
-                                                        deleteComment(
-                                                            '${post.id}',
-                                                            '${comment.id}'
-                                                        )
-                                                    "
-                                                >
-                                                    حذف
-                                                </button>
-                                            `
-                                            :
-                                            ""
-                                        }
-
-                                    </div>
-                                `;
-                            })
-                            .join("")
-                        }
-
-
-                        <div class="commentbox">
-
-                            <input
-                                id="c-${post.id}"
-                                class="input"
-                                maxlength="500"
-                                placeholder="اكتب تعليقاً..."
-                            >
-
-                            <button
-                                class="btn red"
-                                onclick="comment('${post.id}')"
-                            >
-                                تعليق
-                            </button>
+                            ${escapeHTML(
+                                post.content
+                            )}
 
                         </div>
 
-                    </div>
 
-                </article>
-            `;
-        })
-        .join("");
+                        <div class="actions">
+
+                            <button
+                                class="action
+                                ${liked ? "liked" : ""}"
+                                onclick="
+                                    likePost(
+                                        '${post.id}'
+                                    )
+                                "
+                            >
+
+                                ${liked
+                                    ? "❤️"
+                                    : "🤍"
+                                }
+
+                                ${postLikes.length}
+
+                                إعجاب
+
+                            </button>
+
+
+                            <button
+                                class="action"
+                                onclick="
+                                    document
+                                    .getElementById(
+                                        'c-${post.id}'
+                                    )
+                                    .focus()
+                                "
+                            >
+
+                                💬
+
+                                ${postComments.length}
+
+                                تعليق
+
+                            </button>
+
+
+                            ${
+                                canDelete
+
+                                ?
+
+                                `
+
+                                    <button
+                                        class="action"
+                                        onclick="
+                                            deletePost(
+                                                '${post.id}'
+                                            )
+                                        "
+                                    >
+
+                                        🗑️ حذف
+
+                                    </button>
+
+                                `
+
+                                :
+
+                                ""
+                            }
+
+                        </div>
+
+
+                        <div class="comments">
+
+
+                            ${
+                                postComments
+                                    .map(comment => {
+
+                                        const
+                                            canDeleteComment =
+                                            comment.user_id ===
+                                            currentUser?.id;
+
+
+                                        return `
+
+                                            <div
+                                                class="comment"
+                                            >
+
+                                                <div
+                                                    class="commenthead"
+                                                >
+
+                                                    ${avatar(
+                                                        comment.photo,
+                                                        comment.name,
+                                                        "cavatar"
+                                                    )}
+
+
+                                                    <b
+                                                        style="
+                                                        font-size:12px;
+                                                        "
+                                                    >
+
+                                                        ${escapeHTML(
+                                                            comment.name
+                                                        )}
+
+                                                    </b>
+
+
+                                                    <span
+                                                        class="time"
+                                                    >
+
+                                                        ${ago(
+                                                            comment.created_at
+                                                        )}
+
+                                                    </span>
+
+                                                </div>
+
+
+                                                <div
+                                                    class="ctext"
+                                                >
+
+                                                    ${escapeHTML(
+                                                        comment.content
+                                                    )}
+
+                                                </div>
+
+
+                                                ${
+                                                    canDeleteComment
+
+                                                    ?
+
+                                                    `
+
+                                                        <button
+                                                            class="action"
+                                                            onclick="
+                                                                deleteComment(
+                                                                    '${comment.id}'
+                                                                )
+                                                            "
+                                                        >
+
+                                                            حذف
+
+                                                        </button>
+
+                                                    `
+
+                                                    :
+
+                                                    ""
+                                                }
+
+                                            </div>
+
+                                        `;
+
+                                    })
+                                    .join("")
+                            }
+
+
+                            <div
+                                class="commentbox"
+                            >
+
+                                <input
+                                    id="c-${post.id}"
+                                    class="input"
+                                    maxlength="500"
+                                    placeholder="اكتب تعليقاً..."
+                                >
+
+
+                                <button
+                                    class="btn red"
+                                    onclick="
+                                        comment(
+                                            '${post.id}'
+                                        )
+                                    "
+                                >
+
+                                    تعليق
+
+                                </button>
+
+                            </div>
+
+
+                        </div>
+
+
+                    </article>
+
+                `;
+
+            })
+            .join("");
+
 }
 
 
 /* =====================================================
-   PUBLISH POST
+   CREATE POST
 ===================================================== */
 
-async function publish(){
+async function publish() {
 
-    if(!profile?.name){
+    if (!profile?.name) {
 
         openModal();
 
-        alert("أنشئ ملفك الشخصي أولاً.");
+        alert(
+            "أنشئ ملفك الشخصي أولاً."
+        );
 
         return;
+
     }
+
 
     const text =
         $("postText")
-        .value
-        .trim();
+            .value
+            .trim();
 
-    if(!text){
 
-        alert("اكتب محتوى المنشور.");
+    if (!text) {
+
+        alert(
+            "اكتب محتوى المنشور."
+        );
 
         return;
+
     }
+
 
     const {
         error
-    } = await supabase
-        .from("posts")
-        .insert({
-            user_id: currentUser.id,
-            content: text
-        });
+    } =
+        await supabaseClient
+            .from("posts")
+            .insert({
 
-    if(error){
+                user_id:
+                    currentUser.id,
+
+                content:
+                    text
+
+            });
+
+
+    if (error) {
 
         showError(
             "تعذر نشر المنشور.",
@@ -1315,12 +1623,21 @@ async function publish(){
         );
 
         return;
+
     }
 
-    $("postText").value = "";
-    $("count").textContent = "0 / 1000";
+
+    $("postText")
+        .value = "";
+
+
+    $("count")
+        .textContent =
+        "0 / 1000";
+
 
     await loadCommunity();
+
 }
 
 
@@ -1328,49 +1645,80 @@ async function publish(){
    LIKE
 ===================================================== */
 
-async function likePost(id){
+async function likePost(postId) {
 
-    if(!currentUser){
-        return;
-    }
-
-    const existingLike =
+    const existing =
         likes.find(
             like =>
-                like.post_id === id &&
-                like.user_id === currentUser.id
+                like.post_id ===
+                    postId
+                &&
+                like.user_id ===
+                    currentUser.id
         );
 
-    if(existingLike){
 
-        const { error } =
-            await supabase
+    if (existing) {
+
+        const {
+            error
+        } =
+            await supabaseClient
                 .from("likes")
                 .delete()
-                .eq("id", existingLike.id);
+                .eq(
+                    "id",
+                    existing.id
+                );
 
-        if(error){
-            showError("تعذر إزالة الإعجاب.", error);
+
+        if (error) {
+
+            showError(
+                "تعذر إزالة الإعجاب.",
+                error
+            );
+
             return;
+
         }
 
-    }else{
-
-        const { error } =
-            await supabase
-                .from("likes")
-                .insert({
-                    post_id: id,
-                    user_id: currentUser.id
-                });
-
-        if(error){
-            showError("تعذر إضافة الإعجاب.", error);
-            return;
-        }
     }
 
+    else {
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("likes")
+                .insert({
+
+                    post_id:
+                        postId,
+
+                    user_id:
+                        currentUser.id
+
+                });
+
+
+        if (error) {
+
+            showError(
+                "تعذر إضافة الإعجاب.",
+                error
+            );
+
+            return;
+
+        }
+
+    }
+
+
     await loadCommunity();
+
 }
 
 
@@ -1378,20 +1726,36 @@ async function likePost(id){
    DELETE POST
 ===================================================== */
 
-async function deletePost(id){
+async function deletePost(postId) {
 
-    if(!confirm("هل تريد حذف هذا المنشور؟")){
+    if (
+        !confirm(
+            "هل تريد حذف هذا المنشور؟"
+        )
+    ) {
+
         return;
+
     }
 
-    const { error } =
-        await supabase
+
+    const {
+        error
+    } =
+        await supabaseClient
             .from("posts")
             .delete()
-            .eq("id", id)
-            .eq("user_id", currentUser.id);
+            .eq(
+                "id",
+                postId
+            )
+            .eq(
+                "user_id",
+                currentUser.id
+            );
 
-    if(error){
+
+    if (error) {
 
         showError(
             "تعذر حذف المنشور.",
@@ -1399,9 +1763,12 @@ async function deletePost(id){
         );
 
         return;
+
     }
 
+
     await loadCommunity();
+
 }
 
 
@@ -1409,38 +1776,58 @@ async function deletePost(id){
    ADD COMMENT
 ===================================================== */
 
-async function comment(postId){
+async function comment(postId) {
 
-    if(!profile?.name){
+    if (!profile?.name) {
 
         openModal();
 
         return;
+
     }
+
 
     const input =
         $("c-" + postId);
 
+
     const text =
-        input.value.trim();
+        input
+            .value
+            .trim();
 
-    if(!text){
 
-        alert("اكتب تعليقاً أولاً.");
+    if (!text) {
+
+        alert(
+            "اكتب تعليقاً أولاً."
+        );
 
         return;
+
     }
 
-    const { error } =
-        await supabase
+
+    const {
+        error
+    } =
+        await supabaseClient
             .from("comments")
             .insert({
-                post_id: postId,
-                user_id: currentUser.id,
-                content: text
+
+                post_id:
+                    postId,
+
+                user_id:
+                    currentUser.id,
+
+                content:
+                    text
+
             });
 
-    if(error){
+
+    if (error) {
 
         showError(
             "تعذر إضافة التعليق.",
@@ -1448,9 +1835,12 @@ async function comment(postId){
         );
 
         return;
+
     }
 
+
     await loadCommunity();
+
 }
 
 
@@ -1459,22 +1849,37 @@ async function comment(postId){
 ===================================================== */
 
 async function deleteComment(
-    postId,
     commentId
-){
+) {
 
-    if(!confirm("هل تريد حذف هذا التعليق؟")){
+    if (
+        !confirm(
+            "هل تريد حذف هذا التعليق؟"
+        )
+    ) {
+
         return;
+
     }
 
-    const { error } =
-        await supabase
+
+    const {
+        error
+    } =
+        await supabaseClient
             .from("comments")
             .delete()
-            .eq("id", commentId)
-            .eq("user_id", currentUser.id);
+            .eq(
+                "id",
+                commentId
+            )
+            .eq(
+                "user_id",
+                currentUser.id
+            );
 
-    if(error){
+
+    if (error) {
 
         showError(
             "تعذر حذف التعليق.",
@@ -1482,97 +1887,261 @@ async function deleteComment(
         );
 
         return;
+
     }
 
+
     await loadCommunity();
+
 }
 
 
 /* =====================================================
-   OPEN PROFILE MODAL
+   OPEN PROFILE
 ===================================================== */
 
-function openModal(){
+function openModal() {
 
     pendingPhoto =
-        profile?.avatar_url || null;
+        profile?.avatar_url ||
+        null;
+
 
     $("name").value =
-        profile?.name || "";
+        profile?.name ||
+        "";
 
-    updateProfile();
+
+    updateProfileUI();
+
 
     $("modalBg")
         .classList
         .add("show");
+
 }
 
 
 /* =====================================================
-   CLOSE PROFILE MODAL
+   CLOSE PROFILE
 ===================================================== */
 
-function closeModal(){
+function closeModal() {
 
     $("modalBg")
         .classList
         .remove("show");
 
+
     pendingPhoto = null;
 
-    if(profile?.name){
-        $("name").value = profile.name;
+
+    if ($("photo")) {
+
+        $("photo").value = "";
+
     }
+
 }
 
 
 /* =====================================================
-   EDIT PROFILE
+   PROFILE BUTTONS
 ===================================================== */
 
 $("edit").onclick =
     openModal;
 
 
-/* =====================================================
-   CLOSE BUTTON
-===================================================== */
-
 $("close").onclick =
     closeModal;
 
 
 /* =====================================================
-   NAME INPUT
+   NAME
 ===================================================== */
 
 $("name").oninput =
-    function(){
-        updateProfile();
+    function () {
+
+        updateProfileUI();
+
     };
 
 
 /* =====================================================
-   PHOTO UPLOAD
+   IMAGE COMPRESSION
+===================================================== */
+
+function compressImage(file) {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                event => {
+
+                    const img =
+                        new Image();
+
+
+                    img.onload =
+                        () => {
+
+                            const max =
+                                400;
+
+
+                            let width =
+                                img.width;
+
+                            let height =
+                                img.height;
+
+
+                            if (
+                                width > max ||
+                                height > max
+                            ) {
+
+                                if (
+                                    width >
+                                    height
+                                ) {
+
+                                    height =
+                                        Math.round(
+                                            height *
+                                            max /
+                                            width
+                                        );
+
+                                    width =
+                                        max;
+
+                                }
+
+                                else {
+
+                                    width =
+                                        Math.round(
+                                            width *
+                                            max /
+                                            height
+                                        );
+
+                                    height =
+                                        max;
+
+                                }
+
+                            }
+
+
+                            const canvas =
+                                document
+                                .createElement(
+                                    "canvas"
+                                );
+
+
+                            canvas.width =
+                                width;
+
+                            canvas.height =
+                                height;
+
+
+                            const ctx =
+                                canvas
+                                .getContext(
+                                    "2d"
+                                );
+
+
+                            ctx.drawImage(
+                                img,
+                                0,
+                                0,
+                                width,
+                                height
+                            );
+
+
+                            resolve(
+                                canvas.toDataURL(
+                                    "image/jpeg",
+                                    0.78
+                                )
+                            );
+
+                        };
+
+
+                    img.onerror =
+                        reject;
+
+
+                    img.src =
+                        event.target.result;
+
+                };
+
+
+            reader.onerror =
+                reject;
+
+
+            reader.readAsDataURL(
+                file
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   PHOTO
 ===================================================== */
 
 $("photo").onchange =
-    async function(event){
+    async function (event) {
 
         const file =
             event.target.files[0];
 
-        if(!file){
+
+        if (!file) {
             return;
         }
 
-        if(!file.type.startsWith("image/")){
-            alert("اختر ملف صورة.");
+
+        if (
+            !file.type
+                .startsWith("image/")
+        ) {
+
+            alert(
+                "اختر ملف صورة."
+            );
+
             event.target.value = "";
+
             return;
+
         }
 
-        if(file.size > 5 * 1024 * 1024){
+
+        if (
+            file.size >
+            5 * 1024 * 1024
+        ) {
 
             alert(
                 "الصورة يجب أن تكون أقل من 5MB."
@@ -1581,125 +2150,32 @@ $("photo").onchange =
             event.target.value = "";
 
             return;
+
         }
 
-        try{
+
+        try {
 
             pendingPhoto =
-                await compressImage(file);
+                await compressImage(
+                    file
+                );
 
-            updateProfile();
 
-        }catch(error){
+            updateProfileUI();
 
-            console.error(error);
+        }
 
-            alert(
-                "تعذر تجهيز الصورة."
+        catch (error) {
+
+            showError(
+                "تعذر تجهيز الصورة.",
+                error
             );
+
         }
+
     };
-
-
-/* =====================================================
-   COMPRESS PROFILE PHOTO
-   Keeps the database image small.
-===================================================== */
-
-function compressImage(file){
-
-    return new Promise(
-        (resolve,reject) => {
-
-            const reader =
-                new FileReader();
-
-            reader.onload = event => {
-
-                const img =
-                    new Image();
-
-                img.onload = () => {
-
-                    const maxSize = 400;
-
-                    let width =
-                        img.width;
-
-                    let height =
-                        img.height;
-
-                    if(width > height){
-
-                        if(width > maxSize){
-
-                            height =
-                                Math.round(
-                                    height *
-                                    maxSize /
-                                    width
-                                );
-
-                            width =
-                                maxSize;
-                        }
-
-                    }else{
-
-                        if(height > maxSize){
-
-                            width =
-                                Math.round(
-                                    width *
-                                    maxSize /
-                                    height
-                                );
-
-                            height =
-                                maxSize;
-                        }
-                    }
-
-                    const canvas =
-                        document.createElement("canvas");
-
-                    canvas.width =
-                        width;
-
-                    canvas.height =
-                        height;
-
-                    const ctx =
-                        canvas.getContext("2d");
-
-                    ctx.drawImage(
-                        img,
-                        0,
-                        0,
-                        width,
-                        height
-                    );
-
-                    resolve(
-                        canvas.toDataURL(
-                            "image/jpeg",
-                            0.78
-                        )
-                    );
-                };
-
-                img.onerror = reject;
-
-                img.src =
-                    event.target.result;
-            };
-
-            reader.onerror = reject;
-
-            reader.readAsDataURL(file);
-        }
-    );
-}
 
 
 /* =====================================================
@@ -1707,44 +2183,76 @@ function compressImage(file){
 ===================================================== */
 
 $("save").onclick =
-    async function(){
+    async function () {
 
-        const newName =
+        const name =
             $("name")
-            .value
-            .trim();
+                .value
+                .trim();
 
-        if(!newName){
 
-            alert("اكتب اسمك.");
+        if (!name) {
+
+            alert(
+                "اكتب اسمك."
+            );
 
             return;
+
         }
+
 
         const avatarUrl =
             pendingPhoto !== null
-            ? pendingPhoto
-            : (profile?.avatar_url || null);
 
-        const { data, error } =
-            await supabase
+            ?
+
+            pendingPhoto
+
+            :
+
+            (
+                profile?.avatar_url ||
+                null
+            );
+
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
                 .from("profiles")
                 .upsert(
+
                     {
-                        id: currentUser.id,
-                        name: newName,
-                        avatar_url: avatarUrl
+
+                        id:
+                            currentUser.id,
+
+                        name:
+                            name,
+
+                        avatar_url:
+                            avatarUrl
+
                     },
+
                     {
-                        onConflict: "id"
+
+                        onConflict:
+                            "id"
+
                     }
+
                 )
-                .select("id,name,avatar_url")
+                .select(
+                    "id,name,avatar_url"
+                )
                 .single();
 
-        if(error){
 
-            console.error(error);
+        if (error) {
 
             showError(
                 "تعذر حفظ الملف الشخصي.",
@@ -1752,31 +2260,44 @@ $("save").onclick =
             );
 
             return;
+
         }
 
-        profile = data;
 
-        pendingPhoto = null;
+        profile =
+            data;
 
-        $("photo").value = "";
 
-        updateProfile();
+        pendingPhoto =
+            null;
+
+
+        $("photo").value =
+            "";
+
+
+        updateProfileUI();
+
 
         closeModal();
 
+
         await loadCommunity();
+
     };
 
 
 /* =====================================================
-   POST CHARACTER COUNTER
+   CHARACTER COUNTER
 ===================================================== */
 
 $("postText").oninput =
-    function(){
+    function () {
 
-        $("count").textContent =
+        $("count")
+            .textContent =
             `${this.value.length} / 1000`;
+
     };
 
 
@@ -1792,47 +2313,61 @@ $("publish").onclick =
    INITIALIZE
 ===================================================== */
 
-async function init(){
+async function init() {
 
     $("feed").innerHTML = `
+
         <div class="card empty">
+
             جاري تحميل المجتمع...
+
         </div>
+
     `;
+
 
     const authenticated =
         await initAuth();
 
-    if(!authenticated){
+
+    if (!authenticated) {
+
         return;
+
     }
+
 
     await loadProfile();
 
-    updateProfile();
 
     await loadCommunity();
 
-    if(!profile?.name){
+
+    if (!profile?.name) {
 
         setTimeout(
             openModal,
-            250
+            300
         );
+
     }
 
+
     /*
-       Simple prototype refresh:
-       every 15 seconds the feed checks
-       for new posts/comments from other users.
+       Check for new posts every 15 seconds.
     */
+
     setInterval(
-        async () => {
-            await loadCommunity();
-        },
+        loadCommunity,
         15000
     );
+
 }
+
+
+/* =====================================================
+   START
+===================================================== */
 
 init();
 
