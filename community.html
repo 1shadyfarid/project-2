@@ -171,21 +171,17 @@ body{
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 16px;
-    height: 16px;
-    margin-right: 4px;
-    border-radius: 50%;
+    width: 17px;
+    height: 17px;
+    margin-right: 5px;
     background: #1877f2;
-    color: white;
+    color: #fff;
+    border-radius: 50%;
     font-size: 11px;
     font-weight: 900;
     line-height: 1;
     vertical-align: middle;
 }
-
-
-
-
 
 
 
@@ -829,10 +825,13 @@ body{
     </div>
 
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
+
+
+
+
+
 
 /* =====================================================
    SUPABASE CONNECTION
@@ -857,19 +856,27 @@ const supabaseClient =
 
 let currentUser = null;
 let profile = null;
+
 let posts = [];
 let comments = [];
 let likes = [];
+
 let pendingPhoto = null;
 
 let isAdmin = false;
+
+let isBanned = false;
+let banReason = "";
 
 
 /* =====================================================
    ADMIN UUID
 ===================================================== */
+
 const ADMIN_USER_ID =
     "b23a59ff-9fb6-49ee-a956-9291b0c6dd35";
+
+
 /* =====================================================
    SHORTCUT
 ===================================================== */
@@ -1019,11 +1026,6 @@ async function initAuth() {
             .getSession();
 
 
-    /*
-       If a real/admin session already exists,
-       keep it.
-    */
-
     if (session?.user) {
 
         currentUser =
@@ -1033,10 +1035,6 @@ async function initAuth() {
 
     }
 
-
-    /*
-       Otherwise create anonymous user.
-    */
 
     const {
         data,
@@ -1081,25 +1079,16 @@ async function checkAdmin() {
     }
 
 
-    /*
-       First make sure the logged-in user's ID
-       is the expected admin account.
-    */
-
     if (currentUser.id !== ADMIN_USER_ID) {
 
         isAdmin = false;
+
         updateAdminUI();
 
         return false;
 
     }
 
-
-    /*
-       Then verify against the admins table.
-       This is the database-backed check.
-    */
 
     const {
         data,
@@ -1176,10 +1165,6 @@ async function adminLogin() {
     }
 
 
-    /*
-       Sign out anonymous session first.
-    */
-
     await supabaseClient
         .auth
         .signOut();
@@ -1198,11 +1183,6 @@ async function adminLogin() {
 
 
     if (error) {
-
-        /*
-           If login fails, create a new anonymous session
-           so the community still works normally.
-        */
 
         await supabaseClient
             .auth
@@ -1238,11 +1218,6 @@ async function adminLogin() {
         data.user;
 
 
-    /*
-       Check whether this account is actually
-       in the admins table.
-    */
-
     const admin =
         await checkAdmin();
 
@@ -1277,10 +1252,6 @@ async function adminLogin() {
 
     }
 
-
-    /*
-       Reload everything using the admin session.
-    */
 
     await loadProfile();
 
@@ -1325,10 +1296,6 @@ async function adminLogout() {
     currentUser = null;
     profile = null;
 
-
-    /*
-       Start a new anonymous session.
-    */
 
     const {
         data,
@@ -1377,18 +1344,15 @@ function updateAdminUI() {
         $("adminLoginButton");
 
 
-    /*
-       If there is no admin button in the HTML,
-       create one automatically.
-    */
-
     if (!button) {
 
         button =
             document.createElement("button");
 
+
         button.id =
             "adminLoginButton";
+
 
         button.type =
             "button";
@@ -1397,29 +1361,38 @@ function updateAdminUI() {
         button.style.position =
             "fixed";
 
+
         button.style.bottom =
             "20px";
+
 
         button.style.left =
             "20px";
 
+
         button.style.zIndex =
             "99999";
+
 
         button.style.padding =
             "10px 16px";
 
+
         button.style.border =
             "none";
+
 
         button.style.borderRadius =
             "10px";
 
+
         button.style.cursor =
             "pointer";
 
+
         button.style.fontFamily =
             "Cairo, sans-serif";
+
 
         button.style.fontWeight =
             "700";
@@ -1437,11 +1410,14 @@ function updateAdminUI() {
         button.textContent =
             "👑 تسجيل خروج المدير";
 
+
         button.style.background =
             "#222";
 
+
         button.style.color =
             "#fff";
+
 
         button.onclick =
             adminLogout;
@@ -1453,11 +1429,14 @@ function updateAdminUI() {
         button.textContent =
             "🔐 دخول المدير";
 
+
         button.style.background =
             "#c62828";
 
+
         button.style.color =
             "#fff";
+
 
         button.onclick =
             adminLogin;
@@ -1466,12 +1445,10 @@ function updateAdminUI() {
 
 }
 
-/* =====================================================
-   CHECK IF USER IS BANNED
-===================================================== */
 
-let isBanned = false;
-let banReason = "";
+/* =====================================================
+   BAN STATUS
+===================================================== */
 
 async function checkBanStatus() {
 
@@ -1479,14 +1456,20 @@ async function checkBanStatus() {
         return false;
     }
 
+
     const {
         data,
         error
-    } = await supabaseClient
-        .from("banned_users")
-        .select("user_id,reason")
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
+    } =
+        await supabaseClient
+            .from("banned_users")
+            .select("user_id,reason")
+            .eq(
+                "user_id",
+                currentUser.id
+            )
+            .maybeSingle();
+
 
     if (error) {
 
@@ -1496,23 +1479,33 @@ async function checkBanStatus() {
         );
 
         return false;
+
     }
+
 
     if (data) {
 
         isBanned = true;
-        banReason = data.reason || "";
+
+        banReason =
+            data.reason || "";
 
         return true;
+
     }
 
+
     isBanned = false;
+
     banReason = "";
 
     return false;
+
 }
+
+
 /* =====================================================
-   LOAD PROFILE + CHECK ADMIN
+   LOAD PROFILE
 ===================================================== */
 
 async function loadProfile() {
@@ -1522,10 +1515,6 @@ async function loadProfile() {
     }
 
 
-    /* =========================
-       LOAD PROFILE
-    ========================= */
-
     const {
         data,
         error
@@ -1533,7 +1522,7 @@ async function loadProfile() {
         await supabaseClient
             .from("profiles")
             .select(
-                "id,name,avatar_url"
+                "id,name,avatar_url,is_verified"
             )
             .eq(
                 "id",
@@ -1557,10 +1546,6 @@ async function loadProfile() {
     profile =
         data || null;
 
-
-    /* =========================
-       CHECK ADMIN
-    ========================= */
 
     await checkAdmin();
 
@@ -1663,7 +1648,7 @@ function updateProfileUI() {
 
 
 /* =====================================================
-   LOAD POSTS / COMMENTS / LIKES
+   LOAD POSTS / COMMENTS / LIKES / PROFILES
 ===================================================== */
 
 async function loadCommunity() {
@@ -1673,54 +1658,47 @@ async function loadCommunity() {
         commentsResult,
         likesResult,
         profilesResult
-    ] =
-        await Promise.all([
+    ] = await Promise.all([
 
-            supabaseClient
-                .from("posts")
-                .select(
-                    "id,user_id,content,created_at,is_pinned"
-                )
-                .order("is_pinned", {
-    ascending: false
-})
-.order("created_at", {
-    ascending: false
-}),
+        supabaseClient
+            .from("posts")
+            .select(
+                "id,user_id,content,created_at,is_pinned"
+            )
+            .order("is_pinned", {
+                ascending: false
+            })
+            .order("created_at", {
+                ascending: false
+            }),
 
-            supabaseClient
-                .from("comments")
-                .select(
-                    "id,post_id,user_id,content,created_at"
-                )
-                .order(
-                    "created_at",
-                    {
-                        ascending: true
-                    }
-                ),
+        supabaseClient
+            .from("comments")
+            .select(
+                "id,post_id,user_id,content,created_at"
+            )
+            .order("created_at", {
+                ascending: true
+            }),
 
-            supabaseClient
-                .from("likes")
-                .select(
-                    "id,post_id,user_id,created_at"
-                ),
+        supabaseClient
+            .from("likes")
+            .select(
+                "id,post_id,user_id,created_at"
+            ),
 
-            supabaseClient
-    .from("profiles")
-    .select(
-        "id,name,avatar_url,is_verified"
-    )
-
-        ]);
-
+        supabaseClient
+            .from("profiles")
+            .select(
+                "id,name,avatar_url,is_verified"
+            )
+    ]);
 
     const error =
         postsResult.error ||
         commentsResult.error ||
         likesResult.error ||
         profilesResult.error;
-
 
     if (error) {
 
@@ -1730,7 +1708,2041 @@ async function loadCommunity() {
         );
 
         return;
+    }
 
+    /* =========================
+       PROFILE MAP
+    ========================= */
+
+    const profileMap =
+        new Map(
+            (profilesResult.data || []).map(
+                p => [
+                    p.id,
+                    p
+                ]
+            )
+        );
+
+    /* =========================
+       POSTS
+    ========================= */
+
+    posts =
+        (postsResult.data || []).map(post => {
+
+            const p =
+                profileMap.get(
+                    post.user_id
+                );
+
+            return {
+
+                ...post,
+
+                name:
+                    p?.name ||
+                    "عضو",
+
+                photo:
+                    p?.avatar_url ||
+                    null,
+
+                is_verified:
+                    p?.is_verified === true
+            };
+        });
+
+    /* =========================
+       COMMENTS
+    ========================= */
+
+    comments =
+        (commentsResult.data || []).map(comment => {
+
+            const p =
+                profileMap.get(
+                    comment.user_id
+                );
+
+            return {
+
+                ...comment,
+
+                name:
+                    p?.name ||
+                    "عضو",
+
+                photo:
+                    p?.avatar_url ||
+                    null,
+
+                is_verified:
+                    p?.is_verified === true
+            };
+        });
+
+    /* =========================
+       LIKES
+    ========================= */
+
+    likes =
+        likesResult.data || [];
+
+    render();
+}
+
+
+/* =====================================================
+   VERIFIED BADGE
+===================================================== */
+
+function verifiedBadge(isVerified) {
+
+    if (!isVerified) {
+        return "";
+    }
+
+    return `
+        <span
+            class="verified-badge"
+            title="حساب موثق"
+            aria-label="حساب موثق"
+        >
+            ✓
+        </span>
+    `;
+}
+
+
+/* =====================================================
+   RENDER
+===================================================== */
+
+function render() {
+
+    const feed = $("feed");
+
+    if (!feed) {
+        console.warn("feed element not found.");
+        return;
+    }
+
+    if (!posts.length) {
+
+        feed.innerHTML = `
+            <div class="card empty">
+                لا توجد منشورات بعد.
+                <br>
+                كن أول من يشارك شيئاً 👋
+            </div>
+        `;
+
+        return;
+    }
+
+    feed.innerHTML =
+        posts.map(post => {
+
+            const postComments =
+                comments.filter(
+                    comment =>
+                        comment.post_id ===
+                        post.id
+                );
+
+            const postLikes =
+                likes.filter(
+                    like =>
+                        like.post_id ===
+                        post.id
+                );
+
+            const liked =
+                postLikes.some(
+                    like =>
+                        like.user_id ===
+                        currentUser?.id
+                );
+
+            /* =========================
+               DELETE PERMISSION
+            ========================= */
+
+            const canDelete =
+                isAdmin ||
+                post.user_id ===
+                currentUser?.id;
+
+            /* =========================
+               PIN BUTTON
+            ========================= */
+
+            const pinButton =
+                isAdmin
+                    ? `
+                        <button
+                            type="button"
+                            class="action"
+                            onclick="
+                                togglePin(
+                                    '${post.id}',
+                                    ${!!post.is_pinned}
+                                )
+                            "
+                        >
+                            ${
+                                post.is_pinned
+                                    ? "📌 إلغاء التثبيت"
+                                    : "📌 تثبيت"
+                            }
+                        </button>
+                    `
+                    : "";
+
+            /* =========================
+               BAN BUTTON
+            ========================= */
+
+            const banButton =
+                isAdmin &&
+                post.user_id !==
+                currentUser?.id
+
+                    ? `
+                        <button
+                            type="button"
+                            class="action"
+                            onclick="
+                                banUser(
+                                    '${post.user_id}',
+                                    '${escapeHTML(post.name)}'
+                                )
+                            "
+                        >
+                            🚫 حظر
+                        </button>
+                    `
+                    : "";
+
+            /* =========================
+               VERIFY BUTTON
+            ========================= */
+
+            const verifyButton =
+                isAdmin
+                    ? `
+                        <button
+                            type="button"
+                            class="action verify-action"
+                            onclick="
+                                toggleVerified(
+                                    '${post.user_id}',
+                                    ${!!post.is_verified}
+                                )
+                            "
+                        >
+                            ${
+                                post.is_verified
+                                    ? "❌ إلغاء التوثيق"
+                                    : "🔵 توثيق"
+                            }
+                        </button>
+                    `
+                    : "";
+
+            return `
+                <article class="card post">
+
+                    ${
+                        post.is_pinned
+                            ? `
+                                <div
+                                    style="
+                                        color:#d71920;
+                                        font-weight:700;
+                                        font-size:13px;
+                                        margin-bottom:10px;
+                                    "
+                                >
+                                    📌 منشور مثبت
+                                </div>
+                            `
+                            : ""
+                    }
+
+                    <!-- POST HEADER -->
+
+                    <div class="posthead">
+
+                        ${avatar(
+                            post.photo,
+                            post.name
+                        )}
+
+                        <div>
+
+                            <b class="post-name">
+
+                                ${escapeHTML(
+                                    post.name
+                                )}
+
+                                ${verifiedBadge(
+                                    post.is_verified
+                                )}
+
+                            </b>
+
+                            <div class="time">
+
+                                ${ago(
+                                    post.created_at
+                                )}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- POST CONTENT -->
+
+                    <div class="text">
+
+                        ${escapeHTML(
+                            post.content
+                        )}
+
+                    </div>
+
+                    <!-- ACTIONS -->
+
+                    <div class="actions">
+
+                        <!-- LIKE -->
+
+                        <button
+                            type="button"
+                            class="
+                                action
+                                ${liked ? "liked" : ""}
+                            "
+                            onclick="
+                                likePost(
+                                    '${post.id}'
+                                )
+                            "
+                        >
+
+                            ${
+                                liked
+                                    ? "❤️"
+                                    : "🤍"
+                            }
+
+                            ${postLikes.length}
+
+                            إعجاب
+
+                        </button>
+
+                        <!-- COMMENTS -->
+
+                        <button
+                            type="button"
+                            class="action"
+                            onclick="
+                                document
+                                    .getElementById(
+                                        'c-${post.id}'
+                                    )
+                                    ?.focus()
+                            "
+                        >
+
+                            💬
+
+                            ${postComments.length}
+
+                            تعليق
+
+                        </button>
+
+                        <!-- DELETE -->
+
+                        ${
+                            canDelete
+                                ? `
+                                    <button
+                                        type="button"
+                                        class="action"
+                                        onclick="
+                                            deletePost(
+                                                '${post.id}'
+                                            )
+                                        "
+                                    >
+                                        🗑️ حذف
+                                    </button>
+                                `
+                                : ""
+                        }
+
+                        <!-- PIN -->
+
+                        ${pinButton}
+
+                        <!-- BAN -->
+
+                        ${banButton}
+
+                        <!-- VERIFY -->
+
+                        ${verifyButton}
+
+                    </div>
+
+                    <!-- COMMENTS -->
+
+                    <div class="comments">
+
+                        ${
+                            postComments
+                                .map(comment => {
+
+                                    const canDeleteComment =
+                                        isAdmin ||
+                                        comment.user_id ===
+                                        currentUser?.id;
+
+                                    return `
+                                        <div
+                                            class="comment"
+                                        >
+
+                                            <div
+                                                class="commenthead"
+                                            >
+
+                                                ${avatar(
+                                                    comment.photo,
+                                                    comment.name,
+                                                    "cavatar"
+                                                )}
+
+                                                <b
+                                                    style="
+                                                        font-size:12px;
+                                                    "
+                                                >
+
+                                                    ${escapeHTML(
+                                                        comment.name
+                                                    )}
+
+                                                    ${verifiedBadge(
+                                                        comment.is_verified
+                                                    )}
+
+                                                </b>
+
+                                                <span
+                                                    class="time"
+                                                >
+
+                                                    ${ago(
+                                                        comment.created_at
+                                                    )}
+
+                                                </span>
+
+                                            </div>
+
+                                            <div
+                                                class="ctext"
+                                            >
+
+                                                ${escapeHTML(
+                                                    comment.content
+                                                )}
+
+                                            </div>
+
+                                            ${
+                                                canDeleteComment
+                                                    ? `
+                                                        <button
+                                                            type="button"
+                                                            class="action"
+                                                            onclick="
+                                                                deleteComment(
+                                                                    '${comment.id}'
+                                                                )
+                                                            "
+                                                        >
+                                                            🗑️ حذف
+                                                        </button>
+                                                    `
+                                                    : ""
+                                            }
+
+                                        </div>
+                                    `;
+                                })
+                                .join("")
+                        }
+
+                        <!-- COMMENT BOX -->
+
+                        <div
+                            class="commentbox"
+                        >
+
+                            <input
+                                id="c-${post.id}"
+                                class="input"
+                                maxlength="500"
+                                placeholder="اكتب تعليقاً..."
+                            >
+
+                            <button
+                                type="button"
+                                class="btn red"
+                                onclick="
+                                    comment(
+                                        '${post.id}'
+                                    )
+                                "
+                            >
+                                تعليق
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </article>
+            `;
+
+        }).join("");
+}
+
+
+/* =====================================================
+   CREATE POST
+===================================================== */
+
+async function publish() {
+
+    if (!currentUser) {
+
+        alert(
+            "لم يتم إنشاء جلسة المستخدم."
+        );
+
+        return;
+    }
+
+    if (isBanned) {
+
+        alert(
+            banReason
+                ? "تم حظر حسابك.\n\nالسبب: " + banReason
+                : "تم حظر حسابك من المشاركة."
+        );
+
+        return;
+    }
+
+    if (!profile?.name) {
+
+        openModal();
+
+        alert(
+            "أنشئ ملفك الشخصي أولاً."
+        );
+
+        return;
+    }
+
+    const postText =
+        $("postText");
+
+    if (!postText) {
+        return;
+    }
+
+    const text =
+        postText.value.trim();
+
+    if (!text) {
+
+        alert(
+            "اكتب محتوى المنشور."
+        );
+
+        return;
+    }
+
+    if (text.length > 1000) {
+
+        alert(
+            "المنشور يجب ألا يتجاوز 1000 حرف."
+        );
+
+        return;
+    }
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("posts")
+            .insert({
+
+                user_id:
+                    currentUser.id,
+
+                content:
+                    text
+
+            });
+
+    if (error) {
+
+        showError(
+            "تعذر نشر المنشور.",
+            error
+        );
+
+        return;
+    }
+
+    postText.value = "";
+
+    if ($("count")) {
+
+        $("count").textContent =
+            "0 / 1000";
+    }
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   LIKE
+===================================================== */
+
+async function likePost(postId) {
+
+    if (!currentUser) {
+        return;
+    }
+
+    if (isBanned) {
+
+        alert(
+            "تم حظر حسابك."
+        );
+
+        return;
+    }
+
+    const existing =
+        likes.find(
+            like =>
+                like.post_id ===
+                    postId &&
+                like.user_id ===
+                    currentUser.id
+        );
+
+    if (existing) {
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("likes")
+                .delete()
+                .eq(
+                    "id",
+                    existing.id
+                );
+
+        if (error) {
+
+            showError(
+                "تعذر إزالة الإعجاب.",
+                error
+            );
+
+            return;
+        }
+
+    } else {
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("likes")
+                .insert({
+
+                    post_id:
+                        postId,
+
+                    user_id:
+                        currentUser.id
+
+                });
+
+        if (error) {
+
+            showError(
+                "تعذر إضافة الإعجاب.",
+                error
+            );
+
+            return;
+        }
+    }
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   PIN / UNPIN POST — ADMIN ONLY
+===================================================== */
+
+async function togglePin(
+    postId,
+    currentlyPinned
+) {
+
+    if (!isAdmin) {
+
+        alert(
+            "ليس لديك صلاحية."
+        );
+
+        return;
+    }
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("posts")
+            .update({
+
+                is_pinned:
+                    !currentlyPinned
+
+            })
+            .eq(
+                "id",
+                postId
+            );
+
+    if (error) {
+
+        showError(
+            "تعذر تغيير حالة التثبيت.",
+            error
+        );
+
+        return;
+    }
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   BAN USER — ADMIN ONLY
+===================================================== */
+
+async function banUser(
+    userId,
+    userName
+) {
+
+    if (!isAdmin) {
+
+        alert(
+            "ليس لديك صلاحية."
+        );
+
+        return;
+    }
+
+    if (!userId) {
+        return;
+    }
+
+    if (
+        userId ===
+        currentUser?.id
+    ) {
+
+        alert(
+            "لا يمكنك حظر نفسك."
+        );
+
+        return;
+    }
+
+    const reason =
+        prompt(
+            "سبب الحظر (اختياري):"
+        );
+
+    if (reason === null) {
+        return;
+    }
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("banned_users")
+            .insert({
+
+                user_id:
+                    userId,
+
+                reason:
+                    reason.trim() ||
+                    null
+
+            });
+
+    if (error) {
+
+        if (
+            error.code ===
+            "23505"
+        ) {
+
+            alert(
+                "هذا المستخدم محظور بالفعل."
+            );
+
+        } else {
+
+            showError(
+                "تعذر حظر المستخدم.",
+                error
+            );
+        }
+
+        return;
+    }
+
+    alert(
+        "🚫 تم حظر " +
+        (
+            userName ||
+            "هذا المستخدم"
+        )
+    );
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   VERIFY / UNVERIFY USER — ADMIN ONLY
+===================================================== */
+
+async function toggleVerified(
+    userId,
+    currentlyVerified
+) {
+
+    if (!isAdmin) {
+
+        alert(
+            "ليس لديك صلاحية."
+        );
+
+        return;
+    }
+
+    if (!userId) {
+
+        alert(
+            "تعذر تحديد المستخدم."
+        );
+
+        return;
+    }
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("profiles")
+            .update({
+
+                is_verified:
+                    !currentlyVerified
+
+            })
+            .eq(
+                "id",
+                userId
+            )
+            .select(
+                "id,name,is_verified"
+            )
+            .maybeSingle();
+
+    if (error) {
+
+        showError(
+            "تعذر تحديث حالة التوثيق.",
+            error
+        );
+
+        return;
+    }
+
+    if (!data) {
+
+        alert(
+            "لم يتم العثور على ملف هذا المستخدم."
+        );
+
+        return;
+    }
+
+    alert(
+        data.is_verified
+            ? "🔵 تم توثيق الحساب بنجاح."
+            : "❌ تم إلغاء توثيق الحساب."
+    );
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   DELETE POST
+===================================================== */
+
+async function deletePost(postId) {
+
+    if (!currentUser) {
+        return;
+    }
+
+    if (!postId) {
+        return;
+    }
+
+    if (
+        !confirm(
+            "هل تريد حذف هذا المنشور؟"
+        )
+    ) {
+        return;
+    }
+
+    let query =
+        supabaseClient
+            .from("posts")
+            .delete()
+            .eq(
+                "id",
+                postId
+            );
+
+    /*
+        Admin:
+        Can delete any post.
+
+        Normal user:
+        Can delete only their own post.
+    */
+
+    if (!isAdmin) {
+
+        query =
+            query.eq(
+                "user_id",
+                currentUser.id
+            );
+    }
+
+    const {
+        data,
+        error
+    } =
+        await query
+            .select();
+
+    if (error) {
+
+        showError(
+            "تعذر حذف المنشور.",
+            error
+        );
+
+        return;
+    }
+
+    if (
+        !data ||
+        data.length === 0
+    ) {
+
+        alert(
+            "لم يتم حذف المنشور. قد لا تملك صلاحية حذفه."
+        );
+
+        return;
+    }
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   ADD COMMENT
+===================================================== */
+
+async function comment(postId) {
+
+    if (!currentUser) {
+        return;
+    }
+
+    if (isBanned) {
+
+        alert(
+            banReason
+                ? "تم حظر حسابك.\n\nالسبب: " + banReason
+                : "تم حظر حسابك من التعليق."
+        );
+
+        return;
+    }
+
+    if (!profile?.name) {
+
+        openModal();
+
+        alert(
+            "أنشئ ملفك الشخصي أولاً."
+        );
+
+        return;
+    }
+
+    const input =
+        $("c-" + postId);
+
+    if (!input) {
+        return;
+    }
+
+    const text =
+        input.value.trim();
+
+    if (!text) {
+
+        alert(
+            "اكتب تعليقاً أولاً."
+        );
+
+        return;
+    }
+
+    if (text.length > 500) {
+
+        alert(
+            "التعليق يجب ألا يتجاوز 500 حرف."
+        );
+
+        return;
+    }
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("comments")
+            .insert({
+
+                post_id:
+                    postId,
+
+                user_id:
+                    currentUser.id,
+
+                content:
+                    text
+
+            });
+
+    if (error) {
+
+        showError(
+            "تعذر إضافة التعليق.",
+            error
+        );
+
+        return;
+    }
+
+    input.value = "";
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   DELETE COMMENT
+===================================================== */
+
+async function deleteComment(
+    commentId
+) {
+
+    if (!currentUser) {
+        return;
+    }
+
+    if (!commentId) {
+        return;
+    }
+
+    if (
+        !confirm(
+            "هل تريد حذف هذا التعليق؟"
+        )
+    ) {
+        return;
+    }
+
+    let query =
+        supabaseClient
+            .from("comments")
+            .delete()
+            .eq(
+                "id",
+                commentId
+            );
+
+    /*
+        Admin:
+        Can delete any comment.
+
+        Normal user:
+        Can delete only their own comment.
+    */
+
+    if (!isAdmin) {
+
+        query =
+            query.eq(
+                "user_id",
+                currentUser.id
+            );
+    }
+
+    const {
+        data,
+        error
+    } =
+        await query
+            .select();
+
+    if (error) {
+
+        showError(
+            "تعذر حذف التعليق.",
+            error
+        );
+
+        return;
+    }
+
+    if (
+        !data ||
+        data.length === 0
+    ) {
+
+        alert(
+            "لم يتم حذف التعليق. قد لا تملك صلاحية حذفه."
+        );
+
+        return;
+    }
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   PROFILE MODAL
+===================================================== */
+
+function openModal() {
+
+    const modal =
+        $("profileModal");
+
+    if (!modal) {
+
+        console.warn(
+            "profileModal not found."
+        );
+
+        return;
+    }
+
+    modal.style.display =
+        "flex";
+
+    updateProfileUI();
+}
+
+
+/* =====================================================
+   CLOSE PROFILE MODAL
+===================================================== */
+
+function closeModal() {
+
+    const modal =
+        $("profileModal");
+
+    if (!modal) {
+        return;
+    }
+
+    modal.style.display =
+        "none";
+}
+
+
+/* =====================================================
+   PROFILE PHOTO INPUT
+===================================================== */
+
+function handlePhotoInput(event) {
+
+    const file =
+        event?.target?.files?.[0];
+
+    if (!file) {
+        return;
+    }
+
+    /* =========================
+       FILE TYPE
+    ========================= */
+
+    if (!file.type.startsWith("image/")) {
+
+        alert(
+            "يرجى اختيار صورة فقط."
+        );
+
+        event.target.value =
+            "";
+
+        return;
+    }
+
+    /* =========================
+       FILE SIZE
+    ========================= */
+
+    if (
+        file.size >
+        5 * 1024 * 1024
+    ) {
+
+        alert(
+            "حجم الصورة يجب ألا يتجاوز 5MB."
+        );
+
+        event.target.value =
+            "";
+
+        return;
+    }
+
+    /* =========================
+       READ IMAGE
+    ========================= */
+
+    const reader =
+        new FileReader();
+
+    reader.onload =
+        function () {
+
+            pendingPhoto =
+                reader.result;
+
+            updateProfileUI();
+        };
+
+    reader.onerror =
+        function () {
+
+            alert(
+                "تعذر قراءة الصورة."
+            );
+        };
+
+    reader.readAsDataURL(
+        file
+    );
+}
+
+
+/* =====================================================
+   REMOVE PENDING PHOTO
+===================================================== */
+
+function removePendingPhoto() {
+
+    pendingPhoto =
+        null;
+
+    const input =
+        $("photoInput");
+
+    if (input) {
+        input.value = "";
+    }
+
+    updateProfileUI();
+}
+
+
+/* =====================================================
+   SAVE PROFILE
+===================================================== */
+
+async function saveProfile() {
+
+    if (!currentUser) {
+
+        alert(
+            "لم يتم إنشاء جلسة مستخدم."
+        );
+
+        return;
+    }
+
+    const nameInput =
+        $("name");
+
+    const name =
+        nameInput?.value?.trim() ||
+        "";
+
+    if (!name) {
+
+        alert(
+            "اكتب اسمك أولاً."
+        );
+
+        nameInput?.focus();
+
+        return;
+    }
+
+    if (name.length < 2) {
+
+        alert(
+            "الاسم يجب أن يحتوي على حرفين على الأقل."
+        );
+
+        nameInput?.focus();
+
+        return;
+    }
+
+    if (name.length > 100) {
+
+        alert(
+            "الاسم طويل جداً."
+        );
+
+        nameInput?.focus();
+
+        return;
+    }
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("profiles")
+            .upsert({
+
+                id:
+                    currentUser.id,
+
+                name:
+                    name,
+
+                avatar_url:
+                    pendingPhoto ||
+                    profile?.avatar_url ||
+                    null
+
+            }, {
+                onConflict:
+                    "id"
+            })
+            .select(
+                "id,name,avatar_url,is_verified"
+            )
+            .single();
+
+    if (error) {
+
+        showError(
+            "تعذر حفظ الملف الشخصي.",
+            error
+        );
+
+        return;
+    }
+
+    profile =
+        data;
+
+    pendingPhoto =
+        null;
+
+    const photoInput =
+        $("photoInput");
+
+    if (photoInput) {
+        photoInput.value = "";
+    }
+
+    updateProfileUI();
+
+    closeModal();
+
+    await loadCommunity();
+
+    alert(
+        "تم حفظ الملف الشخصي بنجاح ✅"
+    );
+}
+
+
+/* =====================================================
+   DELETE PROFILE PHOTO
+===================================================== */
+
+async function deleteProfilePhoto() {
+
+    if (!currentUser) {
+        return;
+    }
+
+    if (
+        !confirm(
+            "هل تريد حذف صورتك الشخصية؟"
+        )
+    ) {
+        return;
+    }
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("profiles")
+            .update({
+
+                avatar_url:
+                    null
+
+            })
+            .eq(
+                "id",
+                currentUser.id
+            );
+
+    if (error) {
+
+        showError(
+            "تعذر حذف الصورة الشخصية.",
+            error
+        );
+
+        return;
+    }
+
+    pendingPhoto =
+        null;
+
+    profile =
+        profile
+            ? {
+                ...profile,
+                avatar_url:
+                    null
+            }
+            : profile;
+
+    const photoInput =
+        $("photoInput");
+
+    if (photoInput) {
+        photoInput.value = "";
+    }
+
+    updateProfileUI();
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   EDIT PROFILE
+===================================================== */
+
+function editProfile() {
+
+    if (!currentUser) {
+
+        alert(
+            "تعذر فتح الملف الشخصي."
+        );
+
+        return;
+    }
+
+    if ($("name")) {
+
+        $("name").value =
+            profile?.name ||
+            "";
+    }
+
+    pendingPhoto =
+        null;
+
+    if ($("photoInput")) {
+
+        $("photoInput").value =
+            "";
+    }
+
+    openModal();
+}
+
+
+/* =====================================================
+   PROFILE BUTTON
+===================================================== */
+
+function profileButton() {
+
+    if (!currentUser) {
+        return;
+    }
+
+    openModal();
+}
+
+
+/* =====================================================
+   CLOSE MODAL WHEN CLICKING OUTSIDE
+===================================================== */
+
+document.addEventListener(
+    "click",
+    function (event) {
+
+        const modal =
+            $("profileModal");
+
+        if (!modal) {
+            return;
+        }
+
+        if (
+            event.target ===
+            modal
+        ) {
+
+            closeModal();
+        }
+    }
+);
+
+
+/* =====================================================
+   ESC KEY
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (
+            event.key !==
+            "Escape"
+        ) {
+            return;
+        }
+
+        const modal =
+            $("profileModal");
+
+        if (
+            modal &&
+            modal.style.display !==
+            "none"
+        ) {
+
+            closeModal();
+        }
+    }
+);
+
+
+/* =====================================================
+   POST CHARACTER COUNTER
+===================================================== */
+
+function setupPostCounter() {
+
+    const textarea =
+        $("postText");
+
+    const counter =
+        $("count");
+
+    if (
+        !textarea ||
+        !counter
+    ) {
+        return;
+    }
+
+    const updateCounter =
+        function () {
+
+            const length =
+                textarea.value.length;
+
+            counter.textContent =
+                `${length} / 1000`;
+
+            if (length >= 1000) {
+
+                counter.style.color =
+                    "#c62828";
+
+            } else if (length >= 900) {
+
+                counter.style.color =
+                    "#e67e22";
+
+            } else {
+
+                counter.style.color =
+                    "";
+            }
+        };
+
+    textarea.addEventListener(
+        "input",
+        updateCounter
+    );
+
+    updateCounter();
+}
+
+
+/* =====================================================
+   ENTER TO COMMENT
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        const target =
+            event.target;
+
+        if (
+            !target?.matches(
+                ".commentbox input"
+            )
+        ) {
+            return;
+        }
+
+        if (
+            event.key !==
+            "Enter"
+        ) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const id =
+            target.id;
+
+        if (
+            !id.startsWith("c-")
+        ) {
+            return;
+        }
+
+        const postId =
+            id.substring(2);
+
+        comment(postId);
+    }
+);
+
+
+/* =====================================================
+   CTRL + ENTER TO PUBLISH
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        const target =
+            event.target;
+
+        if (
+            !target?.matches(
+                "#postText"
+            )
+        ) {
+            return;
+        }
+
+        if (
+            event.ctrlKey &&
+            event.key === "Enter"
+        ) {
+
+            event.preventDefault();
+
+            publish();
+        }
+    }
+);
+
+
+/* =====================================================
+   AUTH STATE LISTENER
+===================================================== */
+
+supabaseClient
+    .auth
+    .onAuthStateChange(
+        async function (
+            event,
+            session
+        ) {
+
+            console.log(
+                "Auth event:",
+                event
+            );
+
+            if (
+                session?.user
+            ) {
+
+                currentUser =
+                    session.user;
+
+                await loadProfile();
+
+                await checkBanStatus();
+
+                await loadCommunity();
+            }
+        }
+    );
+
+
+/* =====================================================
+   INITIALIZE COMMUNITY
+===================================================== */
+
+async function initCommunity() {
+
+    try {
+
+        /* =========================
+           AUTH
+        ========================= */
+
+        const authenticated =
+            await initAuth();
+
+        if (!authenticated) {
+            return;
+        }
+
+        /* =========================
+           BAN CHECK
+        ========================= */
+
+        await checkBanStatus();
+
+        /* =========================
+           PROFILE
+        ========================= */
+
+        await loadProfile();
+
+        /* =========================
+           COMMUNITY
+        ========================= */
+
+        await loadCommunity();
+
+        /* =========================
+           ADMIN UI
+        ========================= */
+
+        updateAdminUI();
+
+        /* =========================
+           CHARACTER COUNTER
+        ========================= */
+
+        setupPostCounter();
+
+        /* =========================
+           BANNED USER
+        ========================= */
+
+        if (isBanned) {
+
+            console.warn(
+                "Current user is banned:",
+                banReason
+            );
+
+            const publishButton =
+                $("publishButton");
+
+            if (publishButton) {
+
+                publishButton.disabled =
+                    true;
+
+                publishButton.style.opacity =
+                    "0.5";
+
+                publishButton.style.cursor =
+                    "not-allowed";
+            }
+
+            const postText =
+                $("postText");
+
+            if (postText) {
+
+                postText.disabled =
+                    true;
+
+                postText.placeholder =
+                    "تم حظر حسابك من المشاركة.";
+            }
+
+            document
+                .querySelectorAll(
+                    ".commentbox input"
+                )
+                .forEach(
+                    input => {
+
+                        input.disabled =
+                            true;
+
+                        input.placeholder =
+                            "تم حظر حسابك من التعليق.";
+                    }
+                );
+        }
+
+        console.log(
+            "Community initialized successfully."
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Community initialization error:",
+            error
+        );
+
+        alert(
+            "حدث خطأ أثناء تشغيل المجتمع."
+        );
+    }
+}
+
+
+/* =====================================================
+   DOM READY
+===================================================== */
+
+if (
+    document.readyState ===
+    "loading"
+) {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        initCommunity
+    );
+
+} else {
+
+    initCommunity();
+}
+
+
+/* =====================================================
+   GLOBAL FUNCTIONS
+   REQUIRED FOR INLINE onclick
+===================================================== */
+
+window.publish =
+    publish;
+
+window.likePost =
+    likePost;
+
+window.comment =
+    comment;
+
+window.deletePost =
+    deletePost;
+
+window.deleteComment =
+    deleteComment;
+
+window.togglePin =
+    togglePin;
+
+window.banUser =
+    banUser;
+
+window.toggleVerified =
+    toggleVerified;
+
+window.openModal =
+    openModal;
+
+window.closeModal =
+    closeModal;
+
+window.saveProfile =
+    saveProfile;
+
+window.editProfile =
+    editProfile;
+
+window.profileButton =
+    profileButton;
+
+window.adminLogin =
+    adminLogin;
+
+window.adminLogout =
+    adminLogout;
+
+window.handlePhotoInput =
+    handlePhotoInput;
+
+window.removePendingPhoto =
+    removePendingPhoto;
+
+window.deleteProfilePhoto =
+    deleteProfilePhoto;
+
+
+/* =====================================================
+   LOAD POSTS / COMMENTS / LIKES / PROFILES
+===================================================== */
+
+async function loadCommunity() {
+
+    const [
+        postsResult,
+        commentsResult,
+        likesResult,
+        profilesResult
+    ] = await Promise.all([
+
+        supabaseClient
+            .from("posts")
+            .select("id,user_id,content,created_at,is_pinned")
+            .order("is_pinned", {
+                ascending: false
+            })
+            .order("created_at", {
+                ascending: false
+            }),
+
+        supabaseClient
+            .from("comments")
+            .select("id,post_id,user_id,content,created_at")
+            .order("created_at", {
+                ascending: true
+            }),
+
+        supabaseClient
+            .from("likes")
+            .select("id,post_id,user_id,created_at"),
+
+        supabaseClient
+            .from("profiles")
+            .select("id,name,avatar_url,is_verified")
+
+    ]);
+
+    const error =
+        postsResult.error ||
+        commentsResult.error ||
+        likesResult.error ||
+        profilesResult.error;
+
+    if (error) {
+
+        showError(
+            "تعذر تحميل المجتمع.",
+            error
+        );
+
+        return;
     }
 
 
@@ -1740,13 +3752,12 @@ async function loadCommunity() {
 
     const profileMap =
         new Map(
-            (profilesResult.data || [])
-                .map(
-                    p => [
-                        p.id,
-                        p
-                    ]
-                )
+            (profilesResult.data || []).map(
+                p => [
+                    p.id,
+                    p
+                ]
+            )
         );
 
 
@@ -1755,29 +3766,31 @@ async function loadCommunity() {
     ========================= */
 
     posts =
-        (postsResult.data || [])
-            .map(post => {
+        (postsResult.data || []).map(post => {
 
-                const p =
-                    profileMap.get(
-                        post.user_id
-                    );
+            const p =
+                profileMap.get(
+                    post.user_id
+                );
 
-                return {
+            return {
 
-                    ...post,
+                ...post,
 
-                    name:
-                        p?.name ||
-                        "عضو",
+                name:
+                    p?.name ||
+                    "عضو",
 
-                    photo:
-                        p?.avatar_url ||
-                        null
+                photo:
+                    p?.avatar_url ||
+                    null,
 
-                };
+                is_verified:
+                    p?.is_verified === true
 
-            });
+            };
+
+        });
 
 
     /* =========================
@@ -1785,29 +3798,31 @@ async function loadCommunity() {
     ========================= */
 
     comments =
-        (commentsResult.data || [])
-            .map(comment => {
+        (commentsResult.data || []).map(comment => {
 
-                const p =
-                    profileMap.get(
-                        comment.user_id
-                    );
+            const p =
+                profileMap.get(
+                    comment.user_id
+                );
 
-                return {
+            return {
 
-                    ...comment,
+                ...comment,
 
-                    name:
-                        p?.name ||
-                        "عضو",
+                name:
+                    p?.name ||
+                    "عضو",
 
-                    photo:
-                        p?.avatar_url ||
-                        null
+                photo:
+                    p?.avatar_url ||
+                    null,
 
-                };
+                is_verified:
+                    p?.is_verified === true
 
-            });
+            };
+
+        });
 
 
     /* =========================
@@ -1819,7 +3834,28 @@ async function loadCommunity() {
 
 
     render();
+}
 
+
+/* =====================================================
+   VERIFIED BADGE
+===================================================== */
+
+function verifiedBadge(isVerified) {
+
+    if (!isVerified) {
+        return "";
+    }
+
+    return `
+        <span
+            class="verified-badge"
+            title="حساب موثق"
+            aria-label="حساب موثق"
+        >
+            ✓
+        </span>
+    `;
 }
 
 
@@ -1829,9 +3865,18 @@ async function loadCommunity() {
 
 function render() {
 
+    const feed =
+        $("feed");
+
+    if (!feed) {
+        console.warn("feed element not found.");
+        return;
+    }
+
+
     if (!posts.length) {
 
-        $("feed").innerHTML = `
+        feed.innerHTML = `
 
             <div class="card empty">
 
@@ -1846,11 +3891,10 @@ function render() {
         `;
 
         return;
-
     }
 
 
-    $("feed").innerHTML =
+    feed.innerHTML =
 
         posts
             .map(post => {
@@ -1889,67 +3933,99 @@ function render() {
                     currentUser?.id;
 
 
+                /* =========================
+                   PIN BUTTON
+                ========================= */
+
+                const pinButton =
+                    isAdmin
+                    ? `
+
+                        <button
+                            type="button"
+                            class="action"
+                            onclick="
+                                togglePin(
+                                    '${post.id}',
+                                    ${!!post.is_pinned}
+                                )
+                            "
+                        >
+
+                            ${
+                                post.is_pinned
+                                    ? "📌 إلغاء التثبيت"
+                                    : "📌 تثبيت"
+                            }
+
+                        </button>
+
+                    `
+                    : "";
 
 
-const pinButton = isAdmin
-    ? `
-        <button
-            class="action"
-            onclick="
-                togglePin(
-                    '${post.id}',
-                    ${!!post.is_pinned}
-                )
-            "
-        >
-            ${post.is_pinned
-                ? "📌 إلغاء التثبيت"
-                : "📌 تثبيت"}
-        </button>
-    `
-    : "";
-const banButton =
-    isAdmin &&
-    post.user_id !== currentUser?.id
-    ? `
-        <button
-            class="action"
-            onclick="
-                banUser(
-                    '${post.user_id}',
-                    '${escapeHTML(post.name)}'
-                )
-            "
-        >
-            🚫 حظر
-        </button>
-    `
-    : "";
+                /* =========================
+                   BAN BUTTON
+                ========================= */
+
+                const banButton =
+                    isAdmin &&
+                    post.user_id !==
+                    currentUser?.id
+
+                    ? `
+
+                        <button
+                            type="button"
+                            class="action"
+                            onclick="
+                                banUser(
+                                    '${post.user_id}',
+                                    '${escapeHTML(post.name)}'
+                                )
+                            "
+                        >
+
+                            🚫 حظر
+
+                        </button>
+
+                    `
+
+                    : "";
 
 
+                /* =========================
+                   VERIFY BUTTON
+                ========================= */
 
-const verifyButton =
-    isAdmin &&
-    post.user_id !== currentUser?.id
-    ? `
-        <button
-            class="action"
-            onclick="
-                toggleVerified(
-                    '${post.user_id}',
-                    ${!!post.is_verified}
-                )
-            "
-        >
-            ${
-                post.is_verified
-                    ? "❌ إلغاء التوثيق"
-                    : "✅ توثيق"
-            }
-        </button>
-    `
-    : "";
+                const verifyButton =
+                    isAdmin
 
+                    ? `
+
+                        <button
+                            type="button"
+                            class="action verify-action"
+                            onclick="
+                                toggleVerified(
+                                    '${post.user_id}',
+                                    ${!!post.is_verified}
+                                )
+                            "
+                        >
+
+                            ${
+                                post.is_verified
+                                    ? "❌ إلغاء التوثيق"
+                                    : "🔵 توثيق"
+                            }
+
+                        </button>
+
+                    `
+
+                    : "";
 
 
                 return `
@@ -1958,16 +4034,34 @@ const verifyButton =
                         class="card post"
                     >
 
-                    ${post.is_pinned ? `
-    <div style="
-        color:#d71920;
-        font-weight:700;
-        font-size:13px;
-        margin-bottom:10px;
-    ">
-        📌 منشور مثبت
-    </div>
-` : ""}
+                        ${
+                            post.is_pinned
+
+                            ?
+
+                            `
+                                <div
+                                    style="
+                                        color:#d71920;
+                                        font-weight:700;
+                                        font-size:13px;
+                                        margin-bottom:10px;
+                                    "
+                                >
+
+                                    📌 منشور مثبت
+
+                                </div>
+                            `
+
+                            :
+
+                            ""
+                        }
+
+
+                        <!-- POST HEADER -->
+
                         <div class="posthead">
 
                             ${avatar(
@@ -1975,23 +4069,21 @@ const verifyButton =
                                 post.name
                             )}
 
-                            <div>
-<b>
-    ${escapeHTML(
-        post.name
-    )}
 
-    ${
-        post.is_verified
-            ? `<span style="
-                color:#1877f2;
-                font-weight:700;
-                font-size:13px;
-                margin-right:4px;
-            ">✓</span>`
-            : ""
-    }
-</b>
+                            <div>
+
+                                <b class="post-name">
+
+                                    ${escapeHTML(
+                                        post.name
+                                    )}
+
+                                    ${verifiedBadge(
+                                        post.is_verified
+                                    )}
+
+                                </b>
+
 
                                 <div class="time">
 
@@ -2006,6 +4098,8 @@ const verifyButton =
                         </div>
 
 
+                        <!-- POST CONTENT -->
+
                         <div class="text">
 
                             ${escapeHTML(
@@ -2015,15 +4109,23 @@ const verifyButton =
                         </div>
 
 
+                        <!-- ACTIONS -->
+
                         <div class="actions">
 
+
+                            <!-- LIKE -->
+
                             <button
-                                class="action
-                                ${
-                                    liked
-                                        ? "liked"
-                                        : ""
-                                }"
+                                type="button"
+                                class="
+                                    action
+                                    ${
+                                        liked
+                                            ? "liked"
+                                            : ""
+                                    }
+                                "
                                 onclick="
                                     likePost(
                                         '${post.id}'
@@ -2044,14 +4146,17 @@ const verifyButton =
                             </button>
 
 
+                            <!-- COMMENTS -->
+
                             <button
+                                type="button"
                                 class="action"
                                 onclick="
                                     document
-                                    .getElementById(
-                                        'c-${post.id}'
-                                    )
-                                    .focus()
+                                        .getElementById(
+                                            'c-${post.id}'
+                                        )
+                                        ?.focus()
                                 "
                             >
 
@@ -2064,6 +4169,8 @@ const verifyButton =
                             </button>
 
 
+                            <!-- DELETE -->
+
                             ${
                                 canDelete
 
@@ -2072,6 +4179,7 @@ const verifyButton =
                                 `
 
                                     <button
+                                        type="button"
                                         class="action"
                                         onclick="
                                             deletePost(
@@ -2090,16 +4198,29 @@ const verifyButton =
 
                                 ""
                             }
-${pinButton}
 
-${banButton}
 
-${verifyButton}
+                            <!-- PIN -->
+
+                            ${pinButton}
+
+
+                            <!-- BAN -->
+
+                            ${banButton}
+
+
+                            <!-- VERIFY -->
+
+                            ${verifyButton}
+
+
                         </div>
 
 
-                        <div class="comments">
+                        <!-- COMMENTS -->
 
+                        <div class="comments">
 
                             ${
                                 postComments
@@ -2130,12 +4251,16 @@ ${verifyButton}
 
                                                     <b
                                                         style="
-                                                        font-size:12px;
+                                                            font-size:12px;
                                                         "
                                                     >
 
                                                         ${escapeHTML(
                                                             comment.name
+                                                        )}
+
+                                                        ${verifiedBadge(
+                                                            comment.is_verified
                                                         )}
 
                                                     </b>
@@ -2173,6 +4298,7 @@ ${verifyButton}
                                                     `
 
                                                         <button
+                                                            type="button"
                                                             class="action"
                                                             onclick="
                                                                 deleteComment(
@@ -2201,6 +4327,8 @@ ${verifyButton}
                             }
 
 
+                            <!-- COMMENT BOX -->
+
                             <div
                                 class="commentbox"
                             >
@@ -2214,6 +4342,7 @@ ${verifyButton}
 
 
                                 <button
+                                    type="button"
                                     class="btn red"
                                     onclick="
                                         comment(
@@ -2248,6 +4377,26 @@ ${verifyButton}
 
 async function publish() {
 
+    if (isBanned) {
+
+        alert(
+            "لا يمكنك النشر لأن حسابك محظور."
+        );
+
+        return;
+    }
+
+
+    if (!currentUser) {
+
+        alert(
+            "لم يتم إنشاء جلسة المستخدم."
+        );
+
+        return;
+    }
+
+
     if (!profile?.name) {
 
         openModal();
@@ -2261,16 +4410,34 @@ async function publish() {
     }
 
 
+    const postInput =
+        $("postText");
+
+
+    if (!postInput) {
+        return;
+    }
+
+
     const text =
-        $("postText")
-            .value
-            .trim();
+        postInput.value.trim();
 
 
     if (!text) {
 
         alert(
             "اكتب محتوى المنشور."
+        );
+
+        return;
+
+    }
+
+
+    if (text.length > 1000) {
+
+        alert(
+            "المنشور يجب ألا يتجاوز 1000 حرف."
         );
 
         return;
@@ -2306,13 +4473,16 @@ async function publish() {
     }
 
 
-    $("postText")
-        .value = "";
+    postInput.value = "";
 
 
-    $("count")
-        .textContent =
-        "0 / 1000";
+    if ($("count")) {
+
+        $("count")
+            .textContent =
+            "0 / 1000";
+
+    }
 
 
     await loadCommunity();
@@ -2325,6 +4495,21 @@ async function publish() {
 ===================================================== */
 
 async function likePost(postId) {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    if (isBanned) {
+
+        alert(
+            "لا يمكنك الإعجاب لأن حسابك محظور."
+        );
+
+        return;
+    }
+
 
     const existing =
         likes.find(
@@ -2401,28 +4586,42 @@ async function likePost(postId) {
 }
 
 
-
-
-
 /* =====================================================
    PIN / UNPIN POST — ADMIN ONLY
 ===================================================== */
 
-async function togglePin(postId, currentlyPinned) {
+async function togglePin(
+    postId,
+    currentlyPinned
+) {
 
     if (!isAdmin) {
-        alert("ليس لديك صلاحية.");
+
+        alert(
+            "ليس لديك صلاحية."
+        );
+
         return;
+
     }
+
 
     const {
         error
-    } = await supabaseClient
-        .from("posts")
-        .update({
-            is_pinned: !currentlyPinned
-        })
-        .eq("id", postId);
+    } =
+        await supabaseClient
+            .from("posts")
+            .update({
+
+                is_pinned:
+                    !currentlyPinned
+
+            })
+            .eq(
+                "id",
+                postId
+            );
+
 
     if (error) {
 
@@ -2432,97 +4631,170 @@ async function togglePin(postId, currentlyPinned) {
         );
 
         return;
+
     }
 
+
     await loadCommunity();
+
 }
-
-
-
-
-
-
-
-
-
-
 
 
 /* =====================================================
    BAN USER — ADMIN ONLY
 ===================================================== */
 
-async function banUser(userId, userName) {
+async function banUser(
+    userId,
+    userName
+) {
 
     if (!isAdmin) {
-        alert("ليس لديك صلاحية.");
+
+        alert(
+            "ليس لديك صلاحية."
+        );
+
         return;
+
     }
 
-    if (userId === currentUser.id) {
-        alert("لا يمكنك حظر نفسك.");
+
+    if (
+        userId ===
+        currentUser?.id
+    ) {
+
+        alert(
+            "لا يمكنك حظر نفسك."
+        );
+
         return;
+
     }
 
-    const reason = prompt(
-        "سبب الحظر (اختياري):"
-    );
+
+    const reason =
+        prompt(
+            "سبب الحظر (اختياري):"
+        );
+
 
     if (reason === null) {
         return;
     }
 
+
     const {
         error
-    } = await supabaseClient
-        .from("banned_users")
-        .insert({
-            user_id: userId,
-            reason: reason.trim() || null
-        });
+    } =
+        await supabaseClient
+            .from("banned_users")
+            .insert({
+
+                user_id:
+                    userId,
+
+                reason:
+                    reason.trim() ||
+                    null
+
+            });
+
 
     if (error) {
 
-        if (error.code === "23505") {
-            alert("هذا المستخدم محظور بالفعل.");
-        } else {
+        if (
+            error.code ===
+            "23505"
+        ) {
+
+            alert(
+                "هذا المستخدم محظور بالفعل."
+            );
+
+        }
+
+        else {
+
             showError(
                 "تعذر حظر المستخدم.",
                 error
             );
+
         }
 
         return;
+
     }
+
 
     alert(
         "🚫 تم حظر " +
-        (userName || "هذا المستخدم")
+        (
+            userName ||
+            "هذا المستخدم"
+        )
     );
 
+
     await loadCommunity();
+
 }
-
-
 
 
 /* =====================================================
    VERIFY / UNVERIFY USER — ADMIN ONLY
 ===================================================== */
 
-async function toggleVerified(userId, currentlyVerified) {
+async function toggleVerified(
+    userId,
+    currentlyVerified
+) {
 
     if (!isAdmin) {
-        alert("ليس لديك صلاحية.");
+
+        alert(
+            "ليس لديك صلاحية."
+        );
+
         return;
+
     }
 
-    const { error } = await supabaseClient
-        .from("profiles")
-        .update({
-            is_verified: !currentlyVerified
-        })
-        .eq("id", userId);
+
+    if (!userId) {
+
+        alert(
+            "تعذر تحديد المستخدم."
+        );
+
+        return;
+
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("profiles")
+            .update({
+
+                is_verified:
+                    !currentlyVerified
+
+            })
+            .eq(
+                "id",
+                userId
+            )
+            .select(
+                "id,name,is_verified"
+            )
+            .maybeSingle();
+
 
     if (error) {
 
@@ -2532,19 +4804,40 @@ async function toggleVerified(userId, currentlyVerified) {
         );
 
         return;
+
     }
 
+
+    if (!data) {
+
+        alert(
+            "لم يتم العثور على ملف هذا المستخدم."
+        );
+
+        return;
+
+    }
+
+
+    alert(
+        data.is_verified
+            ? "🔵 تم توثيق الحساب بنجاح."
+            : "❌ تم إلغاء توثيق الحساب."
+    );
+
+
     await loadCommunity();
+
 }
-
-
 
 
 /* =====================================================
    DELETE POST
 ===================================================== */
 
-async function deletePost(postId) {
+async function deletePost(
+    postId
+) {
 
     if (!currentUser) {
         return;
@@ -2562,14 +4855,6 @@ async function deletePost(postId) {
     }
 
 
-    /*
-       Admin:
-       DELETE without user_id restriction.
-
-       Normal user:
-       DELETE only their own post.
-    */
-
     let query =
         supabaseClient
             .from("posts")
@@ -2579,6 +4864,14 @@ async function deletePost(postId) {
                 postId
             );
 
+
+    /*
+       Admin:
+       Can delete any post.
+
+       Normal user:
+       Can delete only their own post.
+    */
 
     if (!isAdmin) {
 
@@ -2611,11 +4904,10 @@ async function deletePost(postId) {
     }
 
 
-    /*
-       If no rows were deleted, tell us.
-    */
-
-    if (!data || data.length === 0) {
+    if (
+        !data ||
+        data.length === 0
+    ) {
 
         alert(
             "لم يتم حذف المنشور. قد لا تملك صلاحية حذفه."
@@ -2635,11 +4927,39 @@ async function deletePost(postId) {
    ADD COMMENT
 ===================================================== */
 
-async function comment(postId) {
+async function comment(
+    postId
+) {
+
+    if (!currentUser) {
+
+        alert(
+            "لم يتم إنشاء جلسة المستخدم."
+        );
+
+        return;
+
+    }
+
+
+    if (isBanned) {
+
+        alert(
+            "لا يمكنك التعليق لأن حسابك محظور."
+        );
+
+        return;
+
+    }
+
 
     if (!profile?.name) {
 
         openModal();
+
+        alert(
+            "أنشئ ملفك الشخصي أولاً."
+        );
 
         return;
 
@@ -2650,16 +4970,30 @@ async function comment(postId) {
         $("c-" + postId);
 
 
+    if (!input) {
+        return;
+    }
+
+
     const text =
-        input
-            .value
-            .trim();
+        input.value.trim();
 
 
     if (!text) {
 
         alert(
             "اكتب تعليقاً أولاً."
+        );
+
+        return;
+
+    }
+
+
+    if (text.length > 500) {
+
+        alert(
+            "التعليق يجب ألا يتجاوز 500 حرف."
         );
 
         return;
@@ -2727,14 +5061,6 @@ async function deleteComment(
     }
 
 
-    /*
-       Admin:
-       DELETE any comment.
-
-       Normal user:
-       DELETE only their own comment.
-    */
-
     let query =
         supabaseClient
             .from("comments")
@@ -2744,6 +5070,14 @@ async function deleteComment(
                 commentId
             );
 
+
+    /*
+       Admin:
+       Can delete any comment.
+
+       Normal user:
+       Can delete only their own comment.
+    */
 
     if (!isAdmin) {
 
@@ -2776,7 +5110,10 @@ async function deleteComment(
     }
 
 
-    if (!data || data.length === 0) {
+    if (
+        !data ||
+        data.length === 0
+    ) {
 
         alert(
             "لم يتم حذف التعليق. قد لا تملك صلاحية حذفه."
@@ -2791,302 +5128,1543 @@ async function deleteComment(
 
 }
 
+/* =====================================================
+   LOAD POSTS / COMMENTS / LIKES / PROFILES
+===================================================== */
+
+async function loadCommunity() {
+
+    const [
+        postsResult,
+        commentsResult,
+        likesResult,
+        profilesResult
+    ] = await Promise.all([
+
+        supabaseClient
+            .from("posts")
+            .select(
+                "id,user_id,content,created_at,is_pinned"
+            )
+            .order("is_pinned", {
+                ascending: false
+            })
+            .order("created_at", {
+                ascending: false
+            }),
+
+        supabaseClient
+            .from("comments")
+            .select(
+                "id,post_id,user_id,content,created_at"
+            )
+            .order(
+                "created_at",
+                {
+                    ascending: true
+                }
+            ),
+
+        supabaseClient
+            .from("likes")
+            .select(
+                "id,post_id,user_id,created_at"
+            ),
+
+        supabaseClient
+            .from("profiles")
+            .select(
+                "id,name,avatar_url,is_verified"
+            )
+
+    ]);
+
+    const error =
+        postsResult.error ||
+        commentsResult.error ||
+        likesResult.error ||
+        profilesResult.error;
+
+    if (error) {
+
+        showError(
+            "تعذر تحميل المجتمع.",
+            error
+        );
+
+        return;
+    }
+
+    /* =========================
+       PROFILE MAP
+    ========================= */
+
+    const profileMap =
+        new Map(
+            (profilesResult.data || [])
+                .map(p => [
+                    p.id,
+                    p
+                ])
+        );
+
+    /* =========================
+       POSTS
+    ========================= */
+
+    posts =
+        (postsResult.data || [])
+            .map(post => {
+
+                const p =
+                    profileMap.get(
+                        post.user_id
+                    );
+
+                return {
+
+                    ...post,
+
+                    name:
+                        p?.name ||
+                        "عضو",
+
+                    photo:
+                        p?.avatar_url ||
+                        null,
+
+                    is_verified:
+                        p?.is_verified === true
+
+                };
+
+            });
+
+    /* =========================
+       COMMENTS
+    ========================= */
+
+    comments =
+        (commentsResult.data || [])
+            .map(comment => {
+
+                const p =
+                    profileMap.get(
+                        comment.user_id
+                    );
+
+                return {
+
+                    ...comment,
+
+                    name:
+                        p?.name ||
+                        "عضو",
+
+                    photo:
+                        p?.avatar_url ||
+                        null,
+
+                    is_verified:
+                        p?.is_verified === true
+
+                };
+
+            });
+
+    /* =========================
+       LIKES
+    ========================= */
+
+    likes =
+        likesResult.data || [];
+
+    render();
+}
+
 
 /* =====================================================
-   OPEN PROFILE
+   VERIFIED BADGE
+===================================================== */
+
+function verifiedBadge(isVerified) {
+
+    if (!isVerified) {
+        return "";
+    }
+
+    return `
+        <span
+            class="verified-badge"
+            title="حساب موثق"
+            aria-label="حساب موثق"
+        >
+            ✓
+        </span>
+    `;
+}
+
+
+/* =====================================================
+   RENDER
+===================================================== */
+
+function render() {
+
+    const feed = $("feed");
+
+    if (!feed) {
+        console.warn("feed element not found.");
+        return;
+    }
+
+    if (!posts.length) {
+
+        feed.innerHTML = `
+
+            <div class="card empty">
+
+                لا توجد منشورات بعد.
+
+                <br>
+
+                كن أول من يشارك شيئاً 👋
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+    feed.innerHTML =
+
+        posts
+            .map(post => {
+
+                const postComments =
+                    comments.filter(
+                        comment =>
+                            comment.post_id ===
+                            post.id
+                    );
+
+                const postLikes =
+                    likes.filter(
+                        like =>
+                            like.post_id ===
+                            post.id
+                    );
+
+                const liked =
+                    postLikes.some(
+                        like =>
+                            like.user_id ===
+                            currentUser?.id
+                    );
+
+                /* =========================
+                   DELETE PERMISSION
+                ========================= */
+
+                const canDelete =
+                    isAdmin ||
+                    post.user_id ===
+                    currentUser?.id;
+
+                /* =========================
+                   PIN BUTTON
+                ========================= */
+
+                const pinButton =
+                    isAdmin
+                        ? `
+
+                            <button
+                                class="action"
+                                type="button"
+                                onclick="togglePin(
+                                    '${post.id}',
+                                    ${Boolean(post.is_pinned)}
+                                )"
+                            >
+
+                                ${
+                                    post.is_pinned
+                                        ? "📌 إلغاء التثبيت"
+                                        : "📌 تثبيت"
+                                }
+
+                            </button>
+
+                        `
+                        : "";
+
+                /* =========================
+                   BAN BUTTON
+                ========================= */
+
+                const banButton =
+                    isAdmin &&
+                    post.user_id !==
+                    currentUser?.id
+
+                        ? `
+
+                            <button
+                                class="action"
+                                type="button"
+                                onclick="banUser(
+                                    '${post.user_id}',
+                                    '${escapeHTML(post.name).replace(/'/g, "\\'")}'
+                                )"
+                            >
+
+                                🚫 حظر
+
+                            </button>
+
+                        `
+
+                        : "";
+
+                /* =========================
+                   VERIFY BUTTON
+                ========================= */
+
+                const verifyButton =
+                    isAdmin
+
+                        ? `
+
+                            <button
+                                class="action verify-action"
+                                type="button"
+                                onclick="toggleVerified(
+                                    '${post.user_id}',
+                                    ${Boolean(post.is_verified)}
+                                )"
+                            >
+
+                                ${
+                                    post.is_verified
+                                        ? "❌ إلغاء التوثيق"
+                                        : "🔵 توثيق"
+                                }
+
+                            </button>
+
+                        `
+
+                        : "";
+
+                return `
+
+                    <article
+                        class="card post"
+                    >
+
+                        ${
+                            post.is_pinned
+
+                                ?
+
+                            `
+                                <div
+                                    style="
+                                        color:#d71920;
+                                        font-weight:700;
+                                        font-size:13px;
+                                        margin-bottom:10px;
+                                    "
+                                >
+
+                                    📌 منشور مثبت
+
+                                </div>
+                            `
+
+                                :
+
+                            ""
+                        }
+
+                        <!-- POST HEADER -->
+
+                        <div class="posthead">
+
+                            ${avatar(
+                                post.photo,
+                                post.name
+                            )}
+
+                            <div>
+
+                                <b class="post-name">
+
+                                    ${escapeHTML(
+                                        post.name
+                                    )}
+
+                                    ${verifiedBadge(
+                                        post.is_verified
+                                    )}
+
+                                </b>
+
+                                <div class="time">
+
+                                    ${ago(
+                                        post.created_at
+                                    )}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- POST CONTENT -->
+
+                        <div class="text">
+
+                            ${escapeHTML(
+                                post.content
+                            )}
+
+                        </div>
+
+
+                        <!-- ACTIONS -->
+
+                        <div class="actions">
+
+
+                            <!-- LIKE -->
+
+                            <button
+                                class="
+                                    action
+                                    ${liked ? "liked" : ""}
+                                "
+                                type="button"
+                                onclick="likePost(
+                                    '${post.id}'
+                                )"
+                            >
+
+                                ${
+                                    liked
+                                        ? "❤️"
+                                        : "🤍"
+                                }
+
+                                ${postLikes.length}
+
+                                إعجاب
+
+                            </button>
+
+
+                            <!-- COMMENTS -->
+
+                            <button
+                                class="action"
+                                type="button"
+                                onclick="
+                                    document
+                                        .getElementById(
+                                            'c-${post.id}'
+                                        )
+                                        ?.focus()
+                                "
+                            >
+
+                                💬
+
+                                ${postComments.length}
+
+                                تعليق
+
+                            </button>
+
+
+                            <!-- DELETE -->
+
+                            ${
+                                canDelete
+
+                                    ?
+
+                                `
+
+                                    <button
+                                        class="action"
+                                        type="button"
+                                        onclick="deletePost(
+                                            '${post.id}'
+                                        )"
+                                    >
+
+                                        🗑️ حذف
+
+                                    </button>
+
+                                `
+
+                                    :
+
+                                ""
+                            }
+
+
+                            <!-- PIN -->
+
+                            ${pinButton}
+
+
+                            <!-- BAN -->
+
+                            ${banButton}
+
+
+                            <!-- VERIFY -->
+
+                            ${verifyButton}
+
+
+                        </div>
+
+
+                        <!-- COMMENTS -->
+
+                        <div class="comments">
+
+                            ${
+                                postComments
+                                    .map(comment => {
+
+                                        const canDeleteComment =
+                                            isAdmin ||
+                                            comment.user_id ===
+                                            currentUser?.id;
+
+                                        return `
+
+                                            <div
+                                                class="comment"
+                                            >
+
+                                                <div
+                                                    class="commenthead"
+                                                >
+
+                                                    ${avatar(
+                                                        comment.photo,
+                                                        comment.name,
+                                                        "cavatar"
+                                                    )}
+
+                                                    <b
+                                                        style="
+                                                            font-size:12px;
+                                                        "
+                                                    >
+
+                                                        ${escapeHTML(
+                                                            comment.name
+                                                        )}
+
+                                                        ${verifiedBadge(
+                                                            comment.is_verified
+                                                        )}
+
+                                                    </b>
+
+                                                    <span
+                                                        class="time"
+                                                    >
+
+                                                        ${ago(
+                                                            comment.created_at
+                                                        )}
+
+                                                    </span>
+
+                                                </div>
+
+
+                                                <div
+                                                    class="ctext"
+                                                >
+
+                                                    ${escapeHTML(
+                                                        comment.content
+                                                    )}
+
+                                                </div>
+
+
+                                                ${
+                                                    canDeleteComment
+
+                                                        ?
+
+                                                    `
+
+                                                        <button
+                                                            class="action"
+                                                            type="button"
+                                                            onclick="deleteComment(
+                                                                '${comment.id}'
+                                                            )"
+                                                        >
+
+                                                            🗑️ حذف
+
+                                                        </button>
+
+                                                    `
+
+                                                        :
+
+                                                    ""
+                                                }
+
+                                            </div>
+
+                                        `;
+
+                                    })
+                                    .join("")
+                            }
+
+
+                            <!-- COMMENT BOX -->
+
+                            <div
+                                class="commentbox"
+                            >
+
+                                <input
+                                    id="c-${post.id}"
+                                    class="input"
+                                    maxlength="500"
+                                    placeholder="اكتب تعليقاً..."
+                                >
+
+                                <button
+                                    class="btn red"
+                                    type="button"
+                                    onclick="comment(
+                                        '${post.id}'
+                                    )"
+                                >
+
+                                    تعليق
+
+                                </button>
+
+                            </div>
+
+
+                        </div>
+
+
+                    </article>
+
+                `;
+
+            })
+            .join("");
+}
+
+
+/* =====================================================
+   CREATE POST
+===================================================== */
+
+async function publish() {
+
+    if (isBanned) {
+
+        alert(
+            "حسابك محظور ولا يمكنك نشر المنشورات."
+        );
+
+        return;
+    }
+
+    if (!currentUser) {
+
+        alert(
+            "لم يتم إنشاء جلسة المستخدم."
+        );
+
+        return;
+    }
+
+    if (!profile?.name) {
+
+        openModal();
+
+        alert(
+            "أنشئ ملفك الشخصي أولاً."
+        );
+
+        return;
+    }
+
+    const postText =
+        $("postText");
+
+    if (!postText) {
+
+        console.warn(
+            "postText element not found."
+        );
+
+        return;
+    }
+
+    const text =
+        postText.value
+            .trim();
+
+    if (!text) {
+
+        alert(
+            "اكتب محتوى المنشور."
+        );
+
+        return;
+    }
+
+    if (text.length > 1000) {
+
+        alert(
+            "المنشور يجب ألا يتجاوز 1000 حرف."
+        );
+
+        return;
+    }
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("posts")
+            .insert({
+
+                user_id:
+                    currentUser.id,
+
+                content:
+                    text
+
+            });
+
+    if (error) {
+
+        showError(
+            "تعذر نشر المنشور.",
+            error
+        );
+
+        return;
+    }
+
+    postText.value = "";
+
+    if ($("count")) {
+
+        $("count")
+            .textContent =
+            "0 / 1000";
+
+    }
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   LIKE
+===================================================== */
+
+async function likePost(postId) {
+
+    if (!currentUser) {
+        return;
+    }
+
+    if (isBanned) {
+
+        alert(
+            "حسابك محظور ولا يمكنك الإعجاب."
+        );
+
+        return;
+    }
+
+    const existing =
+        likes.find(
+            like =>
+                like.post_id ===
+                    postId
+                &&
+                like.user_id ===
+                    currentUser.id
+        );
+
+    if (existing) {
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("likes")
+                .delete()
+                .eq(
+                    "id",
+                    existing.id
+                );
+
+        if (error) {
+
+            showError(
+                "تعذر إزالة الإعجاب.",
+                error
+            );
+
+            return;
+        }
+
+    }
+
+    else {
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("likes")
+                .insert({
+
+                    post_id:
+                        postId,
+
+                    user_id:
+                        currentUser.id
+
+                });
+
+        if (error) {
+
+            showError(
+                "تعذر إضافة الإعجاب.",
+                error
+            );
+
+            return;
+        }
+
+    }
+
+    await loadCommunity();
+}
+
+/* =====================================================
+   PIN / UNPIN POST — ADMIN ONLY
+===================================================== */
+
+async function togglePin(
+    postId,
+    currentlyPinned
+) {
+
+    if (!isAdmin) {
+
+        alert(
+            "ليس لديك صلاحية."
+        );
+
+        return;
+    }
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("posts")
+            .update({
+
+                is_pinned:
+                    !currentlyPinned
+
+            })
+            .eq(
+                "id",
+                postId
+            );
+
+    if (error) {
+
+        showError(
+            "تعذر تغيير حالة التثبيت.",
+            error
+        );
+
+        return;
+    }
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   BAN USER — ADMIN ONLY
+===================================================== */
+
+async function banUser(
+    userId,
+    userName
+) {
+
+    if (!isAdmin) {
+
+        alert(
+            "ليس لديك صلاحية."
+        );
+
+        return;
+    }
+
+    if (
+        !userId ||
+        userId === currentUser?.id
+    ) {
+
+        alert(
+            "لا يمكنك حظر هذا المستخدم."
+        );
+
+        return;
+    }
+
+    const reason =
+        prompt(
+            "سبب الحظر (اختياري):"
+        );
+
+    if (reason === null) {
+        return;
+    }
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("banned_users")
+            .insert({
+
+                user_id:
+                    userId,
+
+                reason:
+                    reason.trim() ||
+                    null
+
+            });
+
+    if (error) {
+
+        if (
+            error.code ===
+            "23505"
+        ) {
+
+            alert(
+                "هذا المستخدم محظور بالفعل."
+            );
+
+        }
+
+        else {
+
+            showError(
+                "تعذر حظر المستخدم.",
+                error
+            );
+
+        }
+
+        return;
+    }
+
+    alert(
+        "🚫 تم حظر " +
+        (
+            userName ||
+            "هذا المستخدم"
+        )
+    );
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   VERIFY / UNVERIFY USER — ADMIN ONLY
+===================================================== */
+
+async function toggleVerified(
+    userId,
+    currentlyVerified
+) {
+
+    /* =========================
+       ADMIN CHECK
+    ========================= */
+
+    if (!isAdmin) {
+
+        alert(
+            "ليس لديك صلاحية."
+        );
+
+        return;
+    }
+
+
+    /* =========================
+       SAFETY CHECK
+    ========================= */
+
+    if (!userId) {
+
+        alert(
+            "تعذر تحديد المستخدم."
+        );
+
+        return;
+    }
+
+
+    /* =========================
+       UPDATE PROFILE
+    ========================= */
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("profiles")
+            .update({
+
+                is_verified:
+                    !currentlyVerified
+
+            })
+            .eq(
+                "id",
+                userId
+            )
+            .select(
+                "id,name,is_verified"
+            )
+            .maybeSingle();
+
+
+    if (error) {
+
+        showError(
+            "تعذر تحديث حالة التوثيق.",
+            error
+        );
+
+        return;
+    }
+
+
+    if (!data) {
+
+        alert(
+            "لم يتم العثور على ملف هذا المستخدم."
+        );
+
+        return;
+    }
+
+
+    alert(
+        data.is_verified
+            ? "🔵 تم توثيق الحساب بنجاح."
+            : "❌ تم إلغاء توثيق الحساب."
+    );
+
+
+    /* =========================
+       RELOAD COMMUNITY
+    ========================= */
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   DELETE POST
+===================================================== */
+
+async function deletePost(
+    postId
+) {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    if (!postId) {
+
+        alert(
+            "تعذر تحديد المنشور."
+        );
+
+        return;
+    }
+
+
+    if (
+        !confirm(
+            "هل تريد حذف هذا المنشور؟"
+        )
+    ) {
+
+        return;
+    }
+
+
+    let query =
+        supabaseClient
+            .from("posts")
+            .delete()
+            .eq(
+                "id",
+                postId
+            );
+
+
+    /*
+       Admin:
+       Can delete any post.
+
+       Normal user:
+       Can delete only their own post.
+    */
+
+    if (!isAdmin) {
+
+        query =
+            query.eq(
+                "user_id",
+                currentUser.id
+            );
+
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await query
+            .select();
+
+
+    if (error) {
+
+        showError(
+            "تعذر حذف المنشور.",
+            error
+        );
+
+        return;
+    }
+
+
+    if (
+        !data ||
+        data.length === 0
+    ) {
+
+        alert(
+            "لم يتم حذف المنشور. قد لا تملك صلاحية حذفه."
+        );
+
+        return;
+    }
+
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   ADD COMMENT
+===================================================== */
+
+async function comment(
+    postId
+) {
+
+    if (!currentUser) {
+
+        alert(
+            "لم يتم إنشاء جلسة المستخدم."
+        );
+
+        return;
+    }
+
+
+    if (isBanned) {
+
+        alert(
+            "حسابك محظور ولا يمكنك التعليق."
+        );
+
+        return;
+    }
+
+
+    if (!profile?.name) {
+
+        openModal();
+
+        alert(
+            "أنشئ ملفك الشخصي أولاً."
+        );
+
+        return;
+    }
+
+
+    const input =
+        $("c-" + postId);
+
+
+    if (!input) {
+        return;
+    }
+
+
+    const text =
+        input
+            .value
+            .trim();
+
+
+    if (!text) {
+
+        alert(
+            "اكتب تعليقاً أولاً."
+        );
+
+        return;
+    }
+
+
+    if (text.length > 500) {
+
+        alert(
+            "التعليق يجب ألا يتجاوز 500 حرف."
+        );
+
+        return;
+    }
+
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("comments")
+            .insert({
+
+                post_id:
+                    postId,
+
+                user_id:
+                    currentUser.id,
+
+                content:
+                    text
+
+            });
+
+
+    if (error) {
+
+        showError(
+            "تعذر إضافة التعليق.",
+            error
+        );
+
+        return;
+    }
+
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   DELETE COMMENT
+===================================================== */
+
+async function deleteComment(
+    commentId
+) {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    if (!commentId) {
+
+        alert(
+            "تعذر تحديد التعليق."
+        );
+
+        return;
+    }
+
+
+    if (
+        !confirm(
+            "هل تريد حذف هذا التعليق؟"
+        )
+    ) {
+
+        return;
+    }
+
+
+    let query =
+        supabaseClient
+            .from("comments")
+            .delete()
+            .eq(
+                "id",
+                commentId
+            );
+
+
+    /*
+       Admin:
+       Can delete any comment.
+
+       Normal user:
+       Can delete only their own comment.
+    */
+
+    if (!isAdmin) {
+
+        query =
+            query.eq(
+                "user_id",
+                currentUser.id
+            );
+
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await query
+            .select();
+
+
+    if (error) {
+
+        showError(
+            "تعذر حذف التعليق.",
+            error
+        );
+
+        return;
+    }
+
+
+    if (
+        !data ||
+        data.length === 0
+    ) {
+
+        alert(
+            "لم يتم حذف التعليق. قد لا تملك صلاحية حذفه."
+        );
+
+        return;
+    }
+
+
+    await loadCommunity();
+}
+
+/* =====================================================
+   PROFILE MODAL
 ===================================================== */
 
 function openModal() {
 
-    pendingPhoto =
-        profile?.avatar_url ||
-        null;
+    const modal =
+        $("profileModal");
 
+    if (!modal) {
 
-    $("name").value =
-        profile?.name ||
-        "";
+        console.warn(
+            "profileModal not found."
+        );
 
+        return;
+    }
+
+    modal.style.display =
+        "flex";
 
     updateProfileUI();
-
-
-    $("modalBg")
-        .classList
-        .add("show");
-
 }
 
 
 /* =====================================================
-   CLOSE PROFILE
+   CLOSE PROFILE MODAL
 ===================================================== */
 
 function closeModal() {
 
-    $("modalBg")
-        .classList
-        .remove("show");
+    const modal =
+        $("profileModal");
 
-
-    pendingPhoto = null;
-
-
-    if ($("photo")) {
-
-        $("photo").value = "";
-
+    if (!modal) {
+        return;
     }
 
+    modal.style.display =
+        "none";
 }
 
 
 /* =====================================================
-   PROFILE BUTTONS
+   PROFILE PHOTO INPUT
 ===================================================== */
 
-if ($("edit")) {
+function handlePhotoInput(event) {
 
-    $("edit").onclick =
-        openModal;
+    const file =
+        event?.target?.files?.[0];
 
-}
-
-
-if ($("close")) {
-
-    $("close").onclick =
-        closeModal;
-
-}
+    if (!file) {
+        return;
+    }
 
 
-/* =====================================================
-   NAME
-===================================================== */
+    /* =========================
+       FILE TYPE
+    ========================= */
 
-if ($("name")) {
+    if (!file.type.startsWith("image/")) {
 
-    $("name").oninput =
+        alert(
+            "يرجى اختيار صورة فقط."
+        );
+
+        event.target.value =
+            "";
+
+        return;
+    }
+
+
+    /* =========================
+       FILE SIZE
+    ========================= */
+
+    if (
+        file.size >
+        5 * 1024 * 1024
+    ) {
+
+        alert(
+            "حجم الصورة يجب ألا يتجاوز 5MB."
+        );
+
+        event.target.value =
+            "";
+
+        return;
+    }
+
+
+    /* =========================
+       READ IMAGE
+    ========================= */
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload =
         function () {
+
+            pendingPhoto =
+                reader.result;
 
             updateProfileUI();
 
         };
 
-}
 
+    reader.onerror =
+        function () {
 
-/* =====================================================
-   IMAGE COMPRESSION
-===================================================== */
-
-function compressImage(file) {
-
-    return new Promise(
-        (resolve, reject) => {
-
-            const reader =
-                new FileReader();
-
-
-            reader.onload =
-                event => {
-
-                    const img =
-                        new Image();
-
-
-                    img.onload =
-                        () => {
-
-                            const max =
-                                400;
-
-
-                            let width =
-                                img.width;
-
-                            let height =
-                                img.height;
-
-
-                            if (
-                                width > max ||
-                                height > max
-                            ) {
-
-                                if (
-                                    width >
-                                    height
-                                ) {
-
-                                    height =
-                                        Math.round(
-                                            height *
-                                            max /
-                                            width
-                                        );
-
-                                    width =
-                                        max;
-
-                                }
-
-                                else {
-
-                                    width =
-                                        Math.round(
-                                            width *
-                                            max /
-                                            height
-                                        );
-
-                                    height =
-                                        max;
-
-                                }
-
-                            }
-
-
-                            const canvas =
-                                document
-                                .createElement(
-                                    "canvas"
-                                );
-
-
-                            canvas.width =
-                                width;
-
-                            canvas.height =
-                                height;
-
-
-                            const ctx =
-                                canvas
-                                .getContext(
-                                    "2d"
-                                );
-
-
-                            ctx.drawImage(
-                                img,
-                                0,
-                                0,
-                                width,
-                                height
-                            );
-
-
-                            resolve(
-                                canvas.toDataURL(
-                                    "image/jpeg",
-                                    0.78
-                                )
-                            );
-
-                        };
-
-
-                    img.onerror =
-                        reject;
-
-
-                    img.src =
-                        event.target.result;
-
-                };
-
-
-            reader.onerror =
-                reject;
-
-
-            reader.readAsDataURL(
-                file
+            alert(
+                "تعذر قراءة الصورة."
             );
-
-        }
-    );
-
-}
-
-
-/* =====================================================
-   PHOTO
-===================================================== */
-
-if ($("photo")) {
-
-    $("photo").onchange =
-        async function (event) {
-
-            const file =
-                event.target.files[0];
-
-
-            if (!file) {
-                return;
-            }
-
-
-            if (
-                !file.type
-                    .startsWith("image/")
-            ) {
-
-                alert(
-                    "اختر ملف صورة."
-                );
-
-                event.target.value = "";
-
-                return;
-
-            }
-
-
-            if (
-                file.size >
-                5 * 1024 * 1024
-            ) {
-
-                alert(
-                    "الصورة يجب أن تكون أقل من 5MB."
-                );
-
-                event.target.value = "";
-
-                return;
-
-            }
-
-
-            try {
-
-                pendingPhoto =
-                    await compressImage(
-                        file
-                    );
-
-
-                updateProfileUI();
-
-            }
-
-            catch (error) {
-
-                showError(
-                    "تعذر تجهيز الصورة.",
-                    error
-                );
-
-            }
 
         };
 
+
+    reader.readAsDataURL(file);
+}
+
+
+/* =====================================================
+   REMOVE PENDING PHOTO
+===================================================== */
+
+function removePendingPhoto() {
+
+    pendingPhoto =
+        null;
+
+    const input =
+        $("photoInput");
+
+    if (input) {
+
+        input.value =
+            "";
+
+    }
+
+    updateProfileUI();
 }
 
 
@@ -3094,144 +6672,513 @@ if ($("photo")) {
    SAVE PROFILE
 ===================================================== */
 
-if ($("save")) {
+async function saveProfile() {
 
-    $("save").onclick =
-        async function () {
+    if (!currentUser) {
 
-            const name =
-                $("name")
-                    .value
-                    .trim();
+        alert(
+            "لم يتم إنشاء جلسة مستخدم."
+        );
 
-
-            if (!name) {
-
-                alert(
-                    "اكتب اسمك."
-                );
-
-                return;
-
-            }
+        return;
+    }
 
 
-            const avatarUrl =
-                pendingPhoto !== null
+    const nameInput =
+        $("name");
 
-                ?
 
-                pendingPhoto
+    const name =
+        nameInput?.value
+            ?.trim() || "";
 
-                :
 
-                (
-                    profile?.avatar_url ||
+    /* =========================
+       VALIDATE NAME
+    ========================= */
+
+    if (!name) {
+
+        alert(
+            "اكتب اسمك أولاً."
+        );
+
+        nameInput?.focus();
+
+        return;
+    }
+
+
+    if (name.length < 2) {
+
+        alert(
+            "الاسم يجب أن يحتوي على حرفين على الأقل."
+        );
+
+        nameInput?.focus();
+
+        return;
+    }
+
+
+    if (name.length > 100) {
+
+        alert(
+            "الاسم طويل جداً."
+        );
+
+        nameInput?.focus();
+
+        return;
+    }
+
+
+    /* =========================
+       SAVE PROFILE
+    ========================= */
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("profiles")
+            .upsert(
+                {
+
+                    id:
+                        currentUser.id,
+
+                    name:
+                        name,
+
+                    avatar_url:
+                        pendingPhoto ||
+                        profile?.avatar_url ||
+                        null
+
+                },
+                {
+
+                    onConflict:
+                        "id"
+
+                }
+            )
+            .select(
+                "id,name,avatar_url,is_verified"
+            )
+            .single();
+
+
+    if (error) {
+
+        showError(
+            "تعذر حفظ الملف الشخصي.",
+            error
+        );
+
+        return;
+    }
+
+
+    profile =
+        data;
+
+
+    pendingPhoto =
+        null;
+
+
+    const photoInput =
+        $("photoInput");
+
+    if (photoInput) {
+
+        photoInput.value =
+            "";
+
+    }
+
+
+    updateProfileUI();
+
+
+    closeModal();
+
+
+    await loadCommunity();
+
+
+    alert(
+        "تم حفظ الملف الشخصي بنجاح ✅"
+    );
+}
+
+
+/* =====================================================
+   DELETE PROFILE PHOTO
+===================================================== */
+
+async function deleteProfilePhoto() {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    if (
+        !confirm(
+            "هل تريد حذف صورتك الشخصية؟"
+        )
+    ) {
+
+        return;
+    }
+
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("profiles")
+            .update({
+
+                avatar_url:
                     null
-                );
+
+            })
+            .eq(
+                "id",
+                currentUser.id
+            );
 
 
-            const {
-                data,
-                error
-            } =
-                await supabaseClient
-                    .from("profiles")
-                    .upsert(
+    if (error) {
 
-                        {
+        showError(
+            "تعذر حذف الصورة الشخصية.",
+            error
+        );
 
-                            id:
-                                currentUser.id,
-
-                            name:
-                                name,
-
-                            avatar_url:
-                                avatarUrl
-
-                        },
-
-                        {
-
-                            onConflict:
-                                "id"
-
-                        }
-
-                    )
-                  .select(
-    "id,name,avatar_url,is_verified"
-)
-                    .single();
+        return;
+    }
 
 
-            if (error) {
+    pendingPhoto =
+        null;
 
-                showError(
-                    "تعذر حفظ الملف الشخصي.",
-                    error
-                );
 
-                return;
-
+    profile =
+        profile
+            ? {
+                ...profile,
+                avatar_url:
+                    null
             }
+            : profile;
 
 
-            profile =
-                data;
+    const photoInput =
+        $("photoInput");
+
+    if (photoInput) {
+
+        photoInput.value =
+            "";
+
+    }
 
 
-            pendingPhoto =
-                null;
+    updateProfileUI();
 
 
-            $("photo").value =
-                "";
+    await loadCommunity();
+}
 
 
-            updateProfileUI();
+/* =====================================================
+   EDIT PROFILE
+===================================================== */
 
+function editProfile() {
+
+    if (!currentUser) {
+
+        alert(
+            "تعذر فتح الملف الشخصي."
+        );
+
+        return;
+    }
+
+
+    if ($("name")) {
+
+        $("name").value =
+            profile?.name ||
+            "";
+
+    }
+
+
+    pendingPhoto =
+        null;
+
+
+    if ($("photoInput")) {
+
+        $("photoInput")
+            .value =
+            "";
+
+    }
+
+
+    openModal();
+}
+
+
+/* =====================================================
+   PROFILE BUTTON
+===================================================== */
+
+function profileButton() {
+
+    if (!currentUser) {
+        return;
+    }
+
+    openModal();
+}
+
+
+/* =====================================================
+   CLOSE MODAL WHEN CLICKING OUTSIDE
+===================================================== */
+
+document.addEventListener(
+    "click",
+    function (event) {
+
+        const modal =
+            $("profileModal");
+
+        if (!modal) {
+            return;
+        }
+
+
+        if (
+            event.target ===
+            modal
+        ) {
 
             closeModal();
 
+        }
 
-            await loadCommunity();
-
-        };
-
-}
+    }
+);
 
 
 /* =====================================================
-   CHARACTER COUNTER
+   ESC KEY
 ===================================================== */
 
-if ($("postText")) {
+document.addEventListener(
+    "keydown",
+    function (event) {
 
-    $("postText").oninput =
+        if (
+            event.key !==
+            "Escape"
+        ) {
+
+            return;
+        }
+
+
+        const modal =
+            $("profileModal");
+
+
+        if (
+            modal &&
+            modal.style.display !==
+            "none"
+        ) {
+
+            closeModal();
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   POST CHARACTER COUNTER
+===================================================== */
+
+function setupPostCounter() {
+
+    const textarea =
+        $("postText");
+
+    const counter =
+        $("count");
+
+
+    if (
+        !textarea ||
+        !counter
+    ) {
+
+        return;
+    }
+
+
+    const updateCounter =
         function () {
 
-            $("count")
-                .textContent =
-                `${this.value.length} / 1000`;
+            const length =
+                textarea.value.length;
+
+
+            counter.textContent =
+                `${length} / 1000`;
+
+
+            if (
+                length >= 1000
+            ) {
+
+                counter.style.color =
+                    "#c62828";
+
+            }
+
+            else if (
+                length >= 900
+            ) {
+
+                counter.style.color =
+                    "#e67e22";
+
+            }
+
+            else {
+
+                counter.style.color =
+                    "";
+
+            }
 
         };
 
+
+    textarea.addEventListener(
+        "input",
+        updateCounter
+    );
+
+
+    updateCounter();
 }
 
 
 /* =====================================================
-   PUBLISH BUTTON
+   ENTER TO COMMENT
 ===================================================== */
 
-if ($("publish")) {
+document.addEventListener(
+    "keydown",
+    function (event) {
 
-    $("publish").onclick =
-        publish;
+        const target =
+            event.target;
 
-}
 
+        if (
+            !target?.matches(
+                ".commentbox input"
+            )
+        ) {
+
+            return;
+        }
+
+
+        if (
+            event.key !==
+            "Enter"
+        ) {
+
+            return;
+        }
+
+
+        event.preventDefault();
+
+
+        const id =
+            target.id;
+
+
+        if (
+            !id.startsWith("c-")
+        ) {
+
+            return;
+        }
+
+
+        const postId =
+            id.substring(2);
+
+
+        comment(postId);
+
+    }
+);
+
+
+/* =====================================================
+   CTRL + ENTER TO PUBLISH
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        const target =
+            event.target;
+
+
+        if (
+            !target?.matches(
+                "#postText"
+            )
+        ) {
+
+            return;
+        }
+
+
+        if (
+            event.ctrlKey &&
+            event.key === "Enter"
+        ) {
+
+            event.preventDefault();
+
+            publish();
+
+        }
+
+    }
+);
 
 /* =====================================================
    AUTH STATE LISTENER
@@ -3240,28 +7187,26 @@ if ($("publish")) {
 supabaseClient
     .auth
     .onAuthStateChange(
-        async (
+        async function (
             event,
             session
-        ) => {
+        ) {
 
             console.log(
                 "Auth event:",
                 event
             );
 
-
             if (
-                session?.user &&
-                session.user.id !==
-                currentUser?.id
+                session?.user
             ) {
 
                 currentUser =
                     session.user;
 
-
                 await loadProfile();
+
+                await checkBanStatus();
 
                 await loadCommunity();
 
@@ -3272,89 +7217,241 @@ supabaseClient
 
 
 /* =====================================================
-   INITIALIZE
+   INITIALIZE COMMUNITY
 ===================================================== */
 
-async function init() {
+async function initCommunity() {
 
-    $("feed").innerHTML = `
+    try {
 
-        <div class="card empty">
+        /* =========================
+           AUTH
+        ========================= */
 
-            جاري تحميل المجتمع...
+        const authenticated =
+            await initAuth();
 
-        </div>
-
-    `;
-
-
-    /*
-       Create admin button immediately.
-    */
-
-    updateAdminUI();
-
-const authenticated =
-    await initAuth();
-
-if (!authenticated) {
-    return;
-}
-
-const banned =
-    await checkBanStatus();
-
-if (banned) {
-
-    alert(
-        "🚫 تم حظرك من المجتمع." +
-        (
-            banReason
-                ? "\n\nالسبب: " + banReason
-                : ""
-        )
-    );
-
-    return;
-}
-
-await loadProfile();
-
-await loadCommunity();
-
-    updateAdminUI();
+        if (!authenticated) {
+            return;
+        }
 
 
-    if (!profile?.name) {
+        /* =========================
+           BAN CHECK
+        ========================= */
 
-        setTimeout(
-            openModal,
-            300
+        await checkBanStatus();
+
+
+        /* =========================
+           PROFILE
+        ========================= */
+
+        await loadProfile();
+
+
+        /* =========================
+           COMMUNITY
+        ========================= */
+
+        await loadCommunity();
+
+
+        /* =========================
+           ADMIN UI
+        ========================= */
+
+        updateAdminUI();
+
+
+        /* =========================
+           CHARACTER COUNTER
+        ========================= */
+
+        setupPostCounter();
+
+
+        /* =========================
+           BANNED USER
+        ========================= */
+
+        if (isBanned) {
+
+            console.warn(
+                "Current user is banned:",
+                banReason
+            );
+
+
+            const publishButton =
+                $("publishButton");
+
+            if (publishButton) {
+
+                publishButton.disabled =
+                    true;
+
+                publishButton.style.opacity =
+                    "0.5";
+
+                publishButton.style.cursor =
+                    "not-allowed";
+
+            }
+
+
+            const postText =
+                $("postText");
+
+            if (postText) {
+
+                postText.disabled =
+                    true;
+
+                postText.placeholder =
+                    "تم حظر حسابك من المشاركة.";
+
+            }
+
+
+            document
+                .querySelectorAll(
+                    ".commentbox input"
+                )
+                .forEach(
+                    input => {
+
+                        input.disabled =
+                            true;
+
+                        input.placeholder =
+                            "تم حظر حسابك من التعليق.";
+
+                    }
+                );
+
+        }
+
+
+        console.log(
+            "Community initialized successfully."
         );
+
 
     }
 
+    catch (error) {
 
-    /*
-       Check for new posts every 15 seconds.
-    */
+        console.error(
+            "Community initialization error:",
+            error
+        );
 
-    setInterval(
-        loadCommunity,
-        15000
-    );
+        alert(
+            "حدث خطأ أثناء تشغيل المجتمع."
+        );
+
+    }
 
 }
 
 
 /* =====================================================
-   START
+   DOM READY
 ===================================================== */
 
-init();
+if (
+    document.readyState ===
+    "loading"
+) {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        initCommunity
+    );
+
+}
+
+else {
+
+    initCommunity();
+
+}
+
+
+/* =====================================================
+   GLOBAL FUNCTIONS
+   REQUIRED FOR INLINE onclick
+===================================================== */
+
+window.publish =
+    publish;
+
+window.likePost =
+    likePost;
+
+window.comment =
+    comment;
+
+window.deletePost =
+    deletePost;
+
+window.deleteComment =
+    deleteComment;
+
+window.togglePin =
+    togglePin;
+
+window.banUser =
+    banUser;
+
+window.toggleVerified =
+    toggleVerified;
+
+window.openModal =
+    openModal;
+
+window.closeModal =
+    closeModal;
+
+window.saveProfile =
+    saveProfile;
+
+window.editProfile =
+    editProfile;
+
+window.profileButton =
+    profileButton;
+
+window.adminLogin =
+    adminLogin;
+
+window.adminLogout =
+    adminLogout;
+
+window.handlePhotoInput =
+    handlePhotoInput;
+
+window.removePendingPhoto =
+    removePendingPhoto;
+
+window.deleteProfilePhoto =
+    deleteProfilePhoto;
+
+
+
+
+
 
 </script>
-```
+
+
+
+
+
+
+
+
 
 
 </body>
