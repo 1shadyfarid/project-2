@@ -3748,10 +3748,13 @@ async function loadAdminStats() {
 /* =====================================================
    UPDATE LAST SEEN
 ===================================================== */
+/* =====================================================
+   UPDATE LAST SEEN
+===================================================== */
 
 async function updateLastSeen() {
 
-    if (!currentUser || isAdmin) {
+    if (!currentUser) {
         return;
     }
 
@@ -3760,17 +3763,21 @@ async function updateLastSeen() {
         .update({
             last_seen: new Date().toISOString()
         })
-        .eq("id", currentUser.id);
+        .eq(
+            "id",
+            currentUser.id
+        );
 
     if (error) {
+
         console.error(
             "Last seen update error:",
             error
         );
+
     }
 
 }
-
 
 
 
