@@ -3538,6 +3538,2027 @@ window.handlePhotoInput =
     handlePhotoInput;
 
 
+    /* =====================================================
+   PROFILE MODAL
+===================================================== */
+
+function openProfileModal() {
+
+    const modal = $("profileModal");
+
+    if (!modal) {
+        return;
+    }
+
+    if ($("name")) {
+        $("name").value =
+            profile?.name || "";
+    }
+
+    pendingPhoto = null;
+
+    updateProfileUI();
+
+    modal.classList.add("active");
+}
+
+
+/* =====================================================
+   CLOSE PROFILE MODAL
+===================================================== */
+
+function closeProfileModal() {
+
+    const modal = $("profileModal");
+
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.remove("active");
+
+    pendingPhoto = null;
+
+    updateProfileUI();
+}
+
+
+/* =====================================================
+   PHOTO PREVIEW
+===================================================== */
+
+function handlePhotoChange(event) {
+
+    const file =
+        event.target.files?.[0];
+
+    if (!file) {
+        return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+
+        alert(
+            "يرجى اختيار صورة صحيحة."
+        );
+
+        event.target.value = "";
+
+        return;
+    }
+
+    const reader =
+        new FileReader();
+
+    reader.onload = function () {
+
+        pendingPhoto =
+            reader.result;
+
+        updateProfileUI();
+
+    };
+
+    reader.readAsDataURL(file);
+}
+
+
+/* =====================================================
+   SAVE PROFILE
+===================================================== */
+
+async function saveProfile() {
+
+    if (!currentUser) {
+
+        alert(
+            "تعذر تحديد المستخدم."
+        );
+
+        return;
+    }
+
+    const name =
+        $("name")?.value
+            ?.trim() || "";
+
+    if (!name) {
+
+        alert(
+            "يرجى كتابة اسمك."
+        );
+
+        return;
+    }
+
+    if (name.length > 40) {
+
+        alert(
+            "الاسم يجب ألا يتجاوز 40 حرفاً."
+        );
+
+        return;
+    }
+
+    const saveButton =
+        $("save");
+
+    if (saveButton) {
+
+        saveButton.disabled = true;
+        saveButton.textContent =
+            "جاري الحفظ...";
+    }
+
+    try {
+
+        let avatarURL =
+            profile?.avatar_url || null;
+
+
+        /* =================================================
+           UPLOAD IMAGE
+        ================================================= */
+
+        const file =
+            $("photo")?.files?.[0];
+
+        if (file) {
+
+            const extension =
+                file.name
+                    .split(".")
+                    .pop()
+                    ?.toLowerCase() || "jpg";
+
+            const filePath =
+                `${currentUser.id}.${extension}`;
+
+
+            const {
+                error: uploadError
+            } =
+                await supabaseClient
+                    .storage
+                    .from("avatars")
+                    .upload(
+                        filePath,
+                        file,
+                        {
+                            upsert: true,
+                            contentType:
+                                file.type
+                        }
+                    );
+
+
+            if (uploadError) {
+
+                throw uploadError;
+            }
+
+
+            const {
+                data: publicData
+            } =
+                supabaseClient
+                    .storage
+                    .from("avatars")
+                    .getPublicUrl(
+                        filePath
+                    );
+
+
+            avatarURL =
+                publicData?.publicUrl ||
+                null;
+        }
+
+
+        /* =================================================
+           SAVE PROFILE
+        ================================================= */
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("profiles")
+                .upsert(
+                    {
+                        id:
+                            currentUser.id,
+
+                        name:
+                            name,
+
+                        avatar_url:
+                            avatarURL
+                    },
+                    {
+                        onConflict:
+                            "id"
+                    }
+                )
+                .select(
+                    "id,name,avatar_url,is_verified"
+                )
+                .single();
+
+
+        if (error) {
+
+            throw error;
+        }
+
+
+        profile =
+            data;
+
+
+        pendingPhoto = null;
+
+
+        updateProfileUI();
+
+
+        closeProfileModal();
+
+
+        await loadCommunity();
+
+
+        alert(
+            "تم حفظ الملف الشخصي بنجاح."
+        );
+
+    }
+
+    catch (error) {
+
+        showError(
+            "حدث خطأ أثناء حفظ الملف الشخصي.",
+            error
+        );
+
+    }
+
+    finally {
+
+        if (saveButton) {
+
+            saveButton.disabled =
+                false;
+
+            saveButton.textContent =
+                "حفظ";
+        }
+    }
+}
+
+
+/* =====================================================
+   LOAD COMMUNITY
+===================================================== */
+
+async function loadCommunity() {
+
+    if (!currentUser) {
+        return;
+    }
+
+    await checkBanStatus();
+
+    await Promise.all([
+        loadPosts(),
+        loadComments(),
+        loadLikes()
+    ]);
+
+    renderFeed();
+}
+
+
+/* =====================================================
+   LOAD POSTS
+===================================================== */
+
+async function loadPosts() {
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("posts")
+            .select(`
+                id,
+                user_id,
+                content,
+                created_at,
+                is_pinned,
+                profiles (
+                    id,
+                    name,
+                    avatar_url,
+                    is_verified
+                )
+            `)
+            .order(
+                "is_pinned",
+                {
+                    ascending: false
+                }
+            )
+            .order(
+                "created_at",
+                {
+                    ascending: false
+                }
+            );
+
+
+    if (error) {
+
+        showError(
+            "تعذر تحميل المنشورات.",
+            error
+        );
+
+        return;
+    }
+
+
+    posts =
+        data || [];
+}
+
+
+/* =====================================================
+   LOAD COMMENTS
+===================================================== */
+
+async function loadComments() {
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("comments")
+            .select(`
+                id,
+                post_id,
+                user_id,
+                content,
+                created_at,
+                is_pinned,
+                profiles (
+                    id,
+                    name,
+                    avatar_url,
+                    is_verified
+                )
+            `)
+            .order(
+                "created_at",
+                {
+                    ascending: true
+                }
+            );
+
+
+    if (error) {
+
+        console.error(
+            "Comments loading error:",
+            error
+        );
+
+        comments = [];
+
+        return;
+    }
+
+
+    comments =
+        data || [];
+}
+
+
+/* =====================================================
+   LOAD LIKES
+===================================================== */
+
+async function loadLikes() {
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("likes")
+            .select(`
+                id,
+                post_id,
+                user_id
+            `);
+
+
+    if (error) {
+
+        console.error(
+            "Likes loading error:",
+            error
+        );
+
+        likes = [];
+
+        return;
+    }
+
+
+    likes =
+        data || [];
+}
+
+
+/* =====================================================
+   VERIFIED BADGE
+===================================================== */
+
+function verifiedBadge(isVerified) {
+
+    if (!isVerified) {
+        return "";
+    }
+
+    return `
+        <span
+            class="verified-badge"
+            title="حساب موثق"
+        >
+            ✓
+        </span>
+    `;
+}
+
+
+/* =====================================================
+   PIN BADGE
+===================================================== */
+
+function pinBadge(isPinned) {
+
+    if (!isPinned) {
+        return "";
+    }
+
+    return `
+        <span
+            class="pin-badge"
+            title="منشور مثبت"
+        >
+            📌 مثبت
+        </span>
+    `;
+}
+
+
+/* =====================================================
+   RENDER FEED
+===================================================== */
+
+function renderFeed() {
+
+    const feed =
+        $("feed");
+
+    if (!feed) {
+        return;
+    }
+
+
+    if (!posts.length) {
+
+        feed.innerHTML = `
+            <div class="card">
+                <div class="muted">
+                    لا توجد منشورات حتى الآن.
+                </div>
+            </div>
+        `;
+
+        return;
+    }
+
+
+    feed.innerHTML =
+        posts
+            .map(
+                post =>
+                    renderPost(post)
+            )
+            .join("");
+}
+
+
+/* =====================================================
+   RENDER POST
+===================================================== */
+
+function renderPost(post) {
+
+    const postComments =
+        comments.filter(
+            comment =>
+                comment.post_id === post.id
+        );
+
+
+    const postLikes =
+        likes.filter(
+            like =>
+                like.post_id === post.id
+        );
+
+
+    const likedByMe =
+        postLikes.some(
+            like =>
+                like.user_id ===
+                currentUser?.id
+        );
+
+
+    const postProfile =
+        post.profiles || {};
+
+
+    const isOwner =
+        post.user_id ===
+        currentUser?.id;
+
+
+    const canDelete =
+        isAdmin || isOwner;
+
+
+    const profileName =
+        postProfile.name ||
+        "مستخدم";
+
+
+    const profilePhoto =
+        postProfile.avatar_url ||
+        null;
+
+
+    const isVerified =
+        !!postProfile.is_verified;
+
+
+    return `
+        <article
+            class="card post"
+            data-post-id="${escapeHTML(post.id)}"
+        >
+
+            <div class="post-header">
+
+                ${avatar(
+                    profilePhoto,
+                    profileName,
+                    "smallavatar"
+                )}
+
+                <div class="post-user">
+
+                    <div class="post-name">
+
+                        ${escapeHTML(
+                            profileName
+                        )}
+
+                        ${verifiedBadge(
+                            isVerified
+                        )}
+
+                    </div>
+
+                    <div class="muted">
+                        ${ago(
+                            post.created_at
+                        )}
+                    </div>
+
+                </div>
+
+                <div class="post-badges">
+
+                    ${pinBadge(
+                        post.is_pinned
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="post-content">
+
+                ${escapeHTML(
+                    post.content
+                ).replace(
+                    /\n/g,
+                    "<br>"
+                )}
+
+            </div>
+
+
+            <div class="post-actions">
+
+                <button
+                    type="button"
+                    class="btn light like-btn ${
+                        likedByMe
+                            ? "liked"
+                            : ""
+                    }"
+                    data-action="like"
+                    data-post-id="${escapeHTML(
+                        post.id
+                    )}"
+                >
+
+                    ${likedByMe
+                        ? "❤️"
+                        : "🤍"}
+
+                    ${postLikes.length}
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="btn light"
+                    data-action="comment"
+                    data-post-id="${escapeHTML(
+                        post.id
+                    )}"
+                >
+                    💬 تعليق
+                </button>
+
+
+                ${
+                    isAdmin
+                        ? `
+                            <button
+                                type="button"
+                                class="btn light"
+                                data-action="pin-post"
+                                data-post-id="${escapeHTML(
+                                    post.id
+                                )}"
+                            >
+                                ${
+                                    post.is_pinned
+                                        ? "📌 إلغاء التثبيت"
+                                        : "📌 تثبيت"
+                                }
+                            </button>
+                        `
+                        : ""
+                }
+
+
+                ${
+                    isAdmin
+                        ? `
+                            <button
+                                type="button"
+                                class="btn light"
+                                data-action="verify-post-user"
+                                data-user-id="${escapeHTML(
+                                    post.user_id
+                                )}"
+                            >
+                                ${
+                                    isVerified
+                                        ? "✓ إلغاء التوثيق"
+                                        : "✓ توثيق المستخدم"
+                                }
+                            </button>
+                        `
+                        : ""
+                }
+
+
+                ${
+                    canDelete
+                        ? `
+                            <button
+                                type="button"
+                                class="btn light delete-btn"
+                                data-action="delete-post"
+                                data-post-id="${escapeHTML(
+                                    post.id
+                                )}"
+                            >
+                                🗑️ حذف
+                            </button>
+                        `
+                        : ""
+                }
+
+            </div>
+
+
+            <div
+                class="comments"
+                id="comments-${escapeHTML(
+                    post.id
+                )}"
+            >
+
+                ${
+                    postComments
+                        .map(
+                            comment =>
+                                renderComment(
+                                    comment
+                                )
+                        )
+                        .join("")
+                }
+
+            </div>
+
+
+            <div class="comment-form">
+
+                <input
+                    type="text"
+                    class="input comment-input"
+                    data-comment-input="${escapeHTML(
+                        post.id
+                    )}"
+                    maxlength="500"
+                    placeholder="اكتب تعليقاً..."
+                >
+
+                <button
+                    type="button"
+                    class="btn red"
+                    data-action="add-comment"
+                    data-post-id="${escapeHTML(
+                        post.id
+                    )}"
+                >
+                    إرسال
+                </button>
+
+            </div>
+
+        </article>
+    `;
+}
+
+
+/* =====================================================
+   RENDER COMMENT
+===================================================== */
+
+function renderComment(comment) {
+
+    const commentProfile =
+        comment.profiles || {};
+
+
+    const commentName =
+        commentProfile.name ||
+        "مستخدم";
+
+
+    const commentPhoto =
+        commentProfile.avatar_url ||
+        null;
+
+
+    const commentVerified =
+        !!commentProfile.is_verified;
+
+
+    const canDelete =
+        isAdmin ||
+        comment.user_id ===
+            currentUser?.id;
+
+
+    return `
+        <div
+            class="comment ${
+                comment.is_pinned
+                    ? "pinned-comment"
+                    : ""
+            }"
+        >
+
+            <div class="comment-header">
+
+                ${avatar(
+                    commentPhoto,
+                    commentName,
+                    "tinyavatar"
+                )}
+
+                <div>
+
+                    <div class="comment-name">
+
+                        ${escapeHTML(
+                            commentName
+                        )}
+
+                        ${verifiedBadge(
+                            commentVerified
+                        )}
+
+                        ${
+                            comment.is_pinned
+                                ? `
+                                    <span class="pin-badge">
+                                        📌
+                                    </span>
+                                `
+                                : ""
+                        }
+
+                    </div>
+
+                    <div class="muted">
+                        ${ago(
+                            comment.created_at
+                        )}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="comment-content">
+
+                ${escapeHTML(
+                    comment.content
+                ).replace(
+                    /\n/g,
+                    "<br>"
+                )}
+
+            </div>
+
+
+            ${
+                isAdmin
+                    ? `
+                        <div class="comment-admin-actions">
+
+                            <button
+                                type="button"
+                                class="btn light"
+                                data-action="pin-comment"
+                                data-comment-id="${escapeHTML(
+                                    comment.id
+                                )}"
+                            >
+                                ${
+                                    comment.is_pinned
+                                        ? "📌 إلغاء التثبيت"
+                                        : "📌 تثبيت"
+                                }
+                            </button>
+
+                        </div>
+                    `
+                    : ""
+            }
+
+
+            ${
+                canDelete
+                    ? `
+                        <button
+                            type="button"
+                            class="btn light delete-btn"
+                            data-action="delete-comment"
+                            data-comment-id="${escapeHTML(
+                                comment.id
+                            )}"
+                        >
+                            🗑️ حذف
+                        </button>
+                    `
+                    : ""
+            }
+
+        </div>
+    `;
+}
+
+
+/* =====================================================
+   CREATE POST
+===================================================== */
+
+async function publishPost() {
+
+    if (!currentUser) {
+
+        alert(
+            "تعذر تحديد المستخدم."
+        );
+
+        return;
+    }
+
+
+    if (isBanned) {
+
+        alert(
+            "لا يمكنك نشر المنشورات حالياً."
+        );
+
+        return;
+    }
+
+
+    const textarea =
+        $("postText");
+
+    if (!textarea) {
+        return;
+    }
+
+
+    const content =
+        textarea.value.trim();
+
+
+    if (!content) {
+
+        alert(
+            "اكتب شيئاً قبل نشر المنشور."
+        );
+
+        return;
+    }
+
+
+    if (content.length > 1000) {
+
+        alert(
+            "المنشور طويل جداً."
+        );
+
+        return;
+    }
+
+
+    const button =
+        $("publish");
+
+
+    if (button) {
+
+        button.disabled = true;
+
+        button.textContent =
+            "جاري النشر...";
+    }
+
+
+    try {
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("posts")
+                .insert({
+                    user_id:
+                        currentUser.id,
+
+                    content:
+                        content
+                });
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        textarea.value = "";
+
+        updateCounter();
+
+
+        await loadCommunity();
+
+    }
+
+    catch (error) {
+
+        showError(
+            "تعذر نشر المنشور.",
+            error
+        );
+
+    }
+
+    finally {
+
+        if (button) {
+
+            button.disabled =
+                false;
+
+            button.textContent =
+                "نشر المنشور";
+        }
+    }
+}
+
+
+/* =====================================================
+   LIKE POST
+===================================================== */
+
+async function toggleLike(postId) {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    if (isBanned) {
+
+        alert(
+            "لا يمكنك التفاعل حالياً."
+        );
+
+        return;
+    }
+
+
+    const existingLike =
+        likes.find(
+            like =>
+                like.post_id ===
+                    postId &&
+                like.user_id ===
+                    currentUser.id
+        );
+
+
+    try {
+
+        if (existingLike) {
+
+            const {
+                error
+            } =
+                await supabaseClient
+                    .from("likes")
+                    .delete()
+                    .eq(
+                        "id",
+                        existingLike.id
+                    );
+
+
+            if (error) {
+                throw error;
+            }
+
+        }
+
+        else {
+
+            const {
+                error
+            } =
+                await supabaseClient
+                    .from("likes")
+                    .insert({
+                        post_id:
+                            postId,
+
+                        user_id:
+                            currentUser.id
+                    });
+
+
+            if (error) {
+                throw error;
+            }
+        }
+
+
+        await loadCommunity();
+
+    }
+
+    catch (error) {
+
+        showError(
+            "تعذر تحديث الإعجاب.",
+            error
+        );
+    }
+}
+
+
+/* =====================================================
+   ADD COMMENT
+===================================================== */
+
+async function addComment(postId) {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    if (isBanned) {
+
+        alert(
+            "لا يمكنك التعليق حالياً."
+        );
+
+        return;
+    }
+
+
+    const input =
+        document.querySelector(
+            `[data-comment-input="${CSS.escape(
+                postId
+            )}"]`
+        );
+
+
+    if (!input) {
+        return;
+    }
+
+
+    const content =
+        input.value.trim();
+
+
+    if (!content) {
+
+        alert(
+            "اكتب تعليقاً أولاً."
+        );
+
+        return;
+    }
+
+
+    if (content.length > 500) {
+
+        alert(
+            "التعليق طويل جداً."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("comments")
+                .insert({
+                    post_id:
+                        postId,
+
+                    user_id:
+                        currentUser.id,
+
+                    content:
+                        content
+                });
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        input.value = "";
+
+        await loadCommunity();
+
+    }
+
+    catch (error) {
+
+        showError(
+            "تعذر نشر التعليق.",
+            error
+        );
+    }
+}
+
+
+/* =====================================================
+   DELETE POST
+===================================================== */
+
+async function deletePost(postId) {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    const post =
+        posts.find(
+            item =>
+                item.id === postId
+        );
+
+
+    if (!post) {
+        return;
+    }
+
+
+    const allowed =
+        isAdmin ||
+        post.user_id ===
+            currentUser.id;
+
+
+    if (!allowed) {
+
+        alert(
+            "ليس لديك صلاحية حذف هذا المنشور."
+        );
+
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            "هل أنت متأكد من حذف هذا المنشور؟"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        /* Delete comments */
+
+        await supabaseClient
+            .from("comments")
+            .delete()
+            .eq(
+                "post_id",
+                postId
+            );
+
+
+        /* Delete likes */
+
+        await supabaseClient
+            .from("likes")
+            .delete()
+            .eq(
+                "post_id",
+                postId
+            );
+
+
+        /* Delete post */
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("posts")
+                .delete()
+                .eq(
+                    "id",
+                    postId
+                );
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        await loadCommunity();
+
+    }
+
+    catch (error) {
+
+        showError(
+            "تعذر حذف المنشور.",
+            error
+        );
+    }
+}
+
+
+/* =====================================================
+   DELETE COMMENT
+===================================================== */
+
+async function deleteComment(commentId) {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    const comment =
+        comments.find(
+            item =>
+                item.id ===
+                commentId
+        );
+
+
+    if (!comment) {
+        return;
+    }
+
+
+    const allowed =
+        isAdmin ||
+        comment.user_id ===
+            currentUser.id;
+
+
+    if (!allowed) {
+
+        alert(
+            "ليس لديك صلاحية حذف هذا التعليق."
+        );
+
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            "هل أنت متأكد من حذف هذا التعليق؟"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("comments")
+                .delete()
+                .eq(
+                    "id",
+                    commentId
+                );
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        await loadCommunity();
+
+    }
+
+    catch (error) {
+
+        showError(
+            "تعذر حذف التعليق.",
+            error
+        );
+    }
+}
+
+
+/* =====================================================
+   PIN / UNPIN POST
+===================================================== */
+
+async function togglePostPin(postId) {
+
+    if (!isAdmin) {
+
+        alert(
+            "هذا الإجراء متاح للمدير فقط."
+        );
+
+        return;
+    }
+
+
+    const post =
+        posts.find(
+            item =>
+                item.id === postId
+        );
+
+
+    if (!post) {
+        return;
+    }
+
+
+    try {
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("posts")
+                .update({
+                    is_pinned:
+                        !post.is_pinned
+                })
+                .eq(
+                    "id",
+                    postId
+                );
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        await loadCommunity();
+
+    }
+
+    catch (error) {
+
+        showError(
+            "تعذر تثبيت المنشور.",
+            error
+        );
+    }
+}
+
+
+/* =====================================================
+   PIN / UNPIN COMMENT
+===================================================== */
+
+async function toggleCommentPin(
+    commentId
+) {
+
+    if (!isAdmin) {
+
+        alert(
+            "هذا الإجراء متاح للمدير فقط."
+        );
+
+        return;
+    }
+
+
+    const comment =
+        comments.find(
+            item =>
+                item.id ===
+                commentId
+        );
+
+
+    if (!comment) {
+        return;
+    }
+
+
+    try {
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("comments")
+                .update({
+                    is_pinned:
+                        !comment.is_pinned
+                })
+                .eq(
+                    "id",
+                    commentId
+                );
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        await loadCommunity();
+
+    }
+
+    catch (error) {
+
+        showError(
+            "تعذر تثبيت التعليق.",
+            error
+        );
+    }
+}
+
+
+/* =====================================================
+   VERIFY / UNVERIFY USER
+===================================================== */
+
+async function toggleUserVerification(
+    userId
+) {
+
+    if (!isAdmin) {
+
+        alert(
+            "هذا الإجراء متاح للمدير فقط."
+        );
+
+        return;
+    }
+
+
+    if (!userId) {
+        return;
+    }
+
+
+    try {
+
+        const {
+            data: userProfile,
+            error: profileError
+        } =
+            await supabaseClient
+                .from("profiles")
+                .select(
+                    "id,is_verified"
+                )
+                .eq(
+                    "id",
+                    userId
+                )
+                .maybeSingle();
+
+
+        if (profileError) {
+            throw profileError;
+        }
+
+
+        if (!userProfile) {
+
+            alert(
+                "لم يتم العثور على الملف الشخصي."
+            );
+
+            return;
+        }
+
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("profiles")
+                .update({
+                    is_verified:
+                        !userProfile.is_verified
+                })
+                .eq(
+                    "id",
+                    userId
+                );
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        await loadCommunity();
+
+    }
+
+    catch (error) {
+
+        showError(
+            "تعذر تغيير حالة التوثيق.",
+            error
+        );
+    }
+}
+
+
+/* =====================================================
+   CHARACTER COUNTER
+===================================================== */
+
+function updateCounter() {
+
+    const textarea =
+        $("postText");
+
+    const counter =
+        $("count");
+
+    if (!textarea || !counter) {
+        return;
+    }
+
+
+    counter.textContent =
+        `${textarea.value.length} / 1000`;
+}
+
+
+/* =====================================================
+   FEED CLICK HANDLER
+===================================================== */
+
+async function handleFeedClick(event) {
+
+    const button =
+        event.target.closest(
+            "[data-action]"
+        );
+
+
+    if (!button) {
+        return;
+    }
+
+
+    const action =
+        button.dataset.action;
+
+
+    const postId =
+        button.dataset.postId;
+
+
+    const commentId =
+        button.dataset.commentId;
+
+
+    const userId =
+        button.dataset.userId;
+
+
+    if (action === "like") {
+
+        await toggleLike(
+            postId
+        );
+
+        return;
+    }
+
+
+    if (action === "add-comment") {
+
+        await addComment(
+            postId
+        );
+
+        return;
+    }
+
+
+    if (action === "delete-post") {
+
+        await deletePost(
+            postId
+        );
+
+        return;
+    }
+
+
+    if (action === "delete-comment") {
+
+        await deleteComment(
+            commentId
+        );
+
+        return;
+    }
+
+
+    if (action === "pin-post") {
+
+        await togglePostPin(
+            postId
+        );
+
+        return;
+    }
+
+
+    if (action === "pin-comment") {
+
+        await toggleCommentPin(
+            commentId
+        );
+
+        return;
+    }
+
+
+    if (action === "verify-post-user") {
+
+        await toggleUserVerification(
+            userId
+        );
+
+        return;
+    }
+}
+
+
+/* =====================================================
+   ENTER KEY FOR COMMENTS
+===================================================== */
+
+function handleCommentKeydown(event) {
+
+    if (
+        event.key !==
+        "Enter"
+    ) {
+        return;
+    }
+
+
+    event.preventDefault();
+
+
+    const input =
+        event.target;
+
+
+    const postId =
+        input.dataset.commentInput;
+
+
+    if (postId) {
+
+        addComment(
+            postId
+        );
+    }
+}
+
+
+/* =====================================================
+   INITIALIZE EVENTS
+===================================================== */
+
+function initializeEvents() {
+
+    const editButton =
+        $("edit");
+
+    if (editButton) {
+
+        editButton.addEventListener(
+            "click",
+            openProfileModal
+        );
+    }
+
+
+    const closeButton =
+        $("close");
+
+    if (closeButton) {
+
+        closeButton.addEventListener(
+            "click",
+            closeProfileModal
+        );
+    }
+
+
+    const saveButton =
+        $("save");
+
+    if (saveButton) {
+
+        saveButton.addEventListener(
+            "click",
+            saveProfile
+        );
+    }
+
+
+    const photoInput =
+        $("photo");
+
+    if (photoInput) {
+
+        photoInput.addEventListener(
+            "change",
+            handlePhotoChange
+        );
+    }
+
+
+    const publishButton =
+        $("publish");
+
+    if (publishButton) {
+
+        publishButton.addEventListener(
+            "click",
+            publishPost
+        );
+    }
+
+
+    const postText =
+        $("postText");
+
+    if (postText) {
+
+        postText.addEventListener(
+            "input",
+            updateCounter
+        );
+    }
+
+
+    const feed =
+        $("feed");
+
+    if (feed) {
+
+        feed.addEventListener(
+            "click",
+            handleFeedClick
+        );
+
+        feed.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.target.matches(
+                        ".comment-input"
+                    )
+                ) {
+
+                    handleCommentKeydown(
+                        event
+                    );
+                }
+
+            }
+        );
+    }
+
+
+    const modal =
+        $("profileModal");
+
+    if (modal) {
+
+        modal.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target ===
+                    modal
+                ) {
+
+                    closeProfileModal();
+                }
+
+            }
+        );
+    }
+}
+
+
+/* =====================================================
+   START APPLICATION
+===================================================== */
+
+async function startCommunity() {
+
+    try {
+
+        const authenticated =
+            await initAuth();
+
+
+        if (!authenticated) {
+            return;
+        }
+
+
+        await loadProfile();
+
+
+        await loadCommunity();
+
+
+        initializeEvents();
+
+
+        updateCounter();
+
+
+        updateAdminUI();
+
+
+        console.log(
+            "Community loaded successfully."
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Community startup error:",
+            error
+        );
+
+        showError(
+            "حدث خطأ أثناء تشغيل المجتمع.",
+            error
+        );
+    }
+}
+
+
+/* =====================================================
+   START
+===================================================== */
+
+if (
+    document.readyState ===
+    "loading"
+) {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        startCommunity
+    );
+
+}
+
+else {
+
+    startCommunity();
+}
+
 </script>
 
 
