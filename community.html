@@ -1560,7 +1560,7 @@ async function loadCommunity() {
             supabaseClient
                 .from("posts")
                 .select(
-                    "id,user_id,content,created_at"
+                    "id,user_id,content,created_at,is_pinned"
                 )
                 .order(
                     "created_at",
@@ -1770,6 +1770,33 @@ function render() {
                     currentUser?.id;
 
 
+
+
+const pinButton = isAdmin
+    ? `
+        <button
+            class="action"
+            onclick="
+                togglePin(
+                    '${post.id}',
+                    ${!!post.is_pinned}
+                )
+            "
+        >
+            ${post.is_pinned
+                ? "📌 إلغاء التثبيت"
+                : "📌 تثبيت"}
+        </button>
+    `
+    : "";
+
+
+
+
+
+
+
+
                 return `
 
                     <article
@@ -1888,7 +1915,7 @@ function render() {
 
                                 ""
                             }
-
+${pinButton}
                         </div>
 
 
@@ -2193,6 +2220,55 @@ async function likePost(postId) {
     await loadCommunity();
 
 }
+
+
+
+
+
+/* =====================================================
+   PIN / UNPIN POST — ADMIN ONLY
+===================================================== */
+
+async function togglePin(postId, currentlyPinned) {
+
+    if (!isAdmin) {
+        alert("ليس لديك صلاحية.");
+        return;
+    }
+
+    const {
+        error
+    } = await supabaseClient
+        .from("posts")
+        .update({
+            is_pinned: !currentlyPinned
+        })
+        .eq("id", postId);
+
+    if (error) {
+
+        showError(
+            "تعذر تغيير حالة التثبيت.",
+            error
+        );
+
+        return;
+    }
+
+    await loadCommunity();
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* =====================================================
