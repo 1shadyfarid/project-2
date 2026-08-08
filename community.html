@@ -1803,6 +1803,16 @@ const pinButton = isAdmin
                         class="card post"
                     >
 
+                    ${post.is_pinned ? `
+    <div style="
+        color:#d71920;
+        font-weight:700;
+        font-size:13px;
+        margin-bottom:10px;
+    ">
+        📌 منشور مثبت
+    </div>
+` : ""}
                         <div class="posthead">
 
                             ${avatar(
