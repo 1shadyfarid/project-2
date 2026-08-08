@@ -1,0 +1,1842 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>مجتمع الفقي</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    background:#f4f5f7;
+    color:#171717;
+    font-family:"Cairo",sans-serif;
+}
+
+/* =========================
+   TOP HEADER
+========================= */
+
+.top{
+    background:linear-gradient(135deg,#a80000,#d71919);
+    color:#fff;
+    text-align:center;
+    padding:34px 18px 50px;
+}
+
+.top strong{
+    font-size:14px;
+}
+
+.top h1{
+    margin:4px 0;
+    font-size:32px;
+    font-weight:800;
+}
+
+.top p{
+    margin:5px 0;
+    font-size:14px;
+}
+
+/* =========================
+   MAIN CONTAINER
+========================= */
+
+.wrap{
+    max-width:900px;
+    margin:-25px auto 50px;
+    padding:0 14px;
+}
+
+.card{
+    background:#fff;
+    border:1px solid #e6e6e6;
+    border-radius:18px;
+    box-shadow:0 8px 28px #0000000d;
+}
+
+/* =========================
+   NOTICE
+========================= */
+
+.note{
+    background:#fff8e6;
+    border:1px solid #efd38a;
+    border-radius:12px;
+    padding:11px 13px;
+    font-size:12px;
+    margin-bottom:14px;
+    line-height:1.7;
+}
+
+/* =========================
+   PROFILE
+========================= */
+
+.profile{
+    padding:18px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:16px;
+}
+
+.avatar{
+    width:58px;
+    height:58px;
+    border-radius:50%;
+    background:#c90000;
+    color:white;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-weight:800;
+    font-size:24px;
+
+    overflow:hidden;
+    flex:none;
+}
+
+.avatar img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+}
+
+.info{
+    flex:1;
+}
+
+.name{
+    font-weight:800;
+    font-size:17px;
+}
+
+.muted{
+    font-size:12px;
+    color:#777;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.btn{
+    border:0;
+    border-radius:10px;
+    padding:10px 15px;
+
+    font-family:inherit;
+    font-weight:800;
+
+    cursor:pointer;
+    transition:.2s;
+}
+
+.btn:hover{
+    transform:translateY(-1px);
+}
+
+.red{
+    background:#c90000;
+    color:#fff;
+}
+
+.red:hover{
+    background:#a80000;
+}
+
+.light{
+    background:#eee;
+    color:#333;
+}
+
+/* =========================
+   COMPOSER
+========================= */
+
+.composer{
+    padding:18px;
+    margin-bottom:16px;
+}
+
+.composer-title{
+    font-weight:800;
+    margin-bottom:10px;
+}
+
+.input,
+.area{
+    width:100%;
+
+    border:1px solid #ddd;
+    border-radius:12px;
+
+    padding:11px 13px;
+
+    font-family:inherit;
+
+    outline:0;
+
+    background:#fafafa;
+
+    transition:.2s;
+}
+
+.input:focus,
+.area:focus{
+    border-color:#c90000;
+    background:#fff;
+}
+
+.area{
+    min-height:95px;
+    resize:vertical;
+    margin-top:10px;
+}
+
+.row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    margin-top:9px;
+}
+
+/* =========================
+   FEED
+========================= */
+
+.feed{
+    display:grid;
+    gap:14px;
+}
+
+.post{
+    padding:18px;
+}
+
+/* =========================
+   POST HEADER
+========================= */
+
+.posthead{
+    display:flex;
+    gap:10px;
+    align-items:center;
+}
+
+.smallavatar{
+    width:43px;
+    height:43px;
+
+    border-radius:50%;
+
+    overflow:hidden;
+
+    background:#c90000;
+    color:white;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-weight:800;
+}
+
+.smallavatar img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.time{
+    font-size:11px;
+    color:#888;
+}
+
+/* =========================
+   POST TEXT
+========================= */
+
+.text{
+    margin:14px 0;
+
+    line-height:1.9;
+
+    white-space:pre-wrap;
+
+    font-size:15px;
+}
+
+/* =========================
+   POST ACTIONS
+========================= */
+
+.actions{
+    border-top:1px solid #eee;
+
+    padding-top:10px;
+
+    display:flex;
+    gap:6px;
+}
+
+.action{
+    border:0;
+    background:transparent;
+
+    padding:7px 10px;
+
+    border-radius:9px;
+
+    cursor:pointer;
+
+    font-family:inherit;
+
+    font-weight:700;
+
+    color:#666;
+}
+
+.action:hover{
+    background:#f4f4f4;
+}
+
+.liked{
+    color:#c90000;
+    background:#fff1f1;
+}
+
+/* =========================
+   COMMENTS
+========================= */
+
+.comments{
+    border-top:1px solid #eee;
+
+    margin-top:8px;
+
+    padding-top:10px;
+}
+
+.comment{
+    background:#f6f6f6;
+
+    border-radius:11px;
+
+    padding:9px 11px;
+
+    margin:7px 0;
+}
+
+.commenthead{
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+
+.cavatar{
+    width:28px;
+    height:28px;
+
+    border-radius:50%;
+
+    overflow:hidden;
+
+    background:#777;
+    color:white;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:11px;
+    font-weight:800;
+}
+
+.cavatar img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.ctext{
+    font-size:13px;
+    margin-top:5px;
+    line-height:1.7;
+}
+
+.commentbox{
+    display:flex;
+    gap:7px;
+    margin-top:9px;
+}
+
+/* =========================
+   EMPTY FEED
+========================= */
+
+.empty{
+    text-align:center;
+
+    color:#777;
+
+    padding:40px;
+}
+
+/* =========================
+   PROFILE MODAL
+========================= */
+
+.modalbg{
+    position:fixed;
+
+    inset:0;
+
+    background:#0008;
+
+    display:none;
+
+    align-items:center;
+    justify-content:center;
+
+    padding:18px;
+
+    z-index:5;
+}
+
+.modalbg.show{
+    display:flex;
+}
+
+.modal{
+    background:white;
+
+    width:min(460px,100%);
+
+    border-radius:20px;
+
+    padding:22px;
+}
+
+.modal h2{
+    margin:0 0 5px;
+}
+
+.modal p{
+    font-size:12px;
+    color:#777;
+}
+
+/* =========================
+   BIG PROFILE AVATAR
+========================= */
+
+.bigavatar{
+    width:90px;
+    height:90px;
+
+    border-radius:50%;
+
+    background:#fff1f1;
+    color:#c90000;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:32px;
+    font-weight:800;
+
+    overflow:hidden;
+
+    margin:15px auto;
+}
+
+.bigavatar img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+}
+
+/* =========================
+   IMAGE UPLOAD
+========================= */
+
+.file{
+    display:block;
+
+    text-align:center;
+
+    color:#c90000;
+
+    font-size:12px;
+
+    font-weight:800;
+
+    cursor:pointer;
+
+    margin-bottom:15px;
+}
+
+.file input{
+    display:none;
+}
+
+/* =========================
+   MODAL BUTTONS
+========================= */
+
+.modalactions{
+    display:flex;
+
+    gap:8px;
+
+    margin-top:15px;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:600px){
+
+    .top h1{
+        font-size:27px;
+    }
+
+    .profile{
+        flex-wrap:wrap;
+    }
+
+    .profile .info{
+        min-width:150px;
+    }
+
+    .commentbox{
+        flex-direction:column;
+    }
+
+    .actions{
+        flex-wrap:wrap;
+    }
+
+    .composer,
+    .post{
+        padding:16px;
+    }
+}
+</style>
+</head>
+
+
+<body>
+
+<!-- =========================
+     HEADER
+========================= -->
+
+<header class="top">
+
+    <strong>
+        مؤسسات الفقي العالمية
+    </strong>
+
+    <h1>
+        مجتمع الفقي
+    </h1>
+
+    <p>
+        مساحة للمتدربين لمشاركة الأفكار والتجارب وطرح الأسئلة.
+    </p>
+
+</header>
+
+
+<main class="wrap">
+
+    <!-- =========================
+         DEMO NOTICE
+    ========================= -->
+
+    <div class="note">
+
+        <b>نسخة تجريبية:</b>
+
+        هذه نسخة تجريبية متصلة بقاعدة بيانات حقيقية. يمكن للمستخدمين رؤية نفس المنشورات والتعليقات من أجهزتهم.
+
+    </div>
+
+
+    <!-- =========================
+         PROFILE CARD
+    ========================= -->
+
+    <section class="card profile">
+
+        <div
+            id="profileAvatar"
+            class="avatar"
+        >
+            ؟
+        </div>
+
+
+        <div class="info">
+
+            <div
+                id="profileName"
+                class="name"
+            >
+                زائر
+            </div>
+
+            <div class="muted">
+                عضو في مجتمع الفقي
+            </div>
+
+        </div>
+
+
+        <button
+            class="btn light"
+            id="edit"
+        >
+            تعديل الملف الشخصي
+        </button>
+
+    </section>
+
+
+    <!-- =========================
+         CREATE POST
+    ========================= -->
+
+    <section class="card composer">
+
+        <div class="composer-title">
+            أنشئ منشوراً
+        </div>
+
+
+        <textarea
+            id="postText"
+            class="area"
+            maxlength="1000"
+            placeholder="ماذا تريد أن تشارك مع المجتمع؟"
+        ></textarea>
+
+
+        <div class="row">
+
+            <span
+                id="count"
+                class="muted"
+            >
+                0 / 1000
+            </span>
+
+
+            <button
+                class="btn red"
+                id="publish"
+            >
+                نشر المنشور
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         POSTS
+    ========================= -->
+
+    <section
+        id="feed"
+        class="feed"
+    ></section>
+
+</main>
+
+
+<!-- =========================
+     PROFILE MODAL
+========================= -->
+
+<div
+    id="modalBg"
+    class="modalbg"
+>
+
+    <div class="modal">
+
+        <h2>
+            الملف الشخصي
+        </h2>
+
+
+        <p>
+            اختر اسمك وصورتك الشخصية.
+        </p>
+
+
+        <!-- Profile image preview -->
+
+        <div
+            id="bigAvatar"
+            class="bigavatar"
+        >
+            ؟
+        </div>
+
+
+        <!-- Image upload -->
+
+        <label class="file">
+
+            📷 اختيار صورة
+
+            <input
+                id="photo"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+            >
+
+        </label>
+
+
+        <!-- Name -->
+
+        <input
+            id="name"
+            class="input"
+            maxlength="40"
+            placeholder="اكتب اسمك"
+        >
+
+
+        <!-- Modal buttons -->
+
+        <div class="modalactions">
+
+            <button
+                id="save"
+                class="btn red"
+            >
+                حفظ
+            </button>
+
+
+            <button
+                id="close"
+                class="btn light"
+            >
+                إلغاء
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+/* =====================================================
+   SUPABASE
+===================================================== */
+
+const SUPABASE_URL = "https://ghhkigchdjhcayemwmdo.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_-Z2vD_Y-UomxWje05uy0qA_SpizyYY3";
+
+const supabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true
+        }
+    }
+);
+
+
+/* =====================================================
+   DATA
+===================================================== */
+
+let currentUser = null;
+let profile = null;
+let posts = [];
+let comments = [];
+let likes = [];
+let pendingPhoto = null;
+
+
+/* =====================================================
+   SHORTCUT
+===================================================== */
+
+const $ = id => document.getElementById(id);
+
+
+/* =====================================================
+   SECURITY
+===================================================== */
+
+const escapeHTML = value => {
+    return String(value ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+};
+
+
+/* =====================================================
+   FIRST LETTER
+===================================================== */
+
+const initial = name => {
+    const cleanName = (name || "؟").trim();
+    return cleanName.charAt(0) || "؟";
+};
+
+
+/* =====================================================
+   TIME
+===================================================== */
+
+function ago(timestamp){
+    const ms = Date.now() - new Date(timestamp).getTime();
+    const seconds = Math.max(0, Math.floor(ms / 1000));
+
+    if(seconds < 60){
+        return "الآن";
+    }
+
+    if(seconds < 3600){
+        return `منذ ${Math.floor(seconds / 60)} دقيقة`;
+    }
+
+    if(seconds < 86400){
+        return `منذ ${Math.floor(seconds / 3600)} ساعة`;
+    }
+
+    return new Date(timestamp).toLocaleDateString("ar-EG");
+}
+
+
+/* =====================================================
+   AVATAR HTML
+===================================================== */
+
+function avatar(photo, name, className = "smallavatar"){
+    if(photo){
+        return `
+            <div class="${className}">
+                <img src="${escapeHTML(photo)}" alt="">
+            </div>
+        `;
+    }
+
+    return `
+        <div class="${className}">
+            ${escapeHTML(initial(name))}
+        </div>
+    `;
+}
+
+
+/* =====================================================
+   ERROR HANDLING
+===================================================== */
+
+function showError(message, error = null){
+    console.error(message, error || "");
+    alert(message);
+}
+
+
+/* =====================================================
+   AUTH
+===================================================== */
+
+async function initAuth(){
+
+    const {
+        data: { session }
+    } = await supabase.auth.getSession();
+
+    if(session?.user){
+        currentUser = session.user;
+        return true;
+    }
+
+    const {
+        data,
+        error
+    } = await supabase.auth.signInAnonymously();
+
+    if(error){
+        console.error(error);
+        showError(
+            "تعذر إنشاء جلسة المستخدم. تأكد أن Anonymous Sign-Ins مفعّل في Supabase."
+        );
+        return false;
+    }
+
+    currentUser = data.user;
+
+    return true;
+}
+
+
+/* =====================================================
+   LOAD PROFILE
+===================================================== */
+
+async function loadProfile(){
+
+    if(!currentUser){
+        return;
+    }
+
+    const {
+        data,
+        error
+    } = await supabase
+        .from("profiles")
+        .select("id,name,avatar_url")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+    if(error){
+        showError("حدث خطأ أثناء تحميل الملف الشخصي.", error);
+        return;
+    }
+
+    profile = data || null;
+}
+
+
+/* =====================================================
+   LOAD COMMUNITY DATA
+===================================================== */
+
+async function loadCommunity(){
+
+    const [
+        postsResult,
+        commentsResult,
+        likesResult,
+        profilesResult
+    ] = await Promise.all([
+
+        supabase
+            .from("posts")
+            .select("id,user_id,content,created_at")
+            .order("created_at", { ascending:false }),
+
+        supabase
+            .from("comments")
+            .select("id,post_id,user_id,content,created_at")
+            .order("created_at", { ascending:true }),
+
+        supabase
+            .from("likes")
+            .select("id,post_id,user_id,created_at"),
+
+        supabase
+            .from("profiles")
+            .select("id,name,avatar_url")
+    ]);
+
+    const firstError =
+        postsResult.error ||
+        commentsResult.error ||
+        likesResult.error ||
+        profilesResult.error;
+
+    if(firstError){
+        console.error(firstError);
+        showError(
+            "حدث خطأ أثناء تحميل المجتمع. إذا ظهرت رسالة Permission denied أرسلها لي."
+        );
+        return;
+    }
+
+    const profileMap = new Map(
+        (profilesResult.data || [])
+            .map(p => [p.id, p])
+    );
+
+    posts = (postsResult.data || []).map(post => {
+
+        const p = profileMap.get(post.user_id);
+
+        return {
+            ...post,
+            name: p?.name || "عضو",
+            photo: p?.avatar_url || null
+        };
+    });
+
+    comments = (commentsResult.data || []).map(comment => {
+
+        const p = profileMap.get(comment.user_id);
+
+        return {
+            ...comment,
+            name: p?.name || "عضو",
+            photo: p?.avatar_url || null
+        };
+    });
+
+    likes = likesResult.data || [];
+
+    render();
+}
+
+
+/* =====================================================
+   UPDATE PROFILE UI
+===================================================== */
+
+function updateProfile(){
+
+    $("profileName").textContent =
+        profile?.name || "زائر";
+
+    $("profileAvatar").innerHTML =
+        profile?.avatar_url
+        ?
+        `
+            <img
+                src="${escapeHTML(profile.avatar_url)}"
+                alt="الصورة الشخصية"
+            >
+        `
+        :
+        escapeHTML(initial(profile?.name));
+
+    const currentName =
+        $("name").value ||
+        profile?.name ||
+        "";
+
+    $("bigAvatar").innerHTML =
+        pendingPhoto
+        ?
+        `
+            <img
+                src="${escapeHTML(pendingPhoto)}"
+                alt=""
+            >
+        `
+        :
+        escapeHTML(initial(currentName));
+}
+
+
+/* =====================================================
+   RENDER POSTS
+===================================================== */
+
+function render(){
+
+    if(!posts.length){
+
+        $("feed").innerHTML = `
+            <div class="card empty">
+                لا توجد منشورات بعد.
+                كن أول من يشارك شيئاً 👋
+            </div>
+        `;
+
+        return;
+    }
+
+    const sortedPosts =
+        posts
+        .slice()
+        .sort(
+            (a,b) =>
+                new Date(b.created_at) -
+                new Date(a.created_at)
+        );
+
+    $("feed").innerHTML =
+        sortedPosts
+        .map(post => {
+
+            const postComments =
+                comments.filter(
+                    c => c.post_id === post.id
+                );
+
+            const postLikes =
+                likes.filter(
+                    like => like.post_id === post.id
+                );
+
+            const liked =
+                postLikes.some(
+                    like => like.user_id === currentUser?.id
+                );
+
+            const canDeletePost =
+                post.user_id === currentUser?.id;
+
+            return `
+                <article class="card post">
+
+                    <div class="posthead">
+
+                        ${avatar(
+                            post.photo,
+                            post.name
+                        )}
+
+                        <div>
+
+                            <b>
+                                ${escapeHTML(post.name)}
+                            </b>
+
+                            <div class="time">
+                                ${ago(post.created_at)}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="text">
+                        ${escapeHTML(post.content)}
+                    </div>
+
+
+                    <div class="actions">
+
+                        <button
+                            class="action ${liked ? "liked" : ""}"
+                            onclick="likePost('${post.id}')"
+                        >
+                            ${liked ? "❤️" : "🤍"}
+                            ${postLikes.length}
+                            إعجاب
+                        </button>
+
+
+                        <button
+                            class="action"
+                            onclick="
+                                document
+                                .getElementById('c-${post.id}')
+                                .focus()
+                            "
+                        >
+                            💬
+                            ${postComments.length}
+                            تعليق
+                        </button>
+
+
+                        ${
+                            canDeletePost
+                            ?
+                            `
+                                <button
+                                    class="action"
+                                    onclick="deletePost('${post.id}')"
+                                >
+                                    🗑️ حذف
+                                </button>
+                            `
+                            :
+                            ""
+                        }
+
+                    </div>
+
+
+                    <div class="comments">
+
+                        ${
+                            postComments
+                            .map(comment => {
+
+                                const canDeleteComment =
+                                    comment.user_id === currentUser?.id;
+
+                                return `
+                                    <div class="comment">
+
+                                        <div class="commenthead">
+
+                                            ${avatar(
+                                                comment.photo,
+                                                comment.name,
+                                                "cavatar"
+                                            )}
+
+                                            <b style="font-size:12px;">
+                                                ${escapeHTML(comment.name)}
+                                            </b>
+
+                                            <span class="time">
+                                                ${ago(comment.created_at)}
+                                            </span>
+
+                                        </div>
+
+
+                                        <div class="ctext">
+                                            ${escapeHTML(comment.content)}
+                                        </div>
+
+
+                                        ${
+                                            canDeleteComment
+                                            ?
+                                            `
+                                                <button
+                                                    class="action"
+                                                    onclick="
+                                                        deleteComment(
+                                                            '${post.id}',
+                                                            '${comment.id}'
+                                                        )
+                                                    "
+                                                >
+                                                    حذف
+                                                </button>
+                                            `
+                                            :
+                                            ""
+                                        }
+
+                                    </div>
+                                `;
+                            })
+                            .join("")
+                        }
+
+
+                        <div class="commentbox">
+
+                            <input
+                                id="c-${post.id}"
+                                class="input"
+                                maxlength="500"
+                                placeholder="اكتب تعليقاً..."
+                            >
+
+                            <button
+                                class="btn red"
+                                onclick="comment('${post.id}')"
+                            >
+                                تعليق
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </article>
+            `;
+        })
+        .join("");
+}
+
+
+/* =====================================================
+   PUBLISH POST
+===================================================== */
+
+async function publish(){
+
+    if(!profile?.name){
+
+        openModal();
+
+        alert("أنشئ ملفك الشخصي أولاً.");
+
+        return;
+    }
+
+    const text =
+        $("postText")
+        .value
+        .trim();
+
+    if(!text){
+
+        alert("اكتب محتوى المنشور.");
+
+        return;
+    }
+
+    const {
+        error
+    } = await supabase
+        .from("posts")
+        .insert({
+            user_id: currentUser.id,
+            content: text
+        });
+
+    if(error){
+
+        showError(
+            "تعذر نشر المنشور.",
+            error
+        );
+
+        return;
+    }
+
+    $("postText").value = "";
+    $("count").textContent = "0 / 1000";
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   LIKE
+===================================================== */
+
+async function likePost(id){
+
+    if(!currentUser){
+        return;
+    }
+
+    const existingLike =
+        likes.find(
+            like =>
+                like.post_id === id &&
+                like.user_id === currentUser.id
+        );
+
+    if(existingLike){
+
+        const { error } =
+            await supabase
+                .from("likes")
+                .delete()
+                .eq("id", existingLike.id);
+
+        if(error){
+            showError("تعذر إزالة الإعجاب.", error);
+            return;
+        }
+
+    }else{
+
+        const { error } =
+            await supabase
+                .from("likes")
+                .insert({
+                    post_id: id,
+                    user_id: currentUser.id
+                });
+
+        if(error){
+            showError("تعذر إضافة الإعجاب.", error);
+            return;
+        }
+    }
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   DELETE POST
+===================================================== */
+
+async function deletePost(id){
+
+    if(!confirm("هل تريد حذف هذا المنشور؟")){
+        return;
+    }
+
+    const { error } =
+        await supabase
+            .from("posts")
+            .delete()
+            .eq("id", id)
+            .eq("user_id", currentUser.id);
+
+    if(error){
+
+        showError(
+            "تعذر حذف المنشور.",
+            error
+        );
+
+        return;
+    }
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   ADD COMMENT
+===================================================== */
+
+async function comment(postId){
+
+    if(!profile?.name){
+
+        openModal();
+
+        return;
+    }
+
+    const input =
+        $("c-" + postId);
+
+    const text =
+        input.value.trim();
+
+    if(!text){
+
+        alert("اكتب تعليقاً أولاً.");
+
+        return;
+    }
+
+    const { error } =
+        await supabase
+            .from("comments")
+            .insert({
+                post_id: postId,
+                user_id: currentUser.id,
+                content: text
+            });
+
+    if(error){
+
+        showError(
+            "تعذر إضافة التعليق.",
+            error
+        );
+
+        return;
+    }
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   DELETE COMMENT
+===================================================== */
+
+async function deleteComment(
+    postId,
+    commentId
+){
+
+    if(!confirm("هل تريد حذف هذا التعليق؟")){
+        return;
+    }
+
+    const { error } =
+        await supabase
+            .from("comments")
+            .delete()
+            .eq("id", commentId)
+            .eq("user_id", currentUser.id);
+
+    if(error){
+
+        showError(
+            "تعذر حذف التعليق.",
+            error
+        );
+
+        return;
+    }
+
+    await loadCommunity();
+}
+
+
+/* =====================================================
+   OPEN PROFILE MODAL
+===================================================== */
+
+function openModal(){
+
+    pendingPhoto =
+        profile?.avatar_url || null;
+
+    $("name").value =
+        profile?.name || "";
+
+    updateProfile();
+
+    $("modalBg")
+        .classList
+        .add("show");
+}
+
+
+/* =====================================================
+   CLOSE PROFILE MODAL
+===================================================== */
+
+function closeModal(){
+
+    $("modalBg")
+        .classList
+        .remove("show");
+
+    pendingPhoto = null;
+
+    if(profile?.name){
+        $("name").value = profile.name;
+    }
+}
+
+
+/* =====================================================
+   EDIT PROFILE
+===================================================== */
+
+$("edit").onclick =
+    openModal;
+
+
+/* =====================================================
+   CLOSE BUTTON
+===================================================== */
+
+$("close").onclick =
+    closeModal;
+
+
+/* =====================================================
+   NAME INPUT
+===================================================== */
+
+$("name").oninput =
+    function(){
+        updateProfile();
+    };
+
+
+/* =====================================================
+   PHOTO UPLOAD
+===================================================== */
+
+$("photo").onchange =
+    async function(event){
+
+        const file =
+            event.target.files[0];
+
+        if(!file){
+            return;
+        }
+
+        if(!file.type.startsWith("image/")){
+            alert("اختر ملف صورة.");
+            event.target.value = "";
+            return;
+        }
+
+        if(file.size > 5 * 1024 * 1024){
+
+            alert(
+                "الصورة يجب أن تكون أقل من 5MB."
+            );
+
+            event.target.value = "";
+
+            return;
+        }
+
+        try{
+
+            pendingPhoto =
+                await compressImage(file);
+
+            updateProfile();
+
+        }catch(error){
+
+            console.error(error);
+
+            alert(
+                "تعذر تجهيز الصورة."
+            );
+        }
+    };
+
+
+/* =====================================================
+   COMPRESS PROFILE PHOTO
+   Keeps the database image small.
+===================================================== */
+
+function compressImage(file){
+
+    return new Promise(
+        (resolve,reject) => {
+
+            const reader =
+                new FileReader();
+
+            reader.onload = event => {
+
+                const img =
+                    new Image();
+
+                img.onload = () => {
+
+                    const maxSize = 400;
+
+                    let width =
+                        img.width;
+
+                    let height =
+                        img.height;
+
+                    if(width > height){
+
+                        if(width > maxSize){
+
+                            height =
+                                Math.round(
+                                    height *
+                                    maxSize /
+                                    width
+                                );
+
+                            width =
+                                maxSize;
+                        }
+
+                    }else{
+
+                        if(height > maxSize){
+
+                            width =
+                                Math.round(
+                                    width *
+                                    maxSize /
+                                    height
+                                );
+
+                            height =
+                                maxSize;
+                        }
+                    }
+
+                    const canvas =
+                        document.createElement("canvas");
+
+                    canvas.width =
+                        width;
+
+                    canvas.height =
+                        height;
+
+                    const ctx =
+                        canvas.getContext("2d");
+
+                    ctx.drawImage(
+                        img,
+                        0,
+                        0,
+                        width,
+                        height
+                    );
+
+                    resolve(
+                        canvas.toDataURL(
+                            "image/jpeg",
+                            0.78
+                        )
+                    );
+                };
+
+                img.onerror = reject;
+
+                img.src =
+                    event.target.result;
+            };
+
+            reader.onerror = reject;
+
+            reader.readAsDataURL(file);
+        }
+    );
+}
+
+
+/* =====================================================
+   SAVE PROFILE
+===================================================== */
+
+$("save").onclick =
+    async function(){
+
+        const newName =
+            $("name")
+            .value
+            .trim();
+
+        if(!newName){
+
+            alert("اكتب اسمك.");
+
+            return;
+        }
+
+        const avatarUrl =
+            pendingPhoto !== null
+            ? pendingPhoto
+            : (profile?.avatar_url || null);
+
+        const { data, error } =
+            await supabase
+                .from("profiles")
+                .upsert(
+                    {
+                        id: currentUser.id,
+                        name: newName,
+                        avatar_url: avatarUrl
+                    },
+                    {
+                        onConflict: "id"
+                    }
+                )
+                .select("id,name,avatar_url")
+                .single();
+
+        if(error){
+
+            console.error(error);
+
+            showError(
+                "تعذر حفظ الملف الشخصي.",
+                error
+            );
+
+            return;
+        }
+
+        profile = data;
+
+        pendingPhoto = null;
+
+        $("photo").value = "";
+
+        updateProfile();
+
+        closeModal();
+
+        await loadCommunity();
+    };
+
+
+/* =====================================================
+   POST CHARACTER COUNTER
+===================================================== */
+
+$("postText").oninput =
+    function(){
+
+        $("count").textContent =
+            `${this.value.length} / 1000`;
+    };
+
+
+/* =====================================================
+   PUBLISH BUTTON
+===================================================== */
+
+$("publish").onclick =
+    publish;
+
+
+/* =====================================================
+   INITIALIZE
+===================================================== */
+
+async function init(){
+
+    $("feed").innerHTML = `
+        <div class="card empty">
+            جاري تحميل المجتمع...
+        </div>
+    `;
+
+    const authenticated =
+        await initAuth();
+
+    if(!authenticated){
+        return;
+    }
+
+    await loadProfile();
+
+    updateProfile();
+
+    await loadCommunity();
+
+    if(!profile?.name){
+
+        setTimeout(
+            openModal,
+            250
+        );
+    }
+
+    /*
+       Simple prototype refresh:
+       every 15 seconds the feed checks
+       for new posts/comments from other users.
+    */
+    setInterval(
+        async () => {
+            await loadCommunity();
+        },
+        15000
+    );
+}
+
+init();
+
+</script>
+
+</body>
+</html>
