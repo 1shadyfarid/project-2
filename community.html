@@ -733,6 +733,15 @@ body{
     </section>
 
 
+
+    <button
+    id="enableNotifications"
+    type="button"
+    class="btn red"
+>
+    🔔 تفعيل الإشعارات
+</button>
+
     <!-- =========================
          POSTS
     ========================= -->
@@ -3671,6 +3680,75 @@ async function init() {
 /* =====================================================
    START
 ===================================================== */
+
+
+
+
+
+/* =====================================================
+   ENABLE PUSH NOTIFICATIONS
+===================================================== */
+
+async function enableNotifications() {
+
+    if (!("Notification" in window)) {
+
+        alert(
+            "متصفحك لا يدعم الإشعارات."
+        );
+
+        return;
+
+    }
+
+
+    if (!("serviceWorker" in navigator)) {
+
+        alert(
+            "متصفحك لا يدعم إشعارات الخلفية."
+        );
+
+        return;
+
+    }
+
+
+    const permission =
+        await Notification.requestPermission();
+
+
+    if (permission === "granted") {
+
+        alert(
+            "🔔 تم تفعيل الإشعارات بنجاح."
+        );
+
+    }
+
+    else if (permission === "denied") {
+
+        alert(
+            "تم رفض الإشعارات. يمكنك تفعيلها من إعدادات المتصفح."
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   NOTIFICATION BUTTON
+===================================================== */
+
+if ($("enableNotifications")) {
+
+    $("enableNotifications").onclick =
+        enableNotifications;
+
+}
+
+
+
 
 init();
 </script>
