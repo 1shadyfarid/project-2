@@ -754,7 +754,7 @@ body{
     </div>
 
 </div>
-
+```html
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
@@ -787,12 +787,20 @@ let comments = [];
 let likes = [];
 let pendingPhoto = null;
 
+let isAdmin = false;
 
+
+/* =====================================================
+   ADMIN UUID
+===================================================== */
+const ADMIN_USER_ID =
+    "4c151a63-c4fb-4a7c-ab56-6a088d569ce6";
 /* =====================================================
    SHORTCUT
 ===================================================== */
 
-const $ = id => document.getElementById(id);
+const $ = id =>
+    document.getElementById(id);
 
 
 /* =====================================================
@@ -835,8 +843,10 @@ function ago(timestamp) {
         Math.max(
             0,
             Math.floor(
-                (Date.now() -
-                new Date(timestamp).getTime()) / 1000
+                (
+                    Date.now() -
+                    new Date(timestamp).getTime()
+                ) / 1000
             )
         );
 
@@ -845,11 +855,19 @@ function ago(timestamp) {
     }
 
     if (seconds < 3600) {
-        return `منذ ${Math.floor(seconds / 60)} دقيقة`;
+
+        return `منذ ${
+            Math.floor(seconds / 60)
+        } دقيقة`;
+
     }
 
     if (seconds < 86400) {
-        return `منذ ${Math.floor(seconds / 3600)} ساعة`;
+
+        return `منذ ${
+            Math.floor(seconds / 3600)
+        } ساعة`;
+
     }
 
     return new Date(timestamp)
@@ -900,9 +918,11 @@ function showError(message, error) {
 
     alert(
         message +
-        (error?.message
-            ? "\n\n" + error.message
-            : "")
+        (
+            error?.message
+                ? "\n\n" + error.message
+                : ""
+        )
     );
 
 }
@@ -924,6 +944,11 @@ async function initAuth() {
             .getSession();
 
 
+    /*
+       If a real/admin session already exists,
+       keep it.
+    */
+
     if (session?.user) {
 
         currentUser =
@@ -933,6 +958,10 @@ async function initAuth() {
 
     }
 
+
+    /*
+       Otherwise create anonymous user.
+    */
 
     const {
         data,
@@ -964,7 +993,407 @@ async function initAuth() {
 
 
 /* =====================================================
-   LOAD PROFILE
+   ADMIN CHECK
+===================================================== */
+
+async function checkAdmin() {
+
+    isAdmin = false;
+
+    if (!currentUser) {
+        updateAdminUI();
+        return false;
+    }
+
+
+    /*
+       First make sure the logged-in user's ID
+       is the expected admin account.
+    */
+
+    if (currentUser.id !== ADMIN_USER_ID) {
+
+        isAdmin = false;
+        updateAdminUI();
+
+        return false;
+
+    }
+
+
+    /*
+       Then verify against the admins table.
+       This is the database-backed check.
+    */
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("admins")
+            .select("user_id")
+            .eq(
+                "user_id",
+                currentUser.id
+            )
+            .maybeSingle();
+
+
+    if (error) {
+
+        console.error(
+            "Admin check error:",
+            error
+        );
+
+        isAdmin = false;
+
+        updateAdminUI();
+
+        return false;
+
+    }
+
+
+    isAdmin =
+        !!data;
+
+
+    console.log(
+        "Admin status:",
+        isAdmin
+    );
+
+
+    updateAdminUI();
+
+    return isAdmin;
+
+}
+
+
+/* =====================================================
+   ADMIN LOGIN
+===================================================== */
+
+async function adminLogin() {
+
+    const email =
+        prompt(
+            "أدخل بريد حساب المدير:"
+        );
+
+
+    if (!email) {
+        return;
+    }
+
+
+    const password =
+        prompt(
+            "أدخل كلمة مرور المدير:"
+        );
+
+
+    if (!password) {
+        return;
+    }
+
+
+    /*
+       Sign out anonymous session first.
+    */
+
+    await supabaseClient
+        .auth
+        .signOut();
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .auth
+            .signInWithPassword({
+                email: email.trim(),
+                password: password
+            });
+
+
+    if (error) {
+
+        /*
+           If login fails, create a new anonymous session
+           so the community still works normally.
+        */
+
+        await supabaseClient
+            .auth
+            .signInAnonymously();
+
+
+        const {
+            data: anonymousData
+        } =
+            await supabaseClient
+                .auth
+                .getUser();
+
+
+        currentUser =
+            anonymousData?.user || null;
+
+
+        await checkAdmin();
+
+
+        alert(
+            "فشل تسجيل دخول المدير.\n\n" +
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    currentUser =
+        data.user;
+
+
+    /*
+       Check whether this account is actually
+       in the admins table.
+    */
+
+    const admin =
+        await checkAdmin();
+
+
+    if (!admin) {
+
+        alert(
+            "تم تسجيل الدخول، ولكن هذا الحساب ليس حساب مدير."
+        );
+
+
+        await supabaseClient
+            .auth
+            .signOut();
+
+
+        const {
+            data: anonymousData
+        } =
+            await supabaseClient
+                .auth
+                .signInAnonymously();
+
+
+        currentUser =
+            anonymousData?.user || null;
+
+
+        await checkAdmin();
+
+        return;
+
+    }
+
+
+    /*
+       Reload everything using the admin session.
+    */
+
+    await loadProfile();
+
+    await loadCommunity();
+
+
+    alert(
+        "تم تسجيل دخول المدير بنجاح 👑"
+    );
+
+}
+
+
+/* =====================================================
+   ADMIN LOGOUT
+===================================================== */
+
+async function adminLogout() {
+
+    if (!isAdmin) {
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            "هل تريد تسجيل الخروج من حساب المدير؟"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    await supabaseClient
+        .auth
+        .signOut();
+
+
+    isAdmin = false;
+    currentUser = null;
+    profile = null;
+
+
+    /*
+       Start a new anonymous session.
+    */
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .auth
+            .signInAnonymously();
+
+
+    if (error) {
+
+        showError(
+            "تعذر إنشاء جلسة جديدة.",
+            error
+        );
+
+        return;
+
+    }
+
+
+    currentUser =
+        data.user;
+
+
+    await loadProfile();
+
+    await loadCommunity();
+
+
+    alert(
+        "تم تسجيل الخروج من حساب المدير."
+    );
+
+}
+
+
+/* =====================================================
+   ADMIN UI
+===================================================== */
+
+function updateAdminUI() {
+
+    let button =
+        $("adminLoginButton");
+
+
+    /*
+       If there is no admin button in the HTML,
+       create one automatically.
+    */
+
+    if (!button) {
+
+        button =
+            document.createElement("button");
+
+        button.id =
+            "adminLoginButton";
+
+        button.type =
+            "button";
+
+
+        button.style.position =
+            "fixed";
+
+        button.style.bottom =
+            "20px";
+
+        button.style.left =
+            "20px";
+
+        button.style.zIndex =
+            "99999";
+
+        button.style.padding =
+            "10px 16px";
+
+        button.style.border =
+            "none";
+
+        button.style.borderRadius =
+            "10px";
+
+        button.style.cursor =
+            "pointer";
+
+        button.style.fontFamily =
+            "Cairo, sans-serif";
+
+        button.style.fontWeight =
+            "700";
+
+
+        document.body.appendChild(
+            button
+        );
+
+    }
+
+
+    if (isAdmin) {
+
+        button.textContent =
+            "👑 تسجيل خروج المدير";
+
+        button.style.background =
+            "#222";
+
+        button.style.color =
+            "#fff";
+
+        button.onclick =
+            adminLogout;
+
+    }
+
+    else {
+
+        button.textContent =
+            "🔐 دخول المدير";
+
+        button.style.background =
+            "#c62828";
+
+        button.style.color =
+            "#fff";
+
+        button.onclick =
+            adminLogin;
+
+    }
+
+}
+
+
+/* =====================================================
+   LOAD PROFILE + CHECK ADMIN
 ===================================================== */
 
 async function loadProfile() {
@@ -973,6 +1402,10 @@ async function loadProfile() {
         return;
     }
 
+
+    /* =========================
+       LOAD PROFILE
+    ========================= */
 
     const {
         data,
@@ -1006,6 +1439,13 @@ async function loadProfile() {
         data || null;
 
 
+    /* =========================
+       CHECK ADMIN
+    ========================= */
+
+    await checkAdmin();
+
+
     updateProfileUI();
 
 }
@@ -1030,13 +1470,16 @@ function updateProfileUI() {
 
         $("profileAvatar")
             .innerHTML =
+
             profile?.avatar_url
 
             ?
 
             `
                 <img
-                    src="${escapeHTML(profile.avatar_url)}"
+                    src="${escapeHTML(
+                        profile.avatar_url
+                    )}"
                     alt="الصورة الشخصية"
                 >
             `
@@ -1067,7 +1510,9 @@ function updateProfileUI() {
 
             `
                 <img
-                    src="${escapeHTML(pendingPhoto)}"
+                    src="${escapeHTML(
+                        pendingPhoto
+                    )}"
                     alt=""
                 >
             `
@@ -1080,7 +1525,9 @@ function updateProfileUI() {
 
             `
                 <img
-                    src="${escapeHTML(profile.avatar_url)}"
+                    src="${escapeHTML(
+                        profile.avatar_url
+                    )}"
                     alt=""
                 >
             `
@@ -1168,6 +1615,10 @@ async function loadCommunity() {
     }
 
 
+    /* =========================
+       PROFILE MAP
+    ========================= */
+
     const profileMap =
         new Map(
             (profilesResult.data || [])
@@ -1179,6 +1630,10 @@ async function loadCommunity() {
                 )
         );
 
+
+    /* =========================
+       POSTS
+    ========================= */
 
     posts =
         (postsResult.data || [])
@@ -1206,6 +1661,10 @@ async function loadCommunity() {
             });
 
 
+    /* =========================
+       COMMENTS
+    ========================= */
+
     comments =
         (commentsResult.data || [])
             .map(comment => {
@@ -1231,6 +1690,10 @@ async function loadCommunity() {
 
             });
 
+
+    /* =========================
+       LIKES
+    ========================= */
 
     likes =
         likesResult.data || [];
@@ -1297,7 +1760,12 @@ function render() {
                     );
 
 
+                /* =========================
+                   DELETE PERMISSION
+                ========================= */
+
                 const canDelete =
+                    isAdmin ||
                     post.user_id ===
                     currentUser?.id;
 
@@ -1349,7 +1817,11 @@ function render() {
 
                             <button
                                 class="action
-                                ${liked ? "liked" : ""}"
+                                ${
+                                    liked
+                                        ? "liked"
+                                        : ""
+                                }"
                                 onclick="
                                     likePost(
                                         '${post.id}'
@@ -1357,9 +1829,10 @@ function render() {
                                 "
                             >
 
-                                ${liked
-                                    ? "❤️"
-                                    : "🤍"
+                                ${
+                                    liked
+                                        ? "❤️"
+                                        : "🤍"
                                 }
 
                                 ${postLikes.length}
@@ -1426,8 +1899,8 @@ function render() {
                                 postComments
                                     .map(comment => {
 
-                                        const
-                                            canDeleteComment =
+                                        const canDeleteComment =
+                                            isAdmin ||
                                             comment.user_id ===
                                             currentUser?.id;
 
@@ -1502,7 +1975,7 @@ function render() {
                                                             "
                                                         >
 
-                                                            حذف
+                                                            🗑️ حذف
 
                                                         </button>
 
@@ -1728,6 +2201,11 @@ async function likePost(postId) {
 
 async function deletePost(postId) {
 
+    if (!currentUser) {
+        return;
+    }
+
+
     if (
         !confirm(
             "هل تريد حذف هذا المنشور؟"
@@ -1739,20 +2217,41 @@ async function deletePost(postId) {
     }
 
 
-    const {
-        error
-    } =
-        await supabaseClient
+    /*
+       Admin:
+       DELETE without user_id restriction.
+
+       Normal user:
+       DELETE only their own post.
+    */
+
+    let query =
+        supabaseClient
             .from("posts")
             .delete()
             .eq(
                 "id",
                 postId
-            )
-            .eq(
+            );
+
+
+    if (!isAdmin) {
+
+        query =
+            query.eq(
                 "user_id",
                 currentUser.id
             );
+
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await query
+            .select();
 
 
     if (error) {
@@ -1760,6 +2259,21 @@ async function deletePost(postId) {
         showError(
             "تعذر حذف المنشور.",
             error
+        );
+
+        return;
+
+    }
+
+
+    /*
+       If no rows were deleted, tell us.
+    */
+
+    if (!data || data.length === 0) {
+
+        alert(
+            "لم يتم حذف المنشور. قد لا تملك صلاحية حذفه."
         );
 
         return;
@@ -1852,6 +2366,11 @@ async function deleteComment(
     commentId
 ) {
 
+    if (!currentUser) {
+        return;
+    }
+
+
     if (
         !confirm(
             "هل تريد حذف هذا التعليق؟"
@@ -1863,20 +2382,41 @@ async function deleteComment(
     }
 
 
-    const {
-        error
-    } =
-        await supabaseClient
+    /*
+       Admin:
+       DELETE any comment.
+
+       Normal user:
+       DELETE only their own comment.
+    */
+
+    let query =
+        supabaseClient
             .from("comments")
             .delete()
             .eq(
                 "id",
                 commentId
-            )
-            .eq(
+            );
+
+
+    if (!isAdmin) {
+
+        query =
+            query.eq(
                 "user_id",
                 currentUser.id
             );
+
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await query
+            .select();
 
 
     if (error) {
@@ -1884,6 +2424,17 @@ async function deleteComment(
         showError(
             "تعذر حذف التعليق.",
             error
+        );
+
+        return;
+
+    }
+
+
+    if (!data || data.length === 0) {
+
+        alert(
+            "لم يتم حذف التعليق. قد لا تملك صلاحية حذفه."
         );
 
         return;
@@ -1949,24 +2500,36 @@ function closeModal() {
    PROFILE BUTTONS
 ===================================================== */
 
-$("edit").onclick =
-    openModal;
+if ($("edit")) {
+
+    $("edit").onclick =
+        openModal;
+
+}
 
 
-$("close").onclick =
-    closeModal;
+if ($("close")) {
+
+    $("close").onclick =
+        closeModal;
+
+}
 
 
 /* =====================================================
    NAME
 ===================================================== */
 
-$("name").oninput =
-    function () {
+if ($("name")) {
 
-        updateProfileUI();
+    $("name").oninput =
+        function () {
 
-    };
+            updateProfileUI();
+
+        };
+
+}
 
 
 /* =====================================================
@@ -2110,203 +2673,257 @@ function compressImage(file) {
    PHOTO
 ===================================================== */
 
-$("photo").onchange =
-    async function (event) {
+if ($("photo")) {
 
-        const file =
-            event.target.files[0];
+    $("photo").onchange =
+        async function (event) {
 
-
-        if (!file) {
-            return;
-        }
+            const file =
+                event.target.files[0];
 
 
-        if (
-            !file.type
-                .startsWith("image/")
-        ) {
-
-            alert(
-                "اختر ملف صورة."
-            );
-
-            event.target.value = "";
-
-            return;
-
-        }
+            if (!file) {
+                return;
+            }
 
 
-        if (
-            file.size >
-            5 * 1024 * 1024
-        ) {
+            if (
+                !file.type
+                    .startsWith("image/")
+            ) {
 
-            alert(
-                "الصورة يجب أن تكون أقل من 5MB."
-            );
-
-            event.target.value = "";
-
-            return;
-
-        }
-
-
-        try {
-
-            pendingPhoto =
-                await compressImage(
-                    file
+                alert(
+                    "اختر ملف صورة."
                 );
 
+                event.target.value = "";
 
-            updateProfileUI();
+                return;
 
-        }
+            }
 
-        catch (error) {
 
-            showError(
-                "تعذر تجهيز الصورة.",
-                error
-            );
+            if (
+                file.size >
+                5 * 1024 * 1024
+            ) {
 
-        }
+                alert(
+                    "الصورة يجب أن تكون أقل من 5MB."
+                );
 
-    };
+                event.target.value = "";
+
+                return;
+
+            }
+
+
+            try {
+
+                pendingPhoto =
+                    await compressImage(
+                        file
+                    );
+
+
+                updateProfileUI();
+
+            }
+
+            catch (error) {
+
+                showError(
+                    "تعذر تجهيز الصورة.",
+                    error
+                );
+
+            }
+
+        };
+
+}
 
 
 /* =====================================================
    SAVE PROFILE
 ===================================================== */
 
-$("save").onclick =
-    async function () {
+if ($("save")) {
 
-        const name =
-            $("name")
-                .value
-                .trim();
+    $("save").onclick =
+        async function () {
 
-
-        if (!name) {
-
-            alert(
-                "اكتب اسمك."
-            );
-
-            return;
-
-        }
+            const name =
+                $("name")
+                    .value
+                    .trim();
 
 
-        const avatarUrl =
-            pendingPhoto !== null
+            if (!name) {
 
-            ?
+                alert(
+                    "اكتب اسمك."
+                );
 
-            pendingPhoto
+                return;
 
-            :
-
-            (
-                profile?.avatar_url ||
-                null
-            );
+            }
 
 
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-                .from("profiles")
-                .upsert(
+            const avatarUrl =
+                pendingPhoto !== null
 
-                    {
+                ?
 
-                        id:
-                            currentUser.id,
+                pendingPhoto
 
-                        name:
-                            name,
+                :
 
-                        avatar_url:
-                            avatarUrl
-
-                    },
-
-                    {
-
-                        onConflict:
-                            "id"
-
-                    }
-
-                )
-                .select(
-                    "id,name,avatar_url"
-                )
-                .single();
+                (
+                    profile?.avatar_url ||
+                    null
+                );
 
 
-        if (error) {
-
-            showError(
-                "تعذر حفظ الملف الشخصي.",
+            const {
+                data,
                 error
-            );
+            } =
+                await supabaseClient
+                    .from("profiles")
+                    .upsert(
 
-            return;
+                        {
 
-        }
+                            id:
+                                currentUser.id,
+
+                            name:
+                                name,
+
+                            avatar_url:
+                                avatarUrl
+
+                        },
+
+                        {
+
+                            onConflict:
+                                "id"
+
+                        }
+
+                    )
+                    .select(
+                        "id,name,avatar_url"
+                    )
+                    .single();
 
 
-        profile =
-            data;
+            if (error) {
+
+                showError(
+                    "تعذر حفظ الملف الشخصي.",
+                    error
+                );
+
+                return;
+
+            }
 
 
-        pendingPhoto =
-            null;
+            profile =
+                data;
 
 
-        $("photo").value =
-            "";
+            pendingPhoto =
+                null;
 
 
-        updateProfileUI();
+            $("photo").value =
+                "";
 
 
-        closeModal();
+            updateProfileUI();
 
 
-        await loadCommunity();
+            closeModal();
 
-    };
+
+            await loadCommunity();
+
+        };
+
+}
 
 
 /* =====================================================
    CHARACTER COUNTER
 ===================================================== */
 
-$("postText").oninput =
-    function () {
+if ($("postText")) {
 
-        $("count")
-            .textContent =
-            `${this.value.length} / 1000`;
+    $("postText").oninput =
+        function () {
 
-    };
+            $("count")
+                .textContent =
+                `${this.value.length} / 1000`;
+
+        };
+
+}
 
 
 /* =====================================================
    PUBLISH BUTTON
 ===================================================== */
 
-$("publish").onclick =
-    publish;
+if ($("publish")) {
+
+    $("publish").onclick =
+        publish;
+
+}
+
+
+/* =====================================================
+   AUTH STATE LISTENER
+===================================================== */
+
+supabaseClient
+    .auth
+    .onAuthStateChange(
+        async (
+            event,
+            session
+        ) => {
+
+            console.log(
+                "Auth event:",
+                event
+            );
+
+
+            if (
+                session?.user &&
+                session.user.id !==
+                currentUser?.id
+            ) {
+
+                currentUser =
+                    session.user;
+
+
+                await loadProfile();
+
+                await loadCommunity();
+
+            }
+
+        }
+    );
 
 
 /* =====================================================
@@ -2326,14 +2943,19 @@ async function init() {
     `;
 
 
+    /*
+       Create admin button immediately.
+    */
+
+    updateAdminUI();
+
+
     const authenticated =
         await initAuth();
 
 
     if (!authenticated) {
-
         return;
-
     }
 
 
@@ -2341,6 +2963,9 @@ async function init() {
 
 
     await loadCommunity();
+
+
+    updateAdminUI();
 
 
     if (!profile?.name) {
@@ -2372,6 +2997,8 @@ async function init() {
 init();
 
 </script>
+```
+
 
 </body>
 </html>
