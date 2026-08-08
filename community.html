@@ -1562,12 +1562,12 @@ async function loadCommunity() {
                 .select(
                     "id,user_id,content,created_at,is_pinned"
                 )
-                .order(
-                    "created_at",
-                    {
-                        ascending: false
-                    }
-                ),
+                .order("is_pinned", {
+    ascending: false
+})
+.order("created_at", {
+    ascending: false
+}),
 
             supabaseClient
                 .from("comments")
