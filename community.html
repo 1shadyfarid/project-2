@@ -1898,7 +1898,27 @@ const banButton =
 
 
 
-
+const verifyButton =
+    isAdmin &&
+    post.user_id !== currentUser?.id
+    ? `
+        <button
+            class="action"
+            onclick="
+                toggleVerified(
+                    '${post.user_id}',
+                    ${!!post.is_verified}
+                )
+            "
+        >
+            ${
+                post.is_verified
+                    ? "❌ إلغاء التوثيق"
+                    : "✅ توثيق"
+            }
+        </button>
+    `
+    : "";
 
 
 
@@ -1926,12 +1946,22 @@ const banButton =
                             )}
 
                             <div>
+<b>
+    ${escapeHTML(
+        post.name
+    )}
 
-                                <b>
-                                    ${escapeHTML(
-                                        post.name
-                                    )}
-                                </b>
+    ${
+        post.is_verified
+            ? `<span style="
+                color:#1877f2;
+                font-weight:700;
+                font-size:13px;
+                margin-right:4px;
+            ">✓</span>`
+            : ""
+    }
+</b>
 
                                 <div class="time">
 
@@ -2033,6 +2063,8 @@ const banButton =
 ${pinButton}
 
 ${banButton}
+
+${verifyButton}
                         </div>
 
 
@@ -2440,6 +2472,43 @@ async function banUser(userId, userName) {
 
     await loadCommunity();
 }
+
+
+
+
+/* =====================================================
+   VERIFY / UNVERIFY USER — ADMIN ONLY
+===================================================== */
+
+async function toggleVerified(userId, currentlyVerified) {
+
+    if (!isAdmin) {
+        alert("ليس لديك صلاحية.");
+        return;
+    }
+
+    const { error } = await supabaseClient
+        .from("profiles")
+        .update({
+            is_verified: !currentlyVerified
+        })
+        .eq("id", userId);
+
+    if (error) {
+
+        showError(
+            "تعذر تحديث حالة التوثيق.",
+            error
+        );
+
+        return;
+    }
+
+    await loadCommunity();
+}
+
+
+
 
 /* =====================================================
    DELETE POST
@@ -3061,9 +3130,9 @@ if ($("save")) {
                         }
 
                     )
-                    .select(
-                        "id,name,avatar_url"
-                    )
+                  .select(
+    "id,name,avatar_url,is_verified"
+)
                     .single();
 
 
