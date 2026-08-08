@@ -1436,7 +1436,51 @@ function updateAdminUI() {
 
 }
 
+/* =====================================================
+   CHECK IF USER IS BANNED
+===================================================== */
 
+let isBanned = false;
+let banReason = "";
+
+async function checkBanStatus() {
+
+    if (!currentUser) {
+        return false;
+    }
+
+    const {
+        data,
+        error
+    } = await supabaseClient
+        .from("banned_users")
+        .select("user_id,reason")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+    if (error) {
+
+        console.error(
+            "Ban check error:",
+            error
+        );
+
+        return false;
+    }
+
+    if (data) {
+
+        isBanned = true;
+        banReason = data.reason || "";
+
+        return true;
+    }
+
+    isBanned = false;
+    banReason = "";
+
+    return false;
+}
 /* =====================================================
    LOAD PROFILE + CHECK ADMIN
 ===================================================== */
@@ -1834,7 +1878,23 @@ const pinButton = isAdmin
         </button>
     `
     : "";
-
+const banButton =
+    isAdmin &&
+    post.user_id !== currentUser?.id
+    ? `
+        <button
+            class="action"
+            onclick="
+                banUser(
+                    '${post.user_id}',
+                    '${escapeHTML(post.name)}'
+                )
+            "
+        >
+            🚫 حظر
+        </button>
+    `
+    : "";
 
 
 
@@ -1971,6 +2031,8 @@ const pinButton = isAdmin
                                 ""
                             }
 ${pinButton}
+
+${banButton}
                         </div>
 
 
@@ -2324,7 +2386,60 @@ async function togglePin(postId, currentlyPinned) {
 
 
 
+/* =====================================================
+   BAN USER — ADMIN ONLY
+===================================================== */
 
+async function banUser(userId, userName) {
+
+    if (!isAdmin) {
+        alert("ليس لديك صلاحية.");
+        return;
+    }
+
+    if (userId === currentUser.id) {
+        alert("لا يمكنك حظر نفسك.");
+        return;
+    }
+
+    const reason = prompt(
+        "سبب الحظر (اختياري):"
+    );
+
+    if (reason === null) {
+        return;
+    }
+
+    const {
+        error
+    } = await supabaseClient
+        .from("banned_users")
+        .insert({
+            user_id: userId,
+            reason: reason.trim() || null
+        });
+
+    if (error) {
+
+        if (error.code === "23505") {
+            alert("هذا المستخدم محظور بالفعل.");
+        } else {
+            showError(
+                "تعذر حظر المستخدم.",
+                error
+            );
+        }
+
+        return;
+    }
+
+    alert(
+        "🚫 تم حظر " +
+        (userName || "هذا المستخدم")
+    );
+
+    await loadCommunity();
+}
 
 /* =====================================================
    DELETE POST
@@ -3080,21 +3195,33 @@ async function init() {
 
     updateAdminUI();
 
+const authenticated =
+    await initAuth();
 
-    const authenticated =
-        await initAuth();
+if (!authenticated) {
+    return;
+}
 
+const banned =
+    await checkBanStatus();
 
-    if (!authenticated) {
-        return;
-    }
+if (banned) {
 
+    alert(
+        "🚫 تم حظرك من المجتمع." +
+        (
+            banReason
+                ? "\n\nالسبب: " + banReason
+                : ""
+        )
+    );
 
-    await loadProfile();
+    return;
+}
 
+await loadProfile();
 
-    await loadCommunity();
-
+await loadCommunity();
 
     updateAdminUI();
 
