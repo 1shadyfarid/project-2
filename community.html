@@ -690,14 +690,36 @@ body{
         </button>
 
 
+<!-- ADMIN STATISTICS -->
+<div id="adminStats" style="display:none;">
 
-    <button
-    id="enableNotifications"
-    type="button"
-    class="btn red"
->
-    🔔 تفعيل الإشعارات
-</button>
+    <h3>👑 إحصائيات المدير</h3>
+
+    <div class="admin-stats-grid">
+
+        <div class="admin-stat">
+            <strong id="totalMembers">0</strong>
+            <span>👥 إجمالي الأعضاء</span>
+        </div>
+
+        <div class="admin-stat">
+            <strong id="activeMembers">0</strong>
+            <span>🟢 نشط الآن</span>
+        </div>
+
+        <div class="admin-stat">
+            <strong id="totalPosts">0</strong>
+            <span>📝 المنشورات</span>
+        </div>
+
+        <div class="admin-stat">
+            <strong id="totalComments">0</strong>
+            <span>💬 التعليقات</span>
+        </div>
+
+    </div>
+
+</div>
 
 
 
@@ -3602,25 +3624,209 @@ async function init() {
     }
 
 
-    /* =========================
-       LOAD PROFILE
-    ========================= */
+/* =====================================================
+   ADMIN STATISTICS
+===================================================== */
 
-    await loadProfile();
+async function loadAdminStats() {
+
+    if (!isAdmin) {
+        return;
+    }
+
+    const [
+        profilesResult,
+        postsResult,
+        commentsResult
+    ] = await Promise.all([
+
+        supabaseClient
+            .from("profiles")
+            .select("id,last_seen"),
+
+        supabaseClient
+            .from("posts")
+            .select("id", { count: "exact", head: true }),
+
+        supabaseClient
+            .from("comments")
+            .select("id", { count: "exact", head: true })
+
+    ]);
 
 
-    /* =========================
-       LOAD COMMUNITY
-    ========================= */
+    if (
+        profilesResult.error ||
+        postsResult.error ||
+        commentsResult.error
+    ) {
 
-    await loadCommunity();
+        console.error(
+            "Admin statistics error:",
+            profilesResult.error ||
+            postsResult.error ||
+            commentsResult.error
+        );
+
+        return;
+    }
 
 
-    /* =========================
-       UPDATE ADMIN UI
-    ========================= */
+    const profiles =
+        profilesResult.data || [];
 
-    updateAdminUI();
+
+    /*
+       Active = seen within the last 5 minutes
+    */
+
+    const fiveMinutesAgo =
+        Date.now() -
+        (5 * 60 * 1000);
+
+
+    const activeMembers =
+        profiles.filter(profile => {
+
+            if (!profile.last_seen) {
+                return false;
+            }
+
+            return (
+                new Date(
+                    profile.last_seen
+                ).getTime() >= fiveMinutesAgo
+            );
+
+        }).length;
+
+
+    if ($("totalMembers")) {
+
+        $("totalMembers")
+            .textContent =
+            profiles.length;
+
+    }
+
+
+    if ($("activeMembers")) {
+
+        $("activeMembers")
+            .textContent =
+            activeMembers;
+
+    }
+
+
+    if ($("totalPosts")) {
+
+        $("totalPosts")
+            .textContent =
+            postsResult.count || 0;
+
+    }
+
+
+    if ($("totalComments")) {
+
+        $("totalComments")
+            .textContent =
+            commentsResult.count || 0;
+
+    }
+
+
+    if ($("adminStats")) {
+
+        $("adminStats").style.display =
+            "block";
+
+    }
+
+}
+/* =====================================================
+   UPDATE LAST SEEN
+===================================================== */
+
+async function updateLastSeen() {
+
+    if (!currentUser || isAdmin) {
+        return;
+    }
+
+    const { error } = await supabaseClient
+        .from("profiles")
+        .update({
+            last_seen: new Date().toISOString()
+        })
+        .eq("id", currentUser.id);
+
+    if (error) {
+        console.error(
+            "Last seen update error:",
+            error
+        );
+    }
+
+}
+
+
+
+
+
+
+/* =========================
+   LOAD PROFILE
+========================= */
+
+await loadProfile();
+
+
+/* =========================
+   LOAD COMMUNITY
+========================= */
+
+await loadCommunity();
+
+
+/* =========================
+   UPDATE LAST SEEN
+========================= */
+
+await updateLastSeen();
+
+
+/* =========================
+   ADMIN STATISTICS
+========================= */
+
+if (isAdmin) {
+    await loadAdminStats();
+}
+
+
+/* =========================
+   UPDATE ADMIN UI
+========================= */
+
+updateAdminUI();
+
+
+/* =========================
+   REFRESH ADMIN STATISTICS
+========================= */
+
+setInterval(
+    () => {
+
+        if (isAdmin) {
+            loadAdminStats();
+        }
+
+    },
+    30000
+);
 
 
     /* =========================
@@ -3679,7 +3885,10 @@ async function init() {
         },
         15000
     );
-
+setInterval(
+    updateLastSeen,
+    120000
+);
 }
 
 
