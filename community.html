@@ -895,6 +895,7 @@ let profile = null;
 let posts = [];
 let comments = [];
 let likes = [];
+let bannedUsers = [];
 
 let pendingPhoto = null;
 
@@ -1459,10 +1460,8 @@ function updateAdminUI() {
     }
 
 }
-
-
 /* =====================================================
-   BAN STATUS
+   CHECK IF USER IS BANNED
 ===================================================== */
 
 let isBanned = false;
@@ -1474,19 +1473,17 @@ async function checkBanStatus() {
         return false;
     }
 
-
     const {
         data,
         error
-    } =
-        await supabaseClient
-            .from("banned_users")
-            .select("user_id,reason")
-            .eq(
-                "user_id",
-                currentUser.id
-            )
-            .maybeSingle();
+    } = await supabaseClient
+        .from("banned_users")
+        .select("user_id,reason")
+        .eq(
+            "user_id",
+            currentUser.id
+        )
+        .maybeSingle();
 
 
     if (error) {
@@ -1497,25 +1494,29 @@ async function checkBanStatus() {
         );
 
         return false;
-
     }
 
 
     if (data) {
 
         isBanned = true;
-        banReason = data.reason || "";
+
+        banReason =
+            data.reason || "";
+
+        updateBanUI();
 
         return true;
-
     }
 
 
     isBanned = false;
+
     banReason = "";
 
-    return false;
+    updateBanUI();
 
+    return false;
 }
 
 
@@ -1670,7 +1671,8 @@ async function loadCommunity() {
         postsResult,
         commentsResult,
         likesResult,
-        profilesResult
+        profilesResult,
+        bannedUsersResult
     ] =
         await Promise.all([
 
@@ -1703,14 +1705,17 @@ async function loadCommunity() {
                 .select(
                     "id,post_id,user_id,created_at"
                 ),
+supabaseClient
+    .from("profiles")
+    .select(
+        "id,name,avatar_url,is_verified"
+    ),
 
-            supabaseClient
-                .from("profiles")
-                .select(
-                    "id,name,avatar_url,is_verified"
-                )
+supabaseClient
+    .from("banned_users")
+    .select("user_id")
 
-        ]);
+]);
 
 
     const error =
@@ -1823,16 +1828,17 @@ async function loadCommunity() {
     /* =========================
        LIKES
     ========================= */
+likes =
+    likesResult.data || [];
 
-    likes =
-        likesResult.data || [];
+bannedUsers =
+    (bannedUsersResult.data || [])
+        .map(
+            user => user.user_id
+        );
 
-
-    render();
-
-}
-
-
+render();
+} 
 /* =====================================================
    VERIFIED BADGE
 ===================================================== */
@@ -1951,38 +1957,47 @@ function render() {
 
                     `
                     : "";
+let banButton = "";
 
+if (
+    isAdmin &&
+    post.user_id !== currentUser?.id
+) {
 
-                /* =========================
-                   BAN BUTTON
-                ========================= */
+    if (
+        bannedUsers.includes(
+            post.user_id
+        )
+    ) {
 
-                const banButton =
-                    isAdmin &&
-                    post.user_id !==
-                    currentUser?.id
+        banButton = `
+            <button
+                class="action"
+                onclick="unbanUser(
+                    '${post.user_id}',
+                    '${escapeHTML(post.name)}'
+                )"
+            >
+                ✅ إلغاء الحظر
+            </button>
+        `;
 
-                    ? `
+    } else {
 
-                        <button
-                            class="action"
-                            onclick="
-                                banUser(
-                                    '${post.user_id}',
-                                    '${escapeHTML(post.name)}'
-                                )
-                            "
-                        >
+        banButton = `
+            <button
+                class="action"
+                onclick="banUser(
+                    '${post.user_id}',
+                    '${escapeHTML(post.name)}'
+                )"
+            >
+                🚫 حظر
+            </button>
+        `;
 
-                            🚫 حظر
-
-                        </button>
-
-                    `
-
-                    : "";
-
-
+    }
+}
                 /* =========================
                    VERIFY BUTTON
 
@@ -2315,32 +2330,35 @@ function render() {
 
                             <!-- COMMENT BOX -->
 
-                            <div
-                                class="commentbox"
-                            >
+                            <div class="commentbox">
 
-                                <input
-                                    id="c-${post.id}"
-                                    class="input"
-                                    maxlength="500"
-                                    placeholder="اكتب تعليقاً..."
-                                >
+    <input
+        id="c-${post.id}"
+        class="input"
+        maxlength="500"
+        placeholder="${
+            isBanned
+                ? "🚫 أنت محظور من التعليق"
+                : "اكتب تعليقاً..."
+        }"
+        ${isBanned ? "disabled" : ""}
+    >
 
+    <button
+        class="btn red"
+        onclick="
+            comment(
+                '${post.id}'
+            )
+        "
+        ${isBanned ? "disabled" : ""}
+    >
 
-                                <button
-                                    class="btn red"
-                                    onclick="
-                                        comment(
-                                            '${post.id}'
-                                        )
-                                    "
-                                >
+        تعليق
 
-                                    تعليق
+    </button>
 
-                                </button>
-
-                            </div>
+</div>
 
 
                         </div>
@@ -2359,6 +2377,17 @@ function render() {
 ===================================================== */
 
 async function publish() {
+
+
+if (isBanned) {
+    alert(
+        "🚫 لا يمكنك نشر المنشورات لأن حسابك محظور."
+    );
+    return;
+}
+
+
+
 
     if (!profile?.name) {
 
@@ -2678,7 +2707,52 @@ async function banUser(
 
 }
 
+/* =====================================================
+   UNBAN USER — ADMIN ONLY
+===================================================== */
 
+async function unbanUser(userId, userName) {
+
+    if (!isAdmin) {
+        alert("ليس لديك صلاحية.");
+        return;
+    }
+
+    const confirmed = confirm(
+        "هل تريد إلغاء حظر " +
+        (userName || "هذا المستخدم") +
+        "؟"
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    const { error } = await supabaseClient
+        .from("banned_users")
+        .delete()
+        .eq(
+            "user_id",
+            userId
+        );
+
+    if (error) {
+
+        showError(
+            "تعذر إلغاء حظر المستخدم.",
+            error
+        );
+
+        return;
+    }
+
+    alert(
+        "✅ تم إلغاء حظر " +
+        (userName || "هذا المستخدم")
+    );
+
+    await loadCommunity();
+}
 /* =====================================================
    VERIFY / UNVERIFY USER — ADMIN ONLY
 ===================================================== */
@@ -2882,7 +2956,12 @@ async function deletePost(
 async function comment(
     postId
 ) {
-
+if (isBanned) {
+    alert(
+        "🚫 لا يمكنك إضافة تعليقات لأن حسابك محظور."
+    );
+    return;
+}
     if (!profile?.name) {
 
         openModal();
@@ -4019,7 +4098,44 @@ async function registerNotificationWorker() {
 
 }
 
+/* =====================================================
+   UPDATE BAN UI
+===================================================== */
 
+function updateBanUI() {
+
+    const publishButton = $("publish");
+
+    if (publishButton) {
+
+        publishButton.disabled = isBanned;
+
+        if (isBanned) {
+
+            publishButton.textContent =
+                "🚫 أنت محظور";
+
+            publishButton.style.opacity =
+                "0.5";
+
+            publishButton.style.cursor =
+                "not-allowed";
+
+        } else {
+
+            publishButton.textContent =
+                "نشر";
+
+            publishButton.style.opacity =
+                "1";
+
+            publishButton.style.cursor =
+                "pointer";
+
+        }
+    }
+
+}
 /* =====================================================
    START NOTIFICATION SYSTEM
 ===================================================== */
