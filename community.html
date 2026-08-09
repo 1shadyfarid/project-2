@@ -601,13 +601,46 @@ body{
     }
 }
 
-.posthead {
-    margin-bottom: 6px !important;
+
+/* =========================
+   POST TEXT SPACING
+========================= */
+
+.post-content {
+    padding: 20px;
+    min-height: 0;
+    height: auto;
 }
 
-.post .text {
-    margin-top: 0 !important;
+.post-content p {
+    margin: 0;
+    line-height: 1.7;
 }
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 600px) {
+
+    .post-content {
+        padding: 14px 12px;
+        min-height: 0;
+        height: auto;
+    }
+
+    .post-content p {
+        margin: 0;
+        line-height: 1.6;
+    }
+
+}
+
+
+
+
+
+
 
 
 </style>
