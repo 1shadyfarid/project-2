@@ -297,13 +297,15 @@ body{
 ========================= */
 
 .text{
-    margin:14px 0;
-
-    line-height:1.9;
-
-    white-space:pre-wrap;
-
-    font-size:15px;
+    margin: 12px 0;
+    padding: 0;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    font-size: 15px;
+    height: auto;
+    min-height: 0;
 }
 
 /* =========================
@@ -640,7 +642,40 @@ body{
 
 
 
+@media (max-width:600px){
 
+    .top h1{
+        font-size:27px;
+    }
+
+    .profile{
+        flex-wrap:wrap;
+    }
+
+    .profile .info{
+        min-width:150px;
+    }
+
+    .commentbox{
+        flex-direction:column;
+    }
+
+    .actions{
+        flex-wrap:wrap;
+    }
+
+    .composer,
+    .post{
+        padding:16px;
+    }
+
+    .post .text{
+        margin:10px 0;
+        line-height:1.6;
+        min-height:0;
+        height:auto;
+    }
+}
 
 
 </style>
