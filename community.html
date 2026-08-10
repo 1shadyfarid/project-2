@@ -1518,100 +1518,32 @@ async function adminLogout() {
 /* =====================================================
    ADMIN UI
 ===================================================== */
+/* =====================================================
+   ADMIN UI
+===================================================== */
 
 function updateAdminUI() {
 
-    let button =
+    const button =
         $("adminLoginButton");
 
-
-    if (!button) {
-
-        button =
-            document.createElement("button");
-
-        button.id =
-            "adminLoginButton";
-
-        button.type =
-            "button";
-
-
-        button.style.position =
-            "fixed";
-
-        button.style.bottom =
-            "20px";
-
-        button.style.left =
-            "20px";
-
-        button.style.zIndex =
-            "99999";
-
-        button.style.padding =
-            "10px 16px";
-
-        button.style.border =
-            "none";
-
-        button.style.borderRadius =
-            "10px";
-
-        button.style.cursor =
-            "pointer";
-
-        button.style.fontFamily =
-            "Cairo, sans-serif";
-
-        button.style.fontWeight =
-            "700";
-
-
-        document.body.appendChild(
-            button
-        );
-
+    if (button) {
+        button.remove();
     }
 
 
-    if (isAdmin) {
+    const adminPostImages =
+        $("adminPostImages");
 
-        button.textContent =
-            "👑 تسجيل خروج المدير";
+    if (adminPostImages) {
 
-        button.style.background =
-            "#222";
-
-        button.style.color =
-            "#fff";
-
-        button.onclick =
-            adminLogout;
+        adminPostImages.style.display =
+            isAdmin
+                ? "block"
+                : "none";
 
     }
 
-    else {
-
-        button.textContent =
-            "🔐 دخول المدير";
-
-        button.style.background =
-            "#c62828";
-
-        button.style.color =
-            "#fff";
-
-        button.onclick =
-            adminLogin;
-
-    }
-const adminPostImages = $("adminPostImages");
-
-if (adminPostImages) {
-    adminPostImages.style.display =
-        isAdmin ? "block" : "none";
-}
 }
 /* =====================================================
    CHECK IF USER IS BANNED
