@@ -707,7 +707,19 @@ body{
         height:auto;
     }
 }
+.community-logo {
+    display: inline-block;
+    margin-bottom: 8px;
+}
 
+.community-logo img {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+    cursor: pointer;
+}
 /* =========================
    POST IMAGES
 ========================= */
@@ -738,31 +750,233 @@ body{
     }
 
 }
+
+/* =====================================================
+   COMMUNITY RED HEADER
+===================================================== */
+
+.community-heading {
+    background: linear-gradient(
+        135deg,
+        #d40000,
+        #b00000
+    );
+
+    width: 100%;
+   min-height: 190px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 25px;
+
+    direction: rtl;
+
+    color: white;
+
+    box-sizing: border-box;
+
+    padding: 25px 20px;
+}
+
+
+/* =========================
+   TEXT
+========================= */
+
+.community-heading-text {
+    text-align: center;
+}
+
+.community-heading-text strong {
+    display: block;
+
+    color: white;
+
+    font-size: 15px;
+
+    margin-bottom: 3px;
+}
+
+.community-heading-text h1 {
+    color: white;
+
+    font-size: 38px;
+
+    font-weight: 800;
+
+    margin: 0;
+}
+
+.community-heading-text p {
+    color: white;
+
+    font-size: 14px;
+
+    margin: 8px 0 0;
+}
+
+
+/* =========================
+   LOGO
+========================= */
+
+.community-logo {
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    color: white;
+
+    flex-shrink: 0;
+
+    transition:
+        transform 0.2s ease;
+}
+
+.community-logo:hover {
+    transform: translateY(-3px);
+}
+
+.community-logo img {
+    width: 75px;
+
+    height: 75px;
+
+    object-fit: contain;
+
+    display: block;
+
+    border-radius: 50%;
+}
+
+.community-logo span {
+    margin-top: 6px;
+
+    color: white;
+
+    font-family: "Cairo", sans-serif;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 600px) {
+
+    .community-heading {
+        min-height: 130px;
+
+        gap: 12px;
+
+        padding: 18px 10px;
+    }
+
+    .community-logo img {
+        width: 55px;
+        height: 55px;
+    }
+
+    .community-logo span {
+        font-size: 8px;
+    }
+
+    .community-heading-text strong {
+        font-size: 11px;
+    }
+
+    .community-heading-text h1 {
+        font-size: 27px;
+    }
+
+    .community-heading-text p {
+        font-size: 11px;
+    }
+
+}
+
+.community-heading {
+    background: linear-gradient(
+        135deg,
+        #d40000,
+        #b00000
+    );
+
+    width: 100%;
+
+    min-height: 190px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 25px;
+
+    direction: rtl;
+
+    color: white;
+
+    box-sizing: border-box;
+
+    padding: 30px 20px 45px;
+}
+
 </style>
 </head>
 
 
 <body>
+<div class="community-heading">
 
-<!-- =========================
-     HEADER
-========================= -->
+    <a
+        href="index.html"
+        class="community-logo"
+        title="العودة إلى الموقع الرئيسي"
+    >
+        <img
+            src="logo5.jpeg"
+            alt="مؤسسات الفقي العالمية"
+        >
 
-<header class="top">
+        <span>
+            ← العودة إلى الموقع الرئيسي
+        </span>
+    </a>
 
-    <strong>
-        مؤسسات الفقي العالمية
-    </strong>
 
-    <h1>
-        مجتمع الفقي
-    </h1>
+    <div class="community-heading-text">
 
-    <p>
-        مساحة للمتدربين لمشاركة الأفكار والتجارب وطرح الأسئلة.
-    </p>
+        <strong>
+            مؤسسات الفقي العالمية
+        </strong>
 
-</header>
+        <h1>
+            مجتمع الفقي
+        </h1>
+
+        <p>
+            مساحة للمتدربين لمشاركة الأفكار والتجارب وطرح الأسئلة.
+        </p>
+
+    </div>
+
+</div>
 
 
 <main class="wrap">
