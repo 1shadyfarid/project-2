@@ -1261,7 +1261,6 @@ async function initAuth() {
 
 }
 
-
 /* =====================================================
    ADMIN CHECK
 ===================================================== */
@@ -1270,15 +1269,8 @@ async function checkAdmin() {
 
     isAdmin = false;
 
+
     if (!currentUser) {
-        updateAdminUI();
-        return false;
-    }
-
-
-    if (currentUser.id !== ADMIN_USER_ID) {
-
-        isAdmin = false;
 
         updateAdminUI();
 
@@ -1332,7 +1324,6 @@ async function checkAdmin() {
     return isAdmin;
 
 }
-
 
 /* =====================================================
    ADMIN LOGIN
