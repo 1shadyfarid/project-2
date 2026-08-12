@@ -1509,7 +1509,6 @@ async function initAuth() {
 /* =====================================================
    ADMIN CHECK
 ===================================================== */
-
 async function checkAdmin() {
 
     isAdmin = false;
@@ -1564,12 +1563,27 @@ async function checkAdmin() {
     );
 
 
+    /* =========================
+       ADMIN STATISTICS VISIBILITY
+    ========================= */
+
+    const adminStats =
+        $("adminStats");
+
+
+    if (adminStats) {
+
+        adminStats.style.display =
+            isAdmin ? "block" : "none";
+
+    }
+
+
     updateAdminUI();
 
     return isAdmin;
 
 }
-
 /* =====================================================
    ADMIN LOGIN
 ===================================================== */
