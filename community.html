@@ -4552,12 +4552,16 @@ async function init() {
 /* =====================================================
    ADMIN STATISTICS
 ===================================================== */
+/* =====================================================
+   ADMIN STATISTICS
+===================================================== */
 
 async function loadAdminStats() {
 
     if (!isAdmin) {
         return;
     }
+
 
     const [
         profilesResult,
@@ -4571,14 +4575,44 @@ async function loadAdminStats() {
 
         supabaseClient
             .from("posts")
-            .select("id", { count: "exact", head: true }),
+            .select("id", {
+                count: "exact",
+                head: true
+            }),
 
         supabaseClient
             .from("comments")
-            .select("id", { count: "exact", head: true })
+            .select("id", {
+                count: "exact",
+                head: true
+            })
 
     ]);
 
+
+    /* =========================
+       DEBUG
+    ========================= */
+
+    console.log(
+        "PROFILES RESULT:",
+        profilesResult
+    );
+
+    console.log(
+        "POSTS RESULT:",
+        postsResult
+    );
+
+    console.log(
+        "COMMENTS RESULT:",
+        commentsResult
+    );
+
+
+    /* =========================
+       ERROR CHECK
+    ========================= */
 
     if (
         profilesResult.error ||
@@ -4601,9 +4635,10 @@ async function loadAdminStats() {
         profilesResult.data || [];
 
 
-    /*
-       Active = seen within the last 5 minutes
-    */
+    /* =========================
+       ACTIVE MEMBERS
+       Seen within last 5 minutes
+    ========================= */
 
     const fiveMinutesAgo =
         Date.now() -
@@ -4617,14 +4652,20 @@ async function loadAdminStats() {
                 return false;
             }
 
+
             return (
                 new Date(
                     profile.last_seen
-                ).getTime() >= fiveMinutesAgo
+                ).getTime() >=
+                fiveMinutesAgo
             );
 
         }).length;
 
+
+    /* =========================
+       TOTAL MEMBERS
+    ========================= */
 
     if ($("totalMembers")) {
 
@@ -4635,6 +4676,10 @@ async function loadAdminStats() {
     }
 
 
+    /* =========================
+       ACTIVE MEMBERS
+    ========================= */
+
     if ($("activeMembers")) {
 
         $("activeMembers")
@@ -4643,6 +4688,10 @@ async function loadAdminStats() {
 
     }
 
+
+    /* =========================
+       TOTAL POSTS
+    ========================= */
 
     if ($("totalPosts")) {
 
@@ -4653,6 +4702,10 @@ async function loadAdminStats() {
     }
 
 
+    /* =========================
+       TOTAL COMMENTS
+    ========================= */
+
     if ($("totalComments")) {
 
         $("totalComments")
@@ -4661,6 +4714,10 @@ async function loadAdminStats() {
 
     }
 
+
+    /* =========================
+       SHOW ADMIN STATISTICS
+    ========================= */
 
     if ($("adminStats")) {
 
