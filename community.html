@@ -1420,8 +1420,6 @@ function showError(message, error) {
     );
 
 }
-
-
 /* =====================================================
    AUTHENTICATION
 ===================================================== */
@@ -1431,31 +1429,26 @@ async function initAuth() {
     try {
 
         /* =========================
-           GET CURRENT SESSION
+           CHECK EXISTING SESSION
         ========================= */
 
         const {
-            data,
-            error
+            data: sessionData,
+            error: sessionError
         } =
             await supabaseClient
                 .auth
                 .getSession();
 
 
-        if (error) {
+        if (sessionError) {
 
             console.error(
-                "Auth session error:",
-                error
+                "Get session error:",
+                sessionError
             );
 
-            showError(
-                "تعذر تجديد المستخدم.",
-                error
-            );
-
-            return false;
+            currentUser = null;
 
         }
 
@@ -1464,13 +1457,15 @@ async function initAuth() {
            EXISTING USER
         ========================= */
 
-        if (data?.session?.user) {
+        if (
+            sessionData?.session?.user
+        ) {
 
             currentUser =
-                data.session.user;
+                sessionData.session.user;
 
             console.log(
-                "Existing user:",
+                "Authenticated user:",
                 currentUser.id
             );
 
@@ -1480,8 +1475,13 @@ async function initAuth() {
 
 
         /* =========================
-           CREATE ANONYMOUS USER
+           CREATE NEW ANONYMOUS USER
         ========================= */
+
+        console.log(
+            "No session found. Creating anonymous user..."
+        );
+
 
         const {
             data: anonymousData,
@@ -1495,13 +1495,13 @@ async function initAuth() {
         if (anonymousError) {
 
             console.error(
-                "Anonymous sign-in error:",
+                "Anonymous authentication failed:",
                 anonymousError
             );
 
-            showError(
-                "تعذر إنشاء جلسة المستخدم. تأكد من تفعيل Anonymous Sign-Ins في Supabase.",
-                anonymousError
+            alert(
+                "تعذر إنشاء جلسة المستخدم.\n\n" +
+                anonymousError.message
             );
 
             return false;
@@ -1509,10 +1509,18 @@ async function initAuth() {
         }
 
 
-        if (!anonymousData?.user) {
+        if (
+            !anonymousData ||
+            !anonymousData.user
+        ) {
 
             console.error(
-                "Anonymous user was not created."
+                "Anonymous authentication returned no user.",
+                anonymousData
+            );
+
+            alert(
+                "تعذر إنشاء مستخدم جديد."
             );
 
             return false;
@@ -1525,7 +1533,7 @@ async function initAuth() {
 
 
         console.log(
-            "New anonymous user:",
+            "Anonymous user created:",
             currentUser.id
         );
 
@@ -1537,13 +1545,16 @@ async function initAuth() {
     catch (error) {
 
         console.error(
-            "Authentication initialization error:",
+            "AUTHENTICATION CRITICAL ERROR:",
             error
         );
 
-        showError(
-            "تعذر تجديد المستخدم.",
-            error
+        alert(
+            "تعذر تجديد المستخدم.\n\n" +
+            (
+                error?.message ||
+                "خطأ غير معروف"
+            )
         );
 
         return false;
