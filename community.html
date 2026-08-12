@@ -1067,6 +1067,16 @@ body{
 
     </section>
 
+<button
+    id="installAppBtn"
+    class="btn red"
+    style="display:none;"
+>
+    📱 تثبيت التطبيق
+</button>
+
+
+
 
     <!-- =========================
          CREATE POST
@@ -4974,6 +4984,100 @@ if ("serviceWorker" in navigator) {
     );
 
 }
+
+
+/* =====================================================
+   PWA INSTALL BUTTON
+===================================================== */
+
+let deferredInstallPrompt = null;
+
+window.addEventListener(
+    "beforeinstallprompt",
+    event => {
+
+        // Prevent the browser from showing its own prompt
+        event.preventDefault();
+
+        // Save the installation event
+        deferredInstallPrompt = event;
+
+        const installBtn =
+            $("installAppBtn");
+
+        if (installBtn) {
+
+            installBtn.style.display =
+                "inline-block";
+
+        }
+
+    }
+);
+
+
+const installBtn =
+    $("installAppBtn");
+
+
+if (installBtn) {
+
+    installBtn.addEventListener(
+        "click",
+        async () => {
+
+            if (!deferredInstallPrompt) {
+                return;
+            }
+
+
+            deferredInstallPrompt.prompt();
+
+
+            const {
+                outcome
+            } =
+                await deferredInstallPrompt.userChoice;
+
+
+            console.log(
+                "PWA install result:",
+                outcome
+            );
+
+
+            deferredInstallPrompt = null;
+
+            installBtn.style.display =
+                "none";
+
+        }
+    );
+
+}
+
+
+window.addEventListener(
+    "appinstalled",
+    () => {
+
+        console.log(
+            "PWA installed successfully."
+        );
+
+
+        const installBtn =
+            $("installAppBtn");
+
+        if (installBtn) {
+
+            installBtn.style.display =
+                "none";
+
+        }
+
+    }
+);
 </script>
 
 
