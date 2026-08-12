@@ -6,6 +6,12 @@
 
 <title>مجتمع الفقي</title>
 
+<link rel="manifest" href="manifest.json">
+
+<meta name="theme-color" content="#d40000">
+
+<link rel="apple-touch-icon" href="logo5.jpeg">
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
 
@@ -4938,6 +4944,36 @@ registerNotificationWorker();
 
 
 init();
+
+
+if ("serviceWorker" in navigator) {
+
+    window.addEventListener(
+        "load",
+        () => {
+
+            navigator.serviceWorker
+                .register("./sw.js")
+                .then(() => {
+
+                    console.log(
+                        "PWA service worker registered."
+                    );
+
+                })
+                .catch(error => {
+
+                    console.error(
+                        "Service worker registration failed:",
+                        error
+                    );
+
+                });
+
+        }
+    );
+
+}
 </script>
 
 
