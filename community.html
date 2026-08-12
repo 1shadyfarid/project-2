@@ -4555,6 +4555,9 @@ async function init() {
 /* =====================================================
    ADMIN STATISTICS
 ===================================================== */
+/* =====================================================
+   ADMIN STATISTICS
+===================================================== */
 
 async function loadAdminStats() {
 
@@ -4562,167 +4565,100 @@ async function loadAdminStats() {
         return;
     }
 
+    try {
 
-    const [
-        profilesResult,
-        postsResult,
-        commentsResult
-    ] = await Promise.all([
-
-        supabaseClient
-            .from("profiles")
-            .select("id,last_seen"),
-
-        supabaseClient
-            .from("posts")
-            .select("id", {
-                count: "exact",
-                head: true
-            }),
-
-        supabaseClient
-            .from("comments")
-            .select("id", {
-                count: "exact",
-                head: true
-            })
-
-    ]);
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .rpc("get_admin_stats");
 
 
-    /* =========================
-       DEBUG
-    ========================= */
+        if (error) {
 
-    console.log(
-        "PROFILES RESULT:",
-        profilesResult
-    );
+            console.error(
+                "Admin statistics error:",
+                error
+            );
 
-    console.log(
-        "POSTS RESULT:",
-        postsResult
-    );
-
-    console.log(
-        "COMMENTS RESULT:",
-        commentsResult
-    );
+            return;
+        }
 
 
-    /* =========================
-       ERROR CHECK
-    ========================= */
+        console.log(
+            "ADMIN STATS:",
+            data
+        );
 
-    if (
-        profilesResult.error ||
-        postsResult.error ||
-        commentsResult.error
-    ) {
+
+        /* =========================
+           TOTAL MEMBERS
+        ========================= */
+
+        if ($("totalMembers")) {
+
+            $("totalMembers").textContent =
+                data.total_members || 0;
+
+        }
+
+
+        /* =========================
+           ACTIVE MEMBERS
+        ========================= */
+
+        if ($("activeMembers")) {
+
+            $("activeMembers").textContent =
+                data.active_members || 0;
+
+        }
+
+
+        /* =========================
+           TOTAL POSTS
+        ========================= */
+
+        if ($("totalPosts")) {
+
+            $("totalPosts").textContent =
+                data.total_posts || 0;
+
+        }
+
+
+        /* =========================
+           TOTAL COMMENTS
+        ========================= */
+
+        if ($("totalComments")) {
+
+            $("totalComments").textContent =
+                data.total_comments || 0;
+
+        }
+
+
+        /* =========================
+           SHOW ADMIN STATS
+        ========================= */
+
+        if ($("adminStats")) {
+
+            $("adminStats").style.display =
+                "block";
+
+        }
+
+    }
+
+    catch (error) {
 
         console.error(
             "Admin statistics error:",
-            profilesResult.error ||
-            postsResult.error ||
-            commentsResult.error
+            error
         );
-
-        return;
-    }
-
-
-    const profiles =
-        profilesResult.data || [];
-
-
-    /* =========================
-       ACTIVE MEMBERS
-       Seen within last 5 minutes
-    ========================= */
-
-    const fiveMinutesAgo =
-        Date.now() -
-        (5 * 60 * 1000);
-
-
-    const activeMembers =
-        profiles.filter(profile => {
-
-            if (!profile.last_seen) {
-                return false;
-            }
-
-
-            return (
-                new Date(
-                    profile.last_seen
-                ).getTime() >=
-                fiveMinutesAgo
-            );
-
-        }).length;
-
-
-    /* =========================
-       TOTAL MEMBERS
-    ========================= */
-
-    if ($("totalMembers")) {
-
-        $("totalMembers")
-            .textContent =
-            profiles.length;
-
-    }
-
-
-    /* =========================
-       ACTIVE MEMBERS
-    ========================= */
-
-    if ($("activeMembers")) {
-
-        $("activeMembers")
-            .textContent =
-            activeMembers;
-
-    }
-
-
-    /* =========================
-       TOTAL POSTS
-    ========================= */
-
-    if ($("totalPosts")) {
-
-        $("totalPosts")
-            .textContent =
-            postsResult.count || 0;
-
-    }
-
-
-    /* =========================
-       TOTAL COMMENTS
-    ========================= */
-
-    if ($("totalComments")) {
-
-        $("totalComments")
-            .textContent =
-            commentsResult.count || 0;
-
-    }
-
-
-    /* =========================
-       SHOW ADMIN STATISTICS
-    ========================= */
-
-    if ($("adminStats")) {
-
-        $("adminStats").style.display =
-            "block";
 
     }
 
