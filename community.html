@@ -4411,8 +4411,6 @@ if ($("publish")) {
         publish;
 
 }
-
-
 /* =====================================================
    AUTH STATE LISTENER
 ===================================================== */
@@ -4519,105 +4517,72 @@ async function init() {
     }
 
 
-/* =====================================================
-   ADMIN STATISTICS
-===================================================== */
-/* =====================================================
-   ADMIN STATISTICS
-===================================================== */
-/* =====================================================
-   ADMIN STATISTICS
-===================================================== */
+    /* =========================
+       UPDATE LAST SEEN
+    ========================= */
 
-/* =====================================================
-   UPDATE LAST SEEN
-===================================================== */
-/* =====================================================
-   UPDATE LAST SEEN
-===================================================== */
+    async function updateLastSeen() {
 
-async function updateLastSeen() {
-
-    if (!currentUser) {
-        return;
-    }
-
-    const { error } = await supabaseClient
-        .from("profiles")
-        .update({
-            last_seen: new Date().toISOString()
-        })
-        .eq(
-            "id",
-            currentUser.id
-        );
-
-    if (error) {
-
-        console.error(
-            "Last seen update error:",
-            error
-        );
-
-    }
-
-}
-
-
-
-
-
-/* =========================
-   LOAD PROFILE
-========================= */
-
-await loadProfile();
-
-
-/* =========================
-   LOAD COMMUNITY
-========================= */
-
-await loadCommunity();
-
-
-/* =========================
-   UPDATE LAST SEEN
-========================= */
-
-await updateLastSeen();
-
-
-/* =========================
-   ADMIN STATISTICS
-========================= */
-
-if (isAdmin) {
-    await loadAdminStats();
-}
-
-
-/* =========================
-   UPDATE ADMIN UI
-========================= */
-
-updateAdminUI();
-
-
-/* =========================
-   REFRESH ADMIN STATISTICS
-========================= */
-
-setInterval(
-    () => {
-
-        if (isAdmin) {
-            loadAdminStats();
+        if (!currentUser) {
+            return;
         }
 
-    },
-    30000
-);
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("profiles")
+                .update({
+
+                    last_seen:
+                        new Date().toISOString()
+
+                })
+                .eq(
+                    "id",
+                    currentUser.id
+                );
+
+
+        if (error) {
+
+            console.error(
+                "Last seen update error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    /* =========================
+       LOAD PROFILE
+    ========================= */
+
+    await loadProfile();
+
+
+    /* =========================
+       LOAD COMMUNITY
+    ========================= */
+
+    await loadCommunity();
+
+
+    /* =========================
+       UPDATE LAST SEEN
+    ========================= */
+
+    await updateLastSeen();
+
+
+    /* =========================
+       UPDATE ADMIN UI
+    ========================= */
+
+    updateAdminUI();
 
 
     /* =========================
@@ -4676,13 +4641,19 @@ setInterval(
         },
         15000
     );
-setInterval(
-    updateLastSeen,
-    120000
-);
+
+
+    /* =========================
+       UPDATE LAST SEEN
+       EVERY 2 MINUTES
+    ========================= */
+
+    setInterval(
+        updateLastSeen,
+        120000
+    );
+
 }
-
-
 </script>
 
 
