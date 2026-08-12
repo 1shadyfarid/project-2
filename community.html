@@ -1075,7 +1075,27 @@ body{
     📱 تثبيت التطبيق
 </button>
 
+<div
+    id="iosInstallGuide"
+    style="display:none;"
+>
+    <strong>📱 تثبيت التطبيق على iPhone</strong>
 
+    <p>
+        اضغط على زر المشاركة
+        <strong>⬆️</strong>
+        في Safari ثم اختر
+        <strong>إضافة إلى الشاشة الرئيسية</strong>.
+    </p>
+
+    <button
+        id="closeIosGuide"
+        class="btn light"
+        type="button"
+    >
+        فهمت
+    </button>
+</div>
 
 
     <!-- =========================
@@ -5078,6 +5098,61 @@ window.addEventListener(
 
     }
 );
+
+/* =====================================================
+   iOS PWA INSTALL GUIDE
+===================================================== */
+
+function isIOS() {
+
+    return /iphone|ipad|ipod/i.test(
+        navigator.userAgent
+    );
+
+}
+
+
+function isIOSStandalone() {
+
+    return (
+        window.navigator.standalone === true
+    );
+
+}
+
+
+const iosGuide =
+    $("iosInstallGuide");
+
+const closeIosGuide =
+    $("closeIosGuide");
+
+
+if (
+    iosGuide &&
+    isIOS() &&
+    !isIOSStandalone()
+) {
+
+    iosGuide.style.display =
+        "block";
+
+}
+
+
+if (closeIosGuide) {
+
+    closeIosGuide.addEventListener(
+        "click",
+        () => {
+
+            iosGuide.style.display =
+                "none";
+
+        }
+    );
+
+}
 </script>
 
 
