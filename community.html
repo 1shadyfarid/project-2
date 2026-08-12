@@ -1068,6 +1068,15 @@ body{
     </section>
 
 <button
+    id="enableNotifications"
+    class="btn red"
+    type="button"
+>
+    🔔 تفعيل الإشعارات
+</button>
+
+
+<button
     id="installAppBtn"
     class="btn red"
     style="display:none;"
@@ -4811,16 +4820,21 @@ setInterval(
 /* =====================================================
    START
 ===================================================== */
-
-
-
-
-
 /* =====================================================
    ENABLE PUSH NOTIFICATIONS
 ===================================================== */
 
 async function enableNotifications() {
+
+    if (!currentUser) {
+
+        alert(
+            "يجب تسجيل الدخول أولاً."
+        );
+
+        return;
+    }
+
 
     if (!("Notification" in window)) {
 
@@ -4829,7 +4843,6 @@ async function enableNotifications() {
         );
 
         return;
-
     }
 
 
@@ -4840,171 +4853,248 @@ async function enableNotifications() {
         );
 
         return;
-
-    }
-
-
-    const permission =
-        await Notification.requestPermission();
-
-
-    if (permission === "granted") {
-
-        alert(
-            "🔔 تم تفعيل الإشعارات بنجاح."
-        );
-
-    }
-
-    else if (permission === "denied") {
-
-        alert(
-            "تم رفض الإشعارات. يمكنك تفعيلها من إعدادات المتصفح."
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   NOTIFICATION BUTTON
-===================================================== */
-
-if ($("enableNotifications")) {
-
-    $("enableNotifications").onclick =
-        enableNotifications;
-
-}
-
-
-
-/* =====================================================
-   REGISTER NOTIFICATION SERVICE WORKER
-===================================================== */
-
-async function registerNotificationWorker() {
-
-    if (!("serviceWorker" in navigator)) {
-
-        console.log(
-            "Service Workers are not supported."
-        );
-
-        return null;
-
     }
 
 
     try {
 
+        /* =========================
+           REQUEST PERMISSION
+        ========================= */
+
+        const permission =
+            await Notification.requestPermission();
+
+
+        if (permission !== "granted") {
+
+            alert(
+                "لم يتم تفعيل الإشعارات."
+            );
+
+            return;
+        }
+
+
+        /* =========================
+           GET SERVICE WORKER
+        ========================= */
+
         const registration =
-            await navigator.serviceWorker.register(
-                "/sw.js"
+            await navigator.serviceWorker.ready;
+
+
+        /* =========================
+           VAPID PUBLIC KEY
+        ========================= */
+
+        const vapidPublicKey =
+            "BH2PXX4sga1fxxMjutiYh59_NOqqVU92VzarFC5162gibLwuSBSZwJC675cMLIFIxJ4OUVslG-ZoPYGmea7BVPc";
+
+
+        /* =========================
+           CONVERT PUBLIC KEY
+        ========================= */
+
+        const applicationServerKey =
+            urlBase64ToUint8Array(
+                vapidPublicKey
             );
 
 
-        console.log(
-            "🔔 Notification Service Worker registered:",
-            registration
+        /* =========================
+           GET EXISTING SUBSCRIPTION
+        ========================= */
+
+        let subscription =
+            await registration.pushManager
+                .getSubscription();
+
+
+        /* =========================
+           CREATE SUBSCRIPTION
+        ========================= */
+
+        if (!subscription) {
+
+            subscription =
+                await registration.pushManager.subscribe({
+
+                    userVisibleOnly:
+                        true,
+
+                    applicationServerKey:
+                        applicationServerKey
+
+                });
+
+        }
+
+
+        /* =========================
+           GET SUBSCRIPTION DATA
+        ========================= */
+
+        const subscriptionJSON =
+            subscription.toJSON();
+
+
+        const endpoint =
+            subscriptionJSON.endpoint;
+
+
+        const p256dh =
+            subscriptionJSON.keys?.p256dh;
+
+
+        const auth =
+            subscriptionJSON.keys?.auth;
+
+
+        if (
+            !endpoint ||
+            !p256dh ||
+            !auth
+        ) {
+
+            throw new Error(
+                "Push subscription data is incomplete."
+            );
+
+        }
+
+
+        /* =========================
+           SAVE TO SUPABASE
+        ========================= */
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from(
+                    "push_subscriptions"
+                )
+                .upsert(
+
+                    {
+
+                        user_id:
+                            currentUser.id,
+
+                        endpoint:
+                            endpoint,
+
+                        p256dh:
+                            p256dh,
+
+                        auth:
+                            auth
+
+                    },
+
+                    {
+                        onConflict:
+                            "endpoint"
+                    }
+
+                );
+
+
+        if (error) {
+
+            throw error;
+
+        }
+
+
+        alert(
+            "🔔 تم تفعيل الإشعارات بنجاح!"
         );
 
 
-        return registration;
+        console.log(
+            "Push subscription saved:",
+            subscription
+        );
 
     }
 
     catch (error) {
 
         console.error(
-            "❌ Service Worker registration failed:",
+            "Notification setup error:",
             error
         );
 
-        return null;
+
+        alert(
+            "حدث خطأ أثناء تفعيل الإشعارات."
+        );
 
     }
 
 }
 
+
 /* =====================================================
-   UPDATE BAN UI
+   BASE64 → UINT8ARRAY
 ===================================================== */
 
-function updateBanUI() {
+function urlBase64ToUint8Array(
+    base64String
+) {
 
-    const publishButton = $("publish");
+    const padding =
+        "=".repeat(
+            (4 -
+                base64String.length % 4
+            ) % 4
+        );
 
-    if (publishButton) {
 
-        publishButton.disabled = isBanned;
+    const base64 =
+        (
+            base64String +
+            padding
+        )
+            .replace(
+                /-/g,
+                "+"
+            )
+            .replace(
+                /_/g,
+                "/"
+            );
 
-        if (isBanned) {
 
-            publishButton.textContent =
-                "🚫 أنت محظور";
+    const rawData =
+        window.atob(
+            base64
+        );
 
-            publishButton.style.opacity =
-                "0.5";
 
-            publishButton.style.cursor =
-                "not-allowed";
+    const outputArray =
+        new Uint8Array(
+            rawData.length
+        );
 
-        } else {
 
-            publishButton.textContent =
-                "نشر";
+    for (
+        let i = 0;
+        i < rawData.length;
+        ++i
+    ) {
 
-            publishButton.style.opacity =
-                "1";
+        outputArray[i] =
+            rawData.charCodeAt(i);
 
-            publishButton.style.cursor =
-                "pointer";
-
-        }
     }
 
-}
-/* =====================================================
-   START NOTIFICATION SYSTEM
-===================================================== */
 
-registerNotificationWorker();
-
-
-init();
-
-
-if ("serviceWorker" in navigator) {
-
-    window.addEventListener(
-        "load",
-        () => {
-
-            navigator.serviceWorker
-                .register("./sw.js")
-                .then(() => {
-
-                    console.log(
-                        "PWA service worker registered."
-                    );
-
-                })
-                .catch(error => {
-
-                    console.error(
-                        "Service worker registration failed:",
-                        error
-                    );
-
-                });
-
-        }
-    );
+    return outputArray;
 
 }
-
 
 /* =====================================================
    PWA INSTALL BUTTON
