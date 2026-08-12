@@ -1428,51 +1428,127 @@ function showError(message, error) {
 
 async function initAuth() {
 
-    const {
-        data: {
-            session
+    try {
+
+        /* =========================
+           GET CURRENT SESSION
+        ========================= */
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .auth
+                .getSession();
+
+
+        if (error) {
+
+            console.error(
+                "Auth session error:",
+                error
+            );
+
+            showError(
+                "تعذر تجديد المستخدم.",
+                error
+            );
+
+            return false;
+
         }
-    } =
-        await supabaseClient
-            .auth
-            .getSession();
 
 
-    if (session?.user) {
+        /* =========================
+           EXISTING USER
+        ========================= */
+
+        if (data?.session?.user) {
+
+            currentUser =
+                data.session.user;
+
+            console.log(
+                "Existing user:",
+                currentUser.id
+            );
+
+            return true;
+
+        }
+
+
+        /* =========================
+           CREATE ANONYMOUS USER
+        ========================= */
+
+        const {
+            data: anonymousData,
+            error: anonymousError
+        } =
+            await supabaseClient
+                .auth
+                .signInAnonymously();
+
+
+        if (anonymousError) {
+
+            console.error(
+                "Anonymous sign-in error:",
+                anonymousError
+            );
+
+            showError(
+                "تعذر إنشاء جلسة المستخدم. تأكد من تفعيل Anonymous Sign-Ins في Supabase.",
+                anonymousError
+            );
+
+            return false;
+
+        }
+
+
+        if (!anonymousData?.user) {
+
+            console.error(
+                "Anonymous user was not created."
+            );
+
+            return false;
+
+        }
+
 
         currentUser =
-            session.user;
+            anonymousData.user;
+
+
+        console.log(
+            "New anonymous user:",
+            currentUser.id
+        );
+
 
         return true;
 
     }
 
+    catch (error) {
 
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
-            .auth
-            .signInAnonymously();
-
-
-    if (error) {
+        console.error(
+            "Authentication initialization error:",
+            error
+        );
 
         showError(
-            "تعذر إنشاء جلسة المستخدم. تأكد من تفعيل Anonymous Sign-Ins في Supabase.",
+            "تعذر تجديد المستخدم.",
             error
         );
 
         return false;
 
     }
-
-
-    currentUser =
-        data.user;
-
-    return true;
 
 }
 
