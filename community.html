@@ -1423,136 +1423,109 @@ function showError(message, error) {
 /* =====================================================
    AUTHENTICATION
 ===================================================== */
-
 async function initAuth() {
 
     try {
 
-        /* =========================
-           CHECK EXISTING SESSION
-        ========================= */
+        console.log("AUTH: starting...");
 
+        // Check whether Supabase already has a session
         const {
             data: sessionData,
             error: sessionError
-        } =
-            await supabaseClient
-                .auth
-                .getSession();
+        } = await supabaseClient.auth.getSession();
 
+        console.log("AUTH: session result:", {
+            sessionData,
+            sessionError
+        });
 
         if (sessionError) {
-
             console.error(
-                "Get session error:",
+                "AUTH SESSION ERROR:",
                 sessionError
             );
 
-            currentUser = null;
+            alert(
+                "خطأ في جلسة المستخدم:\n\n" +
+                sessionError.message
+            );
 
+            return false;
         }
 
-
-        /* =========================
-           EXISTING USER
-        ========================= */
-
-        if (
-            sessionData?.session?.user
-        ) {
+        // Existing session
+        if (sessionData?.session?.user) {
 
             currentUser =
                 sessionData.session.user;
 
             console.log(
-                "Authenticated user:",
+                "AUTH: existing user:",
                 currentUser.id
             );
 
             return true;
-
         }
 
-
-        /* =========================
-           CREATE NEW ANONYMOUS USER
-        ========================= */
-
+        // No session → create anonymous user
         console.log(
-            "No session found. Creating anonymous user..."
+            "AUTH: no session. Creating anonymous user..."
         );
-
 
         const {
             data: anonymousData,
             error: anonymousError
-        } =
-            await supabaseClient
-                .auth
-                .signInAnonymously();
-console.log("ANONYMOUS RESULT:", {
-    anonymousData,
-    anonymousError
-});
+        } = await supabaseClient.auth.signInAnonymously();
+
+        console.log(
+            "AUTH: anonymous result:",
+            {
+                anonymousData,
+                anonymousError
+            }
+        );
 
         if (anonymousError) {
 
-            console.error(
-                "Anonymous authentication failed:",
-                anonymousError
-            );
-
             alert(
-                "تعذر إنشاء جلسة المستخدم.\n\n" +
+                "تعذر إنشاء المستخدم:\n\n" +
                 anonymousError.message
             );
 
             return false;
-
         }
 
-
-        if (
-            !anonymousData ||
-            !anonymousData.user
-        ) {
-
-            console.error(
-                "Anonymous authentication returned no user.",
-                anonymousData
-            );
+        if (!anonymousData?.user) {
 
             alert(
-                "تعذر إنشاء مستخدم جديد."
+                "تم إنشاء الجلسة ولكن لم يتم العثور على المستخدم."
             );
 
             return false;
-
         }
-
 
         currentUser =
             anonymousData.user;
 
-
         console.log(
-            "Anonymous user created:",
+            "AUTH: new anonymous user:",
             currentUser.id
         );
-
 
         return true;
 
     }
+
     catch (error) {
 
         console.error(
-            "AUTHENTICATION CRITICAL ERROR:",
+            "AUTHENTICATION ERROR:",
             error
         );
 
         alert(
-            "تعذر تجديد المستخدم.\n\n" +
+            "خطأ في المصادقة:\n\n" +
             (
                 error?.message ||
                 "خطأ غير معروف"
@@ -1560,11 +1533,8 @@ console.log("ANONYMOUS RESULT:", {
         );
 
         return false;
-
     }
-
 }
-
 /* =====================================================
    ADMIN CHECK
 ===================================================== */
