@@ -4501,26 +4501,6 @@ if ($("save")) {
    GET AUTH USER DIRECTLY
 ========================= */
 
-const {
-    data: authData,
-    error: authError
-} = await supabaseClient.auth.getUser();
-
-
-if (authError) {
-
-    console.error(
-        "GET USER ERROR:",
-        authError
-    );
-
-    alert(
-        "تعذر الوصول إلى جلسة المستخدم.\n\n" +
-        authError.message
-    );
-
-    return;
-}
 
             const user =
                 authData?.user;
