@@ -2195,24 +2195,91 @@ supabaseClient
 
 ]);
 
+console.log("POSTS:", postsResult);
+console.log("COMMENTS:", commentsResult);
+console.log("LIKES:", likesResult);
+console.log("PROFILES:", profilesResult);
+console.log("BANNED USERS:", bannedUsersResult);
 
-    const error =
-        postsResult.error ||
-        commentsResult.error ||
-        likesResult.error ||
-        profilesResult.error;
+
+if (postsResult.error) {
+
+    console.error(
+        "POSTS ERROR:",
+        postsResult.error
+    );
+
+    showError(
+        "خطأ في تحميل المنشورات.",
+        postsResult.error
+    );
+
+    return;
+}
 
 
-    if (error) {
+if (commentsResult.error) {
 
-        showError(
-            "تعذر تحميل المجتمع.",
-            error
-        );
+    console.error(
+        "COMMENTS ERROR:",
+        commentsResult.error
+    );
 
-        return;
+    showError(
+        "خطأ في تحميل التعليقات.",
+        commentsResult.error
+    );
 
-    }
+    return;
+}
+
+
+if (likesResult.error) {
+
+    console.error(
+        "LIKES ERROR:",
+        likesResult.error
+    );
+
+    showError(
+        "خطأ في تحميل الإعجابات.",
+        likesResult.error
+    );
+
+    return;
+}
+
+
+if (profilesResult.error) {
+
+    console.error(
+        "PROFILES ERROR:",
+        profilesResult.error
+    );
+
+    showError(
+        "خطأ في تحميل الملفات الشخصية.",
+        profilesResult.error
+    );
+
+    return;
+}
+
+
+if (bannedUsersResult.error) {
+
+    console.error(
+        "BANNED USERS ERROR:",
+        bannedUsersResult.error
+    );
+
+    showError(
+        "خطأ في تحميل المستخدمين المحظورين.",
+        bannedUsersResult.error
+    );
+
+    return;
+}
 
 
     /* =========================
