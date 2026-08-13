@@ -2189,6 +2189,109 @@ function updateProfileUI() {
 }
 
 
+
+
+/* =====================================================
+   ADMIN STATISTICS
+===================================================== */
+
+function updateAdminStats() {
+
+    if (!isAdmin) {
+        return;
+    }
+
+    const totalMembers =
+        $("totalMembers");
+
+    const activeMembers =
+        $("activeMembers");
+
+    const totalPosts =
+        $("totalPosts");
+
+    const totalComments =
+        $("totalComments");
+
+
+    /* =========================
+       TOTAL MEMBERS
+    ========================= */
+
+    if (totalMembers) {
+
+        totalMembers.textContent =
+            profiles.length;
+
+    }
+
+
+    /* =========================
+       TOTAL POSTS
+    ========================= */
+
+    if (totalPosts) {
+
+        totalPosts.textContent =
+            posts.length;
+
+    }
+
+
+    /* =========================
+       TOTAL COMMENTS
+    ========================= */
+
+    if (totalComments) {
+
+        totalComments.textContent =
+            comments.length;
+
+    }
+
+
+    /* =========================
+       ACTIVE MEMBERS
+    ========================= */
+
+    if (activeMembers) {
+
+        const now =
+            Date.now();
+
+        const fiveMinutes =
+            5 * 60 * 1000;
+
+        const activeCount =
+            profiles.filter(profile => {
+
+                if (!profile.last_seen) {
+                    return false;
+                }
+
+                const lastSeen =
+                    new Date(
+                        profile.last_seen
+                    ).getTime();
+
+                return (
+                    now - lastSeen <=
+                    fiveMinutes
+                );
+
+            }).length;
+
+        activeMembers.textContent =
+            activeCount;
+
+    }
+
+}
+
+
+
+
+
 /* =====================================================
    LOAD COMMUNITY
 ===================================================== */
