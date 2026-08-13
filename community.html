@@ -1548,18 +1548,19 @@ async function initAuth() {
             "AUTHENTICATION CRITICAL ERROR:",
             error
         );
-
-        alert(
-            "تعذر تجديد المستخدم.\n\n" +
-            (
-                error?.message ||
-                "خطأ غير معروف"
-            )
-        );
-
-        return false;
-
-    }
+alert(
+    "AUTH ERROR:\n\n" +
+    JSON.stringify(
+        {
+            message: error?.message,
+            name: error?.name,
+            code: error?.code,
+            status: error?.status
+        },
+        null,
+        2
+    )
+);
 
 }
 
