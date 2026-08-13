@@ -4307,27 +4307,125 @@ if ($("photo")) {
         };
 
 }
-
-
 /* =====================================================
    SAVE PROFILE
 ===================================================== */
 
 if ($("save")) {
 
-    $("save").onclick =
-        async function () {
+    $("save").onclick = async function () {
 
-            if (!currentUser) {
+        try {
+
+            /* =========================
+               GET AUTH USER DIRECTLY
+            ========================= */
+
+            const {
+                data: authData,
+                error: authError
+            } = await supabaseClient.auth.getUser();
+
+
+            if (authError) {
+
+                console.error(
+                    "GET USER ERROR:",
+                    authError
+                );
 
                 alert(
-                    "تعذر تحديد المستخدم."
+                    "تعذر الوصول إلى جلسة المستخدم.\n\n" +
+                    authError.message
                 );
 
                 return;
-
             }
 
+
+            const user =
+                authData?.user;
+
+
+            /* =========================
+               USER DOES NOT EXIST
+            ========================= */
+
+            if (!user) {
+
+                console.error(
+                    "NO AUTH USER FOUND"
+                );
+
+                alert(
+                    "لا توجد جلسة مستخدم حالية.\n\n" +
+                    "سيتم إنشاء جلسة جديدة، ثم حاول حفظ الملف الشخصي مرة أخرى."
+                );
+
+
+                const {
+                    data: anonymousData,
+                    error: anonymousError
+                } =
+                    await supabaseClient
+                        .auth
+                        .signInAnonymously();
+
+
+                if (anonymousError) {
+
+                    console.error(
+                        "ANONYMOUS SIGN IN ERROR:",
+                        anonymousError
+                    );
+
+                    alert(
+                        "تعذر إنشاء مستخدم جديد.\n\n" +
+                        anonymousError.message
+                    );
+
+                    return;
+                }
+
+
+                if (!anonymousData?.user) {
+
+                    alert(
+                        "تم إنشاء الجلسة ولكن لم يتم العثور على المستخدم."
+                    );
+
+                    return;
+                }
+
+
+                currentUser =
+                    anonymousData.user;
+
+
+                alert(
+                    "تم إنشاء جلسة المستخدم.\n\nاضغط حفظ مرة أخرى."
+                );
+
+                return;
+            }
+
+
+            /* =========================
+               SYNC GLOBAL USER
+            ========================= */
+
+            currentUser = user;
+
+
+            console.log(
+                "PROFILE SAVING FOR USER:",
+                currentUser.id
+            );
+
+
+            /* =========================
+               GET NAME
+            ========================= */
 
             const name =
                 $("name")
@@ -4342,24 +4440,25 @@ if ($("save")) {
                 );
 
                 return;
-
             }
 
 
+            /* =========================
+               AVATAR
+            ========================= */
+
             const avatarUrl =
                 pendingPhoto !== null
+                    ? pendingPhoto
+                    : (
+                        profile?.avatar_url ||
+                        null
+                    );
 
-                ?
 
-                pendingPhoto
-
-                :
-
-                (
-                    profile?.avatar_url ||
-                    null
-                );
-
+            /* =========================
+               SAVE PROFILE
+            ========================= */
 
             const {
                 data,
@@ -4368,27 +4467,14 @@ if ($("save")) {
                 await supabaseClient
                     .from("profiles")
                     .upsert(
-
                         {
-
-                            id:
-                                currentUser.id,
-
-                            name:
-                                name,
-
-                            avatar_url:
-                                avatarUrl
-
+                            id: currentUser.id,
+                            name: name,
+                            avatar_url: avatarUrl
                         },
-
                         {
-
-                            onConflict:
-                                "id"
-
+                            onConflict: "id"
                         }
-
                     )
                     .select(
                         "id,name,avatar_url,is_verified"
@@ -4398,44 +4484,75 @@ if ($("save")) {
 
             if (error) {
 
+                console.error(
+                    "PROFILE SAVE ERROR:",
+                    error
+                );
+
                 showError(
                     "تعذر حفظ الملف الشخصي.",
                     error
                 );
 
                 return;
-
             }
 
 
-            profile =
-                data;
+            /* =========================
+               UPDATE LOCAL PROFILE
+            ========================= */
 
+            profile = data;
 
-            pendingPhoto =
-                null;
+            pendingPhoto = null;
 
 
             if ($("photo")) {
 
-                $("photo").value =
-                    "";
+                $("photo").value = "";
 
             }
 
 
             updateProfileUI();
 
-
             closeModal();
 
 
+            /* =========================
+               RELOAD COMMUNITY
+            ========================= */
+
             await loadCommunity();
 
-        };
+
+            console.log(
+                "PROFILE CREATED SUCCESSFULLY:",
+                data
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "SAVE PROFILE CRITICAL ERROR:",
+                error
+            );
+
+            alert(
+                "حدث خطأ أثناء حفظ الملف الشخصي.\n\n" +
+                (
+                    error?.message ||
+                    "خطأ غير معروف"
+                )
+            );
+
+        }
+
+    };
 
 }
-
 
 /* =====================================================
    CHARACTER COUNTER
