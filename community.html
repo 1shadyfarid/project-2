@@ -1541,26 +1541,24 @@ async function initAuth() {
         return true;
 
     }
-
     catch (error) {
 
         console.error(
             "AUTHENTICATION CRITICAL ERROR:",
             error
         );
-alert(
-    "AUTH ERROR:\n\n" +
-    JSON.stringify(
-        {
-            message: error?.message,
-            name: error?.name,
-            code: error?.code,
-            status: error?.status
-        },
-        null,
-        2
-    )
-);
+
+        alert(
+            "تعذر تجديد المستخدم.\n\n" +
+            (
+                error?.message ||
+                "خطأ غير معروف"
+            )
+        );
+
+        return false;
+
+    }
 
 }
 
