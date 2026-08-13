@@ -943,6 +943,14 @@ body{
     padding: 30px 20px 45px;
 }
 
+
+.text {
+    margin: 0;
+    padding: 0;
+    text-indent: 0;
+    direction: rtl;
+    text-align: right;
+}
 </style>
 </head>
 
@@ -3021,14 +3029,9 @@ function render() {
 
                         </div>
 
-
-                        <div class="text">
-
-                            ${escapeHTML(
-                                post.content
-                            )}
-
-                        </div>
+<div class="text">
+    ${escapeHTML((post.content || "").trim())}
+</div>
 
 
                         ${imagesHTML}
