@@ -1575,7 +1575,6 @@ async function initAuth() {
 
 }
 
-
 /* =====================================================
    ADMIN CHECK
 ===================================================== */
@@ -1585,14 +1584,29 @@ async function checkAdmin() {
     isAdmin = false;
 
 
+    /* =========================
+       NO USER
+    ========================= */
+
     if (!currentUser) {
 
         updateAdminUI();
+
+        const adminStats =
+            $("adminStats");
+
+        if (adminStats) {
+            adminStats.style.display = "none";
+        }
 
         return false;
 
     }
 
+
+    /* =========================
+       CHECK ADMINS TABLE
+    ========================= */
 
     const {
         data,
@@ -1608,6 +1622,10 @@ async function checkAdmin() {
             .maybeSingle();
 
 
+    /* =========================
+       ERROR
+    ========================= */
+
     if (error) {
 
         console.error(
@@ -1619,10 +1637,21 @@ async function checkAdmin() {
 
         updateAdminUI();
 
+        const adminStats =
+            $("adminStats");
+
+        if (adminStats) {
+            adminStats.style.display = "none";
+        }
+
         return false;
 
     }
 
+
+    /* =========================
+       ADMIN STATUS
+    ========================= */
 
     isAdmin =
         !!data;
@@ -1633,6 +1662,10 @@ async function checkAdmin() {
         isAdmin
     );
 
+
+    /* =========================
+       ADMIN STATS VISIBILITY
+    ========================= */
 
     const adminStats =
         $("adminStats");
@@ -1648,12 +1681,27 @@ async function checkAdmin() {
     }
 
 
+    /* =========================
+       UPDATE ADMIN UI
+    ========================= */
+
     updateAdminUI();
+
+
+    /* =========================
+       LOAD STATISTICS
+    ========================= */
+
+    if (isAdmin) {
+
+        await loadAdminStats();
+
+    }
+
 
     return isAdmin;
 
 }
-
 
 /* =====================================================
    ADMIN LOGIN
@@ -5279,6 +5327,216 @@ else {
 
 }
 
+/* =====================================================
+   ADMIN STATISTICS
+===================================================== */
+
+async function loadAdminStats() {
+
+    /* =========================
+       ADMIN ONLY
+    ========================= */
+
+    if (!isAdmin) {
+
+        const stats = $("adminStats");
+
+        if (stats) {
+            stats.style.display = "none";
+        }
+
+        return;
+    }
+
+
+    const stats = $("adminStats");
+
+    if (stats) {
+        stats.style.display = "block";
+    }
+
+
+    /* =========================
+       LOAD COUNTS
+    ========================= */
+
+    const [
+        membersResult,
+        postsResult,
+        commentsResult,
+        activeResult
+    ] = await Promise.all([
+
+        /* TOTAL MEMBERS */
+
+        supabaseClient
+            .from("profiles")
+            .select(
+                "id",
+                {
+                    count: "exact",
+                    head: true
+                }
+            ),
+
+
+        /* TOTAL POSTS */
+
+        supabaseClient
+            .from("posts")
+            .select(
+                "id",
+                {
+                    count: "exact",
+                    head: true
+                }
+            ),
+
+
+        /* TOTAL COMMENTS */
+
+        supabaseClient
+            .from("comments")
+            .select(
+                "id",
+                {
+                    count: "exact",
+                    head: true
+                }
+            ),
+
+
+        /* ACTIVE MEMBERS */
+
+        supabaseClient
+            .from("profiles")
+            .select(
+                "id",
+                {
+                    count: "exact",
+                    head: true
+                }
+            )
+            .gte(
+                "last_seen",
+                new Date(
+                    Date.now() - 5 * 60 * 1000
+                ).toISOString()
+            )
+
+    ]);
+
+
+    /* =========================
+       CHECK ERRORS
+    ========================= */
+
+    if (membersResult.error) {
+
+        console.error(
+            "Members statistics error:",
+            membersResult.error
+        );
+
+    }
+
+    if (postsResult.error) {
+
+        console.error(
+            "Posts statistics error:",
+            postsResult.error
+        );
+
+    }
+
+    if (commentsResult.error) {
+
+        console.error(
+            "Comments statistics error:",
+            commentsResult.error
+        );
+
+    }
+
+    if (activeResult.error) {
+
+        console.error(
+            "Active members statistics error:",
+            activeResult.error
+        );
+
+    }
+
+
+    /* =========================
+       UPDATE UI
+    ========================= */
+
+    if ($("totalMembers")) {
+
+        $("totalMembers").textContent =
+            membersResult.count ?? 0;
+
+    }
+
+
+    if ($("totalPosts")) {
+
+        $("totalPosts").textContent =
+            postsResult.count ?? 0;
+
+    }
+
+
+    if ($("totalComments")) {
+
+        $("totalComments").textContent =
+            commentsResult.count ?? 0;
+
+    }
+
+
+    if ($("activeMembers")) {
+
+        $("activeMembers").textContent =
+            activeResult.count ?? 0;
+
+    }
+
+
+    console.log(
+        "ADMIN STATS:",
+        {
+            members:
+                membersResult.count,
+
+            active:
+                activeResult.count,
+
+            posts:
+                postsResult.count,
+
+            comments:
+                commentsResult.count
+        }
+    );
+
+}
+
+
+/* =====================================================
+   LOAD ADMIN STATS AFTER ADMIN CHECK
+===================================================== */
+
+async function refreshAdminStats() {
+
+    if (!isAdmin) {
+        return;
+    }
+
+    await loadAdminStats();
+
+}
 </script>
 
 
