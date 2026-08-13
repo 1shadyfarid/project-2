@@ -1241,8 +1241,6 @@ body{
     </div>
 
 </div>
-
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
@@ -1262,76 +1260,10 @@ const supabaseClient =
         SUPABASE_URL,
         SUPABASE_PUBLISHABLE_KEY
     );
-async function ensureAuthSession() {
 
-    const {
-        data: sessionData,
-        error: sessionError
-    } = await supabaseClient.auth.getSession();
-
-    if (sessionError) {
-        console.error("GET SESSION ERROR:", sessionError);
-        return false;
-    }
-
-    if (sessionData?.session?.user) {
-
-        currentUser = sessionData.session.user;
-
-        console.log(
-            "EXISTING USER:",
-            currentUser.id
-        );
-
-        return true;
-    }
-
-    console.log(
-        "NO SESSION - CREATING ANONYMOUS USER..."
-    );
-
-    const {
-        data: anonymousData,
-        error: anonymousError
-    } = await supabaseClient.auth.signInAnonymously();
-
-    if (anonymousError) {
-
-        console.error(
-            "ANONYMOUS SIGN-IN ERROR:",
-            anonymousError
-        );
-
-        alert(
-            "تعذر إنشاء جلسة مستخدم جديدة.\n\n" +
-            anonymousError.message
-        );
-
-        return false;
-    }
-
-    currentUser =
-        anonymousData?.user || null;
-
-    if (!currentUser) {
-
-        console.error(
-            "ANONYMOUS USER WAS NOT CREATED"
-        );
-
-        return false;
-    }
-
-    console.log(
-        "NEW ANONYMOUS USER:",
-        currentUser.id
-    );
-
-    return true;
-}
 
 /* =====================================================
-   DATA
+   GLOBAL DATA
 ===================================================== */
 
 let currentUser = null;
@@ -1345,6 +1277,11 @@ let bannedUsers = [];
 let pendingPhoto = null;
 
 let isAdmin = false;
+
+let isBanned = false;
+let banReason = "";
+
+let selectedPostImages = [];
 
 
 /* =====================================================
@@ -1380,7 +1317,7 @@ function escapeHTML(value) {
 
 
 /* =====================================================
-   FIRST LETTER AVATAR
+   FIRST LETTER
 ===================================================== */
 
 function initial(name) {
@@ -1486,9 +1423,8 @@ function showError(message, error) {
     );
 
 }
-/* =====================================================
-   AUTHENTICATION
-===================================================== */
+
+
 /* =====================================================
    AUTHENTICATION
 ===================================================== */
@@ -1497,52 +1433,62 @@ async function initAuth() {
 
     try {
 
-        /* =========================
-           GET CURRENT SESSION
-        ========================= */
+        console.log(
+            "Starting authentication..."
+        );
+
+
+        /* =========================================
+           FIRST: GET CURRENT SESSION
+        ========================================= */
 
         const {
             data: sessionData,
             error: sessionError
         } =
-            await supabaseClient.auth.getSession();
+            await supabaseClient
+                .auth
+                .getSession();
 
 
         if (sessionError) {
 
             console.error(
-                "SESSION ERROR:",
+                "GET SESSION ERROR:",
                 sessionError
             );
 
-            return false;
         }
 
 
-        /* =========================
+        /* =========================================
            EXISTING SESSION
-        ========================= */
+        ========================================= */
 
-        if (sessionData?.session?.user) {
+        if (
+            sessionData?.session?.user
+        ) {
 
             currentUser =
                 sessionData.session.user;
 
             console.log(
-                "EXISTING USER:",
+                "Existing authenticated user:",
                 currentUser.id
             );
 
             return true;
+
         }
 
 
-        /* =========================
-           CREATE ANONYMOUS SESSION
-        ========================= */
+        /* =========================================
+           NO SESSION
+           CREATE ANONYMOUS USER
+        ========================================= */
 
         console.log(
-            "NO SESSION - CREATING ANONYMOUS USER"
+            "No session found. Creating anonymous user..."
         );
 
 
@@ -1550,7 +1496,9 @@ async function initAuth() {
             data: anonymousData,
             error: anonymousError
         } =
-            await supabaseClient.auth.signInAnonymously();
+            await supabaseClient
+                .auth
+                .signInAnonymously();
 
 
         if (anonymousError) {
@@ -1561,22 +1509,22 @@ async function initAuth() {
             );
 
             alert(
-                "تعذر إنشاء مستخدم جديد.\n\n" +
+                "تعذر إنشاء جلسة مستخدم جديدة.\n\n" +
                 anonymousError.message
             );
 
             return false;
+
         }
 
 
-        /* =========================
-           SAVE USER
-        ========================= */
-
-        if (!anonymousData?.user) {
+        if (
+            !anonymousData?.user
+        ) {
 
             console.error(
-                "ANONYMOUS USER WAS NOT RETURNED"
+                "Anonymous sign-in returned no user:",
+                anonymousData
             );
 
             alert(
@@ -1584,8 +1532,13 @@ async function initAuth() {
             );
 
             return false;
+
         }
 
+
+        /* =========================================
+           SAVE USER GLOBALLY
+        ========================================= */
 
         currentUser =
             anonymousData.user;
@@ -1617,12 +1570,16 @@ async function initAuth() {
         );
 
         return false;
+
     }
 
 }
+
+
 /* =====================================================
    ADMIN CHECK
 ===================================================== */
+
 async function checkAdmin() {
 
     isAdmin = false;
@@ -1654,7 +1611,7 @@ async function checkAdmin() {
     if (error) {
 
         console.error(
-            "Admin check error:",
+            "ADMIN CHECK ERROR:",
             error
         );
 
@@ -1677,10 +1634,6 @@ async function checkAdmin() {
     );
 
 
-    /* =========================
-       ADMIN STATISTICS VISIBILITY
-    ========================= */
-
     const adminStats =
         $("adminStats");
 
@@ -1688,7 +1641,9 @@ async function checkAdmin() {
     if (adminStats) {
 
         adminStats.style.display =
-            isAdmin ? "block" : "none";
+            isAdmin
+                ? "block"
+                : "none";
 
     }
 
@@ -1698,15 +1653,19 @@ async function checkAdmin() {
     return isAdmin;
 
 }
+
+
 /* =====================================================
    ADMIN LOGIN
 ===================================================== */
+
 async function adminLogin() {
 
     const email =
         prompt(
             "أدخل بريد حساب المدير:"
         );
+
 
     if (!email) {
         return;
@@ -1718,160 +1677,90 @@ async function adminLogin() {
             "أدخل كلمة مرور المدير:"
         );
 
+
     if (!password) {
         return;
     }
 
 
-    /* =========================
-       LOG OUT CURRENT USER
-    ========================= */
-
-    await supabaseClient
-        .auth
-        .signOut();
-
-
-    /* =========================
-       LOGIN AS ADMIN
-    ========================= */
-
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
-            .auth
-            .signInWithPassword({
-                email: email.trim(),
-                password: password
-            });
-
-
-    /* =========================
-       ADMIN LOGIN FAILED
-    ========================= */
-
-    if (error) {
-
-        console.error(
-            "Admin login failed:",
-            error
-        );
-
-
-        /* =========================
-           CREATE ANONYMOUS USER AGAIN
-        ========================= */
-
-        const {
-            data: anonymousData,
-            error: anonymousError
-        } =
-            await supabaseClient
-                .auth
-                .signInAnonymously();
-
-
-        if (anonymousError) {
-
-            console.error(
-                "Anonymous sign-in failed:",
-                anonymousError
-            );
-
-
-            alert(
-                "تعذر إنشاء جلسة مستخدم جديدة.\n\n" +
-                anonymousError.message
-            );
-
-
-            return;
-
-        }
-
-
-        currentUser =
-            anonymousData?.user || null;
-
-
-        if (!currentUser) {
-
-            alert(
-                "تعذر إنشاء مستخدم جديد."
-            );
-
-
-            return;
-
-        }
-
-
-        await checkAdmin();
-
-
-        alert(
-            "فشل تسجيل دخول المدير.\n\n" +
-            error.message
-        );
-
-
-        return;
-
-    }
-
-
-    /* =========================
-       ADMIN USER
-    ========================= */
-
-    currentUser =
-        data.user;
-
-
-    const admin =
-        await checkAdmin();
-
-
-    /* =========================
-       NOT AN ADMIN
-    ========================= */
-
-    if (!admin) {
-
-        alert(
-            "تم تسجيل الدخول، ولكن هذا الحساب ليس حساب مدير."
-        );
-
+    try {
 
         await supabaseClient
             .auth
             .signOut();
 
 
+        currentUser = null;
+        profile = null;
+        isAdmin = false;
+
+
         const {
-            data: anonymousData,
-            error: anonymousError
+            data,
+            error
         } =
             await supabaseClient
                 .auth
-                .signInAnonymously();
+                .signInWithPassword({
+                    email:
+                        email.trim(),
+
+                    password:
+                        password
+                });
 
 
-        if (anonymousError) {
+        if (error) {
 
             console.error(
-                "Anonymous sign-in failed:",
-                anonymousError
+                "ADMIN LOGIN ERROR:",
+                error
             );
+
+
+            /* =====================================
+               RESTORE ANONYMOUS USER
+            ===================================== */
+
+            const {
+                data: anonymousData,
+                error: anonymousError
+            } =
+                await supabaseClient
+                    .auth
+                    .signInAnonymously();
+
+
+            if (!anonymousError) {
+
+                currentUser =
+                    anonymousData?.user ||
+                    null;
+
+                if (currentUser) {
+
+                    await checkAdmin();
+
+                }
+
+            }
 
 
             alert(
-                "تعذر إنشاء جلسة مستخدم جديدة.\n\n" +
-                anonymousError.message
+                "فشل تسجيل دخول المدير.\n\n" +
+                error.message
             );
 
+            return;
+
+        }
+
+
+        if (!data?.user) {
+
+            alert(
+                "تعذر الحصول على حساب المدير."
+            );
 
             return;
 
@@ -1879,32 +1768,85 @@ async function adminLogin() {
 
 
         currentUser =
-            anonymousData?.user || null;
+            data.user;
 
 
-        await checkAdmin();
+        console.log(
+            "ADMIN AUTH USER:",
+            currentUser.id
+        );
 
 
-        return;
+        const admin =
+            await checkAdmin();
+
+
+        if (!admin) {
+
+            alert(
+                "تم تسجيل الدخول، ولكن هذا الحساب ليس حساب مدير."
+            );
+
+
+            await supabaseClient
+                .auth
+                .signOut();
+
+
+            currentUser = null;
+
+
+            const {
+                data: anonymousData
+            } =
+                await supabaseClient
+                    .auth
+                    .signInAnonymously();
+
+
+            currentUser =
+                anonymousData?.user ||
+                null;
+
+
+            await checkAdmin();
+
+            return;
+
+        }
+
+
+        await loadProfile();
+
+        await loadCommunity();
+
+
+        alert(
+            "تم تسجيل دخول المدير بنجاح 👑"
+        );
 
     }
 
+    catch (error) {
 
-    /* =========================
-       LOAD ADMIN PROFILE
-    ========================= */
+        console.error(
+            "ADMIN LOGIN CRITICAL ERROR:",
+            error
+        );
 
-    await loadProfile();
+        alert(
+            "حدث خطأ أثناء تسجيل دخول المدير.\n\n" +
+            (
+                error?.message ||
+                "خطأ غير معروف"
+            )
+        );
 
-
-    await loadCommunity();
-
-
-    alert(
-        "تم تسجيل دخول المدير بنجاح 👑"
-    );
+    }
 
 }
+
+
 /* =====================================================
    ADMIN LOGOUT
 ===================================================== */
@@ -1932,9 +1874,9 @@ async function adminLogout() {
         .signOut();
 
 
-    isAdmin = false;
     currentUser = null;
     profile = null;
+    isAdmin = false;
 
 
     const {
@@ -1977,9 +1919,6 @@ async function adminLogout() {
 /* =====================================================
    ADMIN UI
 ===================================================== */
-/* =====================================================
-   ADMIN UI
-===================================================== */
 
 function updateAdminUI() {
 
@@ -2004,12 +1943,11 @@ function updateAdminUI() {
     }
 
 }
-/* =====================================================
-   CHECK IF USER IS BANNED
-===================================================== */
 
-let isBanned = false;
-let banReason = "";
+
+/* =====================================================
+   BAN STATUS
+===================================================== */
 
 async function checkBanStatus() {
 
@@ -2017,27 +1955,32 @@ async function checkBanStatus() {
         return false;
     }
 
+
     const {
         data,
         error
-    } = await supabaseClient
-        .from("banned_users")
-        .select("user_id,reason")
-        .eq(
-            "user_id",
-            currentUser.id
-        )
-        .maybeSingle();
+    } =
+        await supabaseClient
+            .from("banned_users")
+            .select(
+                "user_id,reason"
+            )
+            .eq(
+                "user_id",
+                currentUser.id
+            )
+            .maybeSingle();
 
 
     if (error) {
 
         console.error(
-            "Ban check error:",
+            "BAN CHECK ERROR:",
             error
         );
 
         return false;
+
     }
 
 
@@ -2051,6 +1994,7 @@ async function checkBanStatus() {
         updateBanUI();
 
         return true;
+
     }
 
 
@@ -2061,6 +2005,26 @@ async function checkBanStatus() {
     updateBanUI();
 
     return false;
+
+}
+
+
+/* =====================================================
+   BAN UI
+===================================================== */
+
+function updateBanUI() {
+
+    const publishButton =
+        $("publish");
+
+    if (publishButton) {
+
+        publishButton.disabled =
+            isBanned;
+
+    }
+
 }
 
 
@@ -2071,8 +2035,20 @@ async function checkBanStatus() {
 async function loadProfile() {
 
     if (!currentUser) {
+
+        console.warn(
+            "LOAD PROFILE: no current user"
+        );
+
         return;
+
     }
+
+
+    console.log(
+        "Loading profile:",
+        currentUser.id
+    );
 
 
     const {
@@ -2082,7 +2058,7 @@ async function loadProfile() {
         await supabaseClient
             .from("profiles")
             .select(
-                "id,name,avatar_url,is_verified"
+                "id,name,avatar_url,is_verified,last_seen"
             )
             .eq(
                 "id",
@@ -2107,8 +2083,13 @@ async function loadProfile() {
         data || null;
 
 
-    await checkAdmin();
+    console.log(
+        "PROFILE:",
+        profile
+    );
 
+
+    await checkAdmin();
 
     updateProfileUI();
 
@@ -2125,7 +2106,8 @@ function updateProfileUI() {
 
         $("profileName")
             .textContent =
-            profile?.name || "زائر";
+            profile?.name ||
+            "زائر";
 
     }
 
@@ -2205,251 +2187,240 @@ function updateProfileUI() {
     }
 
 }
+
+
 /* =====================================================
-   LOAD POSTS / COMMENTS / LIKES / PROFILES
+   LOAD COMMUNITY
 ===================================================== */
 
 async function loadCommunity() {
 
-    const [
-        postsResult,
-        commentsResult,
-        likesResult,
-        profilesResult,
-        bannedUsersResult
-    ] =
-        await Promise.all([
-
-            supabaseClient
-                .from("posts")
-                .select(
-    "id,user_id,content,image_urls,created_at,is_pinned"
-)
-                .order("is_pinned", {
-                    ascending: false
-                })
-                .order("created_at", {
-                    ascending: false
-                }),
-
-            supabaseClient
-                .from("comments")
-                .select(
-                    "id,post_id,user_id,content,created_at"
-                )
-                .order(
-                    "created_at",
-                    {
-                        ascending: true
-                    }
-                ),
-
-            supabaseClient
-                .from("likes")
-                .select(
-                    "id,post_id,user_id,created_at"
-                ),
-supabaseClient
-    .from("profiles")
-    .select(
-        "id,name,avatar_url,is_verified"
-    ),
-
-supabaseClient
-    .from("banned_users")
-    .select("user_id")
-
-]);
-
-console.log("POSTS:", postsResult);
-console.log("COMMENTS:", commentsResult);
-console.log("LIKES:", likesResult);
-console.log("PROFILES:", profilesResult);
-console.log("BANNED USERS:", bannedUsersResult);
-
-
-if (postsResult.error) {
-
-    console.error(
-        "POSTS ERROR:",
-        postsResult.error
+    console.log(
+        "Loading community..."
     );
 
-    showError(
-        "خطأ في تحميل المنشورات.",
-        postsResult.error
-    );
 
-    return;
-}
+    try {
 
+        const [
+            postsResult,
+            commentsResult,
+            likesResult,
+            profilesResult,
+            bannedUsersResult
+        ] =
+            await Promise.all([
 
-if (commentsResult.error) {
+                supabaseClient
+                    .from("posts")
+                    .select(
+                        "id,user_id,content,image_urls,created_at,is_pinned"
+                    )
+                    .order(
+                        "is_pinned",
+                        {
+                            ascending: false
+                        }
+                    )
+                    .order(
+                        "created_at",
+                        {
+                            ascending: false
+                        }
+                    ),
 
-    console.error(
-        "COMMENTS ERROR:",
-        commentsResult.error
-    );
+                supabaseClient
+                    .from("comments")
+                    .select(
+                        "id,post_id,user_id,content,created_at"
+                    )
+                    .order(
+                        "created_at",
+                        {
+                            ascending: true
+                        }
+                    ),
 
-    showError(
-        "خطأ في تحميل التعليقات.",
-        commentsResult.error
-    );
+                supabaseClient
+                    .from("likes")
+                    .select(
+                        "id,post_id,user_id,created_at"
+                    ),
 
-    return;
-}
+                supabaseClient
+                    .from("profiles")
+                    .select(
+                        "id,name,avatar_url,is_verified"
+                    ),
 
+                supabaseClient
+                    .from("banned_users")
+                    .select(
+                        "user_id"
+                    )
 
-if (likesResult.error) {
-
-    console.error(
-        "LIKES ERROR:",
-        likesResult.error
-    );
-
-    showError(
-        "خطأ في تحميل الإعجابات.",
-        likesResult.error
-    );
-
-    return;
-}
-
-
-if (profilesResult.error) {
-
-    console.error(
-        "PROFILES ERROR:",
-        profilesResult.error
-    );
-
-    showError(
-        "خطأ في تحميل الملفات الشخصية.",
-        profilesResult.error
-    );
-
-    return;
-}
-
-
-if (bannedUsersResult.error) {
-
-    console.error(
-        "BANNED USERS ERROR:",
-        bannedUsersResult.error
-    );
-
-    showError(
-        "خطأ في تحميل المستخدمين المحظورين.",
-        bannedUsersResult.error
-    );
-
-    return;
-}
+            ]);
 
 
-    /* =========================
-       PROFILE MAP
-    ========================= */
+        /* =========================================
+           CHECK ERRORS
+        ========================================= */
 
-    const profileMap =
-        new Map(
-            (profilesResult.data || [])
+        const error =
+            postsResult.error ||
+            commentsResult.error ||
+            likesResult.error ||
+            profilesResult.error ||
+            bannedUsersResult.error;
+
+
+        if (error) {
+
+            showError(
+                "تعذر تحميل المجتمع.",
+                error
+            );
+
+            return;
+
+        }
+
+
+        /* =========================================
+           PROFILE MAP
+        ========================================= */
+
+        const profileMap =
+            new Map(
+                (profilesResult.data || [])
+                    .map(
+                        p => [
+                            p.id,
+                            p
+                        ]
+                    )
+            );
+
+
+        /* =========================================
+           POSTS
+        ========================================= */
+
+        posts =
+            (postsResult.data || [])
+                .map(post => {
+
+                    const p =
+                        profileMap.get(
+                            post.user_id
+                        );
+
+
+                    return {
+
+                        ...post,
+
+                        name:
+                            p?.name ||
+                            "عضو",
+
+                        photo:
+                            p?.avatar_url ||
+                            null,
+
+                        is_verified:
+                            p?.is_verified === true
+
+                    };
+
+                });
+
+
+        /* =========================================
+           COMMENTS
+        ========================================= */
+
+        comments =
+            (commentsResult.data || [])
+                .map(comment => {
+
+                    const p =
+                        profileMap.get(
+                            comment.user_id
+                        );
+
+
+                    return {
+
+                        ...comment,
+
+                        name:
+                            p?.name ||
+                            "عضو",
+
+                        photo:
+                            p?.avatar_url ||
+                            null,
+
+                        is_verified:
+                            p?.is_verified === true
+
+                    };
+
+                });
+
+
+        /* =========================================
+           LIKES
+        ========================================= */
+
+        likes =
+            likesResult.data || [];
+
+
+        /* =========================================
+           BANNED USERS
+        ========================================= */
+
+        bannedUsers =
+            (bannedUsersResult.data || [])
                 .map(
-                    p => [
-                        p.id,
-                        p
-                    ]
-                )
+                    user =>
+                        user.user_id
+                );
+
+
+        console.log(
+            "Community loaded:",
+            {
+                posts: posts.length,
+                comments: comments.length,
+                likes: likes.length
+            }
         );
 
 
-    /* =========================
-       POSTS
+        render();
 
-       IMPORTANT:
-       is_verified is copied from
-       the user's profile into the post.
-    ========================= */
+    }
 
-    posts =
-        (postsResult.data || [])
-            .map(post => {
+    catch (error) {
 
-                const p =
-                    profileMap.get(
-                        post.user_id
-                    );
-
-
-                return {
-
-                    ...post,
-
-                    name:
-                        p?.name ||
-                        "عضو",
-
-                    photo:
-                        p?.avatar_url ||
-                        null,
-
-                    is_verified:
-                        p?.is_verified === true
-
-                };
-
-            });
-
-
-    /* =========================
-       COMMENTS
-    ========================= */
-
-    comments =
-        (commentsResult.data || [])
-            .map(comment => {
-
-                const p =
-                    profileMap.get(
-                        comment.user_id
-                    );
-
-
-                return {
-
-                    ...comment,
-
-                    name:
-                        p?.name ||
-                        "عضو",
-
-                    photo:
-                        p?.avatar_url ||
-                        null,
-
-                    is_verified:
-                        p?.is_verified === true
-
-                };
-
-            });
-
-
-    /* =========================
-       LIKES
-    ========================= */
-likes =
-    likesResult.data || [];
-
-bannedUsers =
-    (bannedUsersResult.data || [])
-        .map(
-            user => user.user_id
+        console.error(
+            "LOAD COMMUNITY CRITICAL ERROR:",
+            error
         );
 
-render();
-} 
+        showError(
+            "حدث خطأ أثناء تحميل المجتمع.",
+            error
+        );
+
+    }
+
+}
+
+
 /* =====================================================
    VERIFIED BADGE
 ===================================================== */
@@ -2480,9 +2451,18 @@ function verifiedBadge(isVerified) {
 
 function render() {
 
+    const feed =
+        $("feed");
+
+
+    if (!feed) {
+        return;
+    }
+
+
     if (!posts.length) {
 
-        $("feed").innerHTML = `
+        feed.innerHTML = `
 
             <div class="card empty">
 
@@ -2501,7 +2481,7 @@ function render() {
     }
 
 
-    $("feed").innerHTML =
+    feed.innerHTML =
 
         posts
             .map(post => {
@@ -2530,24 +2510,21 @@ function render() {
                     );
 
 
-                /* =========================
-                   DELETE PERMISSION
-                ========================= */
-
                 const canDelete =
                     isAdmin ||
                     post.user_id ===
                     currentUser?.id;
 
 
-                /* =========================
-                   PIN BUTTON
-                ========================= */
+                /* =====================================
+                   PIN
+                ===================================== */
 
                 const pinButton =
                     isAdmin
-                    ? `
+                    ?
 
+                    `
                         <button
                             class="action"
                             onclick="
@@ -2565,61 +2542,91 @@ function render() {
                             }
 
                         </button>
-
                     `
-                    : "";
-let banButton = "";
 
-if (
-    isAdmin &&
-    post.user_id !== currentUser?.id
-) {
+                    :
 
-    if (
-        bannedUsers.includes(
-            post.user_id
-        )
-    ) {
+                    "";
 
-        banButton = `
-            <button
-                class="action"
-                onclick="unbanUser(
-                    '${post.user_id}',
-                    '${escapeHTML(post.name)}'
-                )"
-            >
-                ✅ إلغاء الحظر
-            </button>
-        `;
 
-    } else {
+                /* =====================================
+                   BAN
+                ===================================== */
 
-        banButton = `
-            <button
-                class="action"
-                onclick="banUser(
-                    '${post.user_id}',
-                    '${escapeHTML(post.name)}'
-                )"
-            >
-                🚫 حظر
-            </button>
-        `;
+                let banButton = "";
 
-    }
-}
-                /* =========================
-                   VERIFY BUTTON
 
-                   ADMIN CAN VERIFY
-                   ANYONE INCLUDING HIMSELF
-                ========================= */
+                if (
+                    isAdmin &&
+                    post.user_id !==
+                    currentUser?.id
+                ) {
+
+                    if (
+                        bannedUsers.includes(
+                            post.user_id
+                        )
+                    ) {
+
+                        banButton = `
+
+                            <button
+                                class="action"
+                                onclick="
+                                    unbanUser(
+                                        '${post.user_id}',
+                                        '${escapeHTML(
+                                            post.name
+                                        )}'
+                                    )
+                                "
+                            >
+
+                                ✅ إلغاء الحظر
+
+                            </button>
+
+                        `;
+
+                    }
+
+                    else {
+
+                        banButton = `
+
+                            <button
+                                class="action"
+                                onclick="
+                                    banUser(
+                                        '${post.user_id}',
+                                        '${escapeHTML(
+                                            post.name
+                                        )}'
+                                    )
+                                "
+                            >
+
+                                🚫 حظر
+
+                            </button>
+
+                        `;
+
+                    }
+
+                }
+
+
+                /* =====================================
+                   VERIFY
+                ===================================== */
 
                 const verifyButton =
                     isAdmin
 
-                    ? `
+                    ?
+
+                    `
 
                         <button
                             class="action verify-action"
@@ -2641,7 +2648,159 @@ if (
 
                     `
 
-                    : "";
+                    :
+
+                    "";
+
+
+                /* =====================================
+                   IMAGES
+                ===================================== */
+
+                const imagesHTML =
+
+                    Array.isArray(
+                        post.image_urls
+                    )
+
+                    &&
+                    post.image_urls.length > 0
+
+                    ?
+
+                    `
+
+                        <div class="post-images">
+
+                            ${post.image_urls
+                                .slice(0, 2)
+                                .map(
+                                    url => `
+
+                                        <img
+                                            src="${escapeHTML(
+                                                url
+                                            )}"
+                                            alt="صورة المنشور"
+                                        >
+
+                                    `
+                                )
+                                .join("")
+                            }
+
+                        </div>
+
+                    `
+
+                    :
+
+                    "";
+
+
+                /* =====================================
+                   COMMENTS
+                ===================================== */
+
+                const commentsHTML =
+                    postComments
+                        .map(comment => {
+
+                            const canDeleteComment =
+                                isAdmin ||
+                                comment.user_id ===
+                                currentUser?.id;
+
+
+                            return `
+
+                                <div
+                                    class="comment"
+                                >
+
+                                    <div
+                                        class="commenthead"
+                                    >
+
+                                        ${avatar(
+                                            comment.photo,
+                                            comment.name,
+                                            "cavatar"
+                                        )}
+
+                                        <b
+                                            style="
+                                                font-size:12px;
+                                            "
+                                        >
+
+                                            ${escapeHTML(
+                                                comment.name
+                                            )}
+
+                                            ${verifiedBadge(
+                                                comment.is_verified
+                                            )}
+
+                                        </b>
+
+                                        <span
+                                            class="time"
+                                        >
+
+                                            ${ago(
+                                                comment.created_at
+                                            )}
+
+                                        </span>
+
+                                    </div>
+
+
+                                    <div
+                                        class="ctext"
+                                    >
+
+                                        ${escapeHTML(
+                                            comment.content
+                                        )}
+
+                                    </div>
+
+
+                                    ${
+                                        canDeleteComment
+
+                                        ?
+
+                                        `
+
+                                            <button
+                                                class="action"
+                                                onclick="
+                                                    deleteComment(
+                                                        '${comment.id}'
+                                                    )
+                                                "
+                                            >
+
+                                                🗑️ حذف
+
+                                            </button>
+
+                                        `
+
+                                        :
+
+                                        ""
+                                    }
+
+                                </div>
+
+                            `;
+
+                        })
+                        .join("");
 
 
                 return `
@@ -2656,6 +2815,7 @@ if (
                             ?
 
                             `
+
                                 <div
                                     style="
                                         color:#d71920;
@@ -2668,6 +2828,7 @@ if (
                                     📌 منشور مثبت
 
                                 </div>
+
                             `
 
                             :
@@ -2676,15 +2837,12 @@ if (
                         }
 
 
-                        <!-- POST HEADER -->
-
                         <div class="posthead">
 
                             ${avatar(
                                 post.photo,
                                 post.name
                             )}
-
 
                             <div>
 
@@ -2700,7 +2858,6 @@ if (
 
                                 </b>
 
-
                                 <div class="time">
 
                                     ${ago(
@@ -2713,42 +2870,20 @@ if (
 
                         </div>
 
-<!-- POST CONTENT -->
-<div class="text">
-    ${escapeHTML(
-        post.content
-    )}
-</div>
 
-${
-    Array.isArray(post.image_urls) &&
-    post.image_urls.length > 0
-        ? `
-            <div class="post-images">
-                ${post.image_urls
-                    .slice(0, 2)
-                    .map(
-                        url => `
-                            <img
-                                src="${escapeHTML(url)}"
-                                alt="صورة المنشور"
-                            >
-                        `
-                    )
-                    .join("")
-                }
-            </div>
-        `
-        : ""
-}
+                        <div class="text">
+
+                            ${escapeHTML(
+                                post.content
+                            )}
+
+                        </div>
 
 
-                        <!-- ACTIONS -->
+                        ${imagesHTML}
+
 
                         <div class="actions">
-
-
-                            <!-- LIKE -->
 
                             <button
                                 class="
@@ -2779,8 +2914,6 @@ ${
                             </button>
 
 
-                            <!-- COMMENTS -->
-
                             <button
                                 class="action"
                                 onclick="
@@ -2800,8 +2933,6 @@ ${
 
                             </button>
 
-
-                            <!-- DELETE -->
 
                             ${
                                 canDelete
@@ -2831,167 +2962,62 @@ ${
                             }
 
 
-                            <!-- PIN -->
-
                             ${pinButton}
-
-
-                            <!-- BAN -->
 
                             ${banButton}
 
-
-                            <!-- VERIFY -->
-
                             ${verifyButton}
-
 
                         </div>
 
-
-                        <!-- COMMENTS -->
 
                         <div class="comments">
 
-                            ${
-                                postComments
-                                    .map(comment => {
-
-                                        const canDeleteComment =
-                                            isAdmin ||
-                                            comment.user_id ===
-                                            currentUser?.id;
+                            ${commentsHTML}
 
 
-                                        return `
+                            <div
+                                class="commentbox"
+                            >
 
-                                            <div
-                                                class="comment"
-                                            >
-
-                                                <div
-                                                    class="commenthead"
-                                                >
-
-                                                    ${avatar(
-                                                        comment.photo,
-                                                        comment.name,
-                                                        "cavatar"
-                                                    )}
-
-
-                                                    <b
-                                                        style="
-                                                            font-size:12px;
-                                                        "
-                                                    >
-
-                                                        ${escapeHTML(
-                                                            comment.name
-                                                        )}
-
-                                                        ${verifiedBadge(
-                                                            comment.is_verified
-                                                        )}
-
-                                                    </b>
+                                <input
+                                    id="c-${post.id}"
+                                    class="input"
+                                    maxlength="500"
+                                    placeholder="${
+                                        isBanned
+                                            ? "🚫 أنت محظور من التعليق"
+                                            : "اكتب تعليقاً..."
+                                    }"
+                                    ${
+                                        isBanned
+                                            ? "disabled"
+                                            : ""
+                                    }
+                                >
 
 
-                                                    <span
-                                                        class="time"
-                                                    >
+                                <button
+                                    class="btn red"
+                                    onclick="
+                                        comment(
+                                            '${post.id}'
+                                        )
+                                    "
+                                    ${
+                                        isBanned
+                                            ? "disabled"
+                                            : ""
+                                    }
+                                >
 
-                                                        ${ago(
-                                                            comment.created_at
-                                                        )}
+                                    تعليق
 
-                                                    </span>
+                                </button>
 
-                                                </div>
-
-
-                                                <div
-                                                    class="ctext"
-                                                >
-
-                                                    ${escapeHTML(
-                                                        comment.content
-                                                    )}
-
-                                                </div>
-
-
-                                                ${
-                                                    canDeleteComment
-
-                                                    ?
-
-                                                    `
-
-                                                        <button
-                                                            class="action"
-                                                            onclick="
-                                                                deleteComment(
-                                                                    '${comment.id}'
-                                                                )
-                                                            "
-                                                        >
-
-                                                            🗑️ حذف
-
-                                                        </button>
-
-                                                    `
-
-                                                    :
-
-                                                    ""
-                                                }
-
-                                            </div>
-
-                                        `;
-
-                                    })
-                                    .join("")
-                            }
-
-
-                            <!-- COMMENT BOX -->
-
-                            <div class="commentbox">
-
-    <input
-        id="c-${post.id}"
-        class="input"
-        maxlength="500"
-        placeholder="${
-            isBanned
-                ? "🚫 أنت محظور من التعليق"
-                : "اكتب تعليقاً..."
-        }"
-        ${isBanned ? "disabled" : ""}
-    >
-
-    <button
-        class="btn red"
-        onclick="
-            comment(
-                '${post.id}'
-            )
-        "
-        ${isBanned ? "disabled" : ""}
-    >
-
-        تعليق
-
-    </button>
-
-</div>
-
+                            </div>
 
                         </div>
-
 
                     </article>
 
@@ -3002,101 +3028,110 @@ ${
 
 }
 
+
 /* =====================================================
-   ADMIN POST IMAGES
+   POST IMAGE INPUT
 ===================================================== */
-
-let selectedPostImages = [];
-
 
 if ($("postImages")) {
 
-    $("postImages").onchange = function (event) {
+    $("postImages").onchange =
+        function(event) {
 
-        if (!isAdmin) {
+            if (!isAdmin) {
 
-            alert("ليس لديك صلاحية.");
+                alert(
+                    "ليس لديك صلاحية."
+                );
 
-            event.target.value = "";
+                event.target.value = "";
 
-            return;
-        }
+                return;
 
-
-        const files =
-            Array.from(event.target.files);
+            }
 
 
-        /* =========================
-           MAXIMUM 2 IMAGES
-        ========================= */
+            const files =
+                Array.from(
+                    event.target.files
+                );
 
-        if (files.length > 2) {
 
-            alert(
-                "يمكنك إضافة صورتين فقط."
-            );
+            if (files.length > 2) {
 
-            event.target.value = "";
+                alert(
+                    "يمكنك إضافة صورتين فقط."
+                );
 
-            selectedPostImages = [];
+                event.target.value = "";
+
+                selectedPostImages = [];
+
+                renderSelectedPostImages();
+
+                return;
+
+            }
+
+
+            for (const file of files) {
+
+                if (
+                    !file.type.startsWith(
+                        "image/"
+                    )
+                ) {
+
+                    alert(
+                        "يرجى اختيار صور فقط."
+                    );
+
+                    event.target.value = "";
+
+                    selectedPostImages = [];
+
+                    renderSelectedPostImages();
+
+                    return;
+
+                }
+
+
+                if (
+                    file.size >
+                    5 * 1024 * 1024
+                ) {
+
+                    alert(
+                        "كل صورة يجب أن تكون أقل من 5MB."
+                    );
+
+                    event.target.value = "";
+
+                    selectedPostImages = [];
+
+                    renderSelectedPostImages();
+
+                    return;
+
+                }
+
+            }
+
+
+            selectedPostImages =
+                files;
+
 
             renderSelectedPostImages();
 
-            return;
-        }
-
-
-        /* =========================
-           VALIDATE IMAGES
-        ========================= */
-
-        for (const file of files) {
-
-            if (!file.type.startsWith("image/")) {
-
-                alert(
-                    "يرجى اختيار صور فقط."
-                );
-
-                event.target.value = "";
-
-                selectedPostImages = [];
-
-                renderSelectedPostImages();
-
-                return;
-            }
-
-
-            if (file.size > 5 * 1024 * 1024) {
-
-                alert(
-                    "كل صورة يجب أن تكون أقل من 5MB."
-                );
-
-                event.target.value = "";
-
-                selectedPostImages = [];
-
-                renderSelectedPostImages();
-
-                return;
-            }
-        }
-
-
-        selectedPostImages = files;
-
-        renderSelectedPostImages();
-
-    };
+        };
 
 }
 
 
 /* =====================================================
-   SHOW SELECTED IMAGES
+   SELECTED POST IMAGES
 ===================================================== */
 
 function renderSelectedPostImages() {
@@ -3113,26 +3148,46 @@ function renderSelectedPostImages() {
     container.innerHTML = "";
 
 
-    selectedPostImages.forEach(file => {
+    selectedPostImages
+        .forEach(file => {
 
-        const img =
-            document.createElement("img");
+            const img =
+                document.createElement(
+                    "img"
+                );
 
 
-        img.src =
-            URL.createObjectURL(file);
+            img.src =
+                URL.createObjectURL(
+                    file
+                );
 
 
-        container.appendChild(img);
+            container.appendChild(
+                img
+            );
 
-    });
+        });
 
 }
+
+
 /* =====================================================
    CREATE POST
 ===================================================== */
 
 async function publish() {
+
+    if (!currentUser) {
+
+        alert(
+            "لم يتم إنشاء جلسة المستخدم بعد. يرجى الانتظار لحظة ثم المحاولة مرة أخرى."
+        );
+
+        return;
+
+    }
+
 
     if (isBanned) {
 
@@ -3141,6 +3196,7 @@ async function publish() {
         );
 
         return;
+
     }
 
 
@@ -3153,13 +3209,15 @@ async function publish() {
         );
 
         return;
+
     }
 
 
     const text =
         $("postText")
-            .value
-            .trim();
+            ?.value
+            ?.trim() ||
+        "";
 
 
     if (!text) {
@@ -3169,12 +3227,9 @@ async function publish() {
         );
 
         return;
+
     }
 
-
-    /* =========================
-       ADMIN IMAGE CHECK
-    ========================= */
 
     if (
         selectedPostImages.length > 0 &&
@@ -3186,6 +3241,7 @@ async function publish() {
         );
 
         return;
+
     }
 
 
@@ -3198,12 +3254,9 @@ async function publish() {
         );
 
         return;
+
     }
 
-
-    /* =========================
-       CREATE POST
-    ========================= */
 
     const {
         data: post,
@@ -3235,15 +3288,12 @@ async function publish() {
         );
 
         return;
+
     }
 
 
     let uploadedPaths = [];
 
-
-    /* =========================
-       UPLOAD IMAGES
-    ========================= */
 
     if (
         isAdmin &&
@@ -3295,7 +3345,6 @@ async function publish() {
 
 
                 if (uploadError) {
-
                     throw uploadError;
                 }
 
@@ -3306,10 +3355,6 @@ async function publish() {
 
             }
 
-
-            /* =========================
-               GET IMAGE URLS
-            ========================= */
 
             const imageUrls =
                 uploadedPaths.map(
@@ -3328,13 +3373,10 @@ async function publish() {
                                 );
 
                         return data.publicUrl;
+
                     }
                 );
 
-
-            /* =========================
-               SAVE IMAGE URLS
-            ========================= */
 
             const {
                 error: updateError
@@ -3342,10 +3384,8 @@ async function publish() {
                 await supabaseClient
                     .from("posts")
                     .update({
-
                         image_urls:
                             imageUrls
-
                     })
                     .eq(
                         "id",
@@ -3354,7 +3394,6 @@ async function publish() {
 
 
             if (updateError) {
-
                 throw updateError;
             }
 
@@ -3363,14 +3402,10 @@ async function publish() {
         catch (error) {
 
             console.error(
-                "Image upload error:",
+                "IMAGE UPLOAD ERROR:",
                 error
             );
 
-
-            /* =========================
-               DELETE UPLOADED FILES
-            ========================= */
 
             if (
                 uploadedPaths.length > 0
@@ -3384,10 +3419,9 @@ async function publish() {
                     .remove(
                         uploadedPaths
                     );
+
             }
 
-
-            /* DELETE POST */
 
             await supabaseClient
                 .from("posts")
@@ -3404,16 +3438,17 @@ async function publish() {
             );
 
             return;
+
         }
+
     }
 
 
-    /* =========================
-       RESET FORM
-    ========================= */
+    if ($("postText")) {
 
-    $("postText")
-        .value = "";
+        $("postText").value = "";
+
+    }
 
 
     if ($("count")) {
@@ -3421,6 +3456,7 @@ async function publish() {
         $("count")
             .textContent =
             "0 / 1000";
+
     }
 
 
@@ -3429,8 +3465,8 @@ async function publish() {
 
     if ($("postImages")) {
 
-        $("postImages")
-            .value = "";
+        $("postImages").value = "";
+
     }
 
 
@@ -3440,25 +3476,30 @@ async function publish() {
     await loadCommunity();
 
 }
+
+
 /* =====================================================
-   LIKE
+   LIKE POST
 ===================================================== */
 
 async function likePost(postId) {
 
     if (!currentUser) {
+
+        alert(
+            "لا توجد جلسة مستخدم."
+        );
+
         return;
+
     }
 
 
     const existing =
         likes.find(
             like =>
-                like.post_id ===
-                    postId
-                &&
-                like.user_id ===
-                    currentUser.id
+                like.post_id === postId &&
+                like.user_id === currentUser.id
         );
 
 
@@ -3527,7 +3568,7 @@ async function likePost(postId) {
 
 
 /* =====================================================
-   PIN / UNPIN POST — ADMIN ONLY
+   PIN POST
 ===================================================== */
 
 async function togglePin(
@@ -3581,7 +3622,7 @@ async function togglePin(
 
 
 /* =====================================================
-   BAN USER — ADMIN ONLY
+   BAN USER
 ===================================================== */
 
 async function banUser(
@@ -3682,64 +3723,15 @@ async function banUser(
 
 }
 
+
 /* =====================================================
-   UNBAN USER — ADMIN ONLY
+   UNBAN USER
 ===================================================== */
 
-async function unbanUser(userId, userName) {
-
-    if (!isAdmin) {
-        alert("ليس لديك صلاحية.");
-        return;
-    }
-
-    const confirmed = confirm(
-        "هل تريد إلغاء حظر " +
-        (userName || "هذا المستخدم") +
-        "؟"
-    );
-
-    if (!confirmed) {
-        return;
-    }
-
-    const { error } = await supabaseClient
-        .from("banned_users")
-        .delete()
-        .eq(
-            "user_id",
-            userId
-        );
-
-    if (error) {
-
-        showError(
-            "تعذر إلغاء حظر المستخدم.",
-            error
-        );
-
-        return;
-    }
-
-    alert(
-        "✅ تم إلغاء حظر " +
-        (userName || "هذا المستخدم")
-    );
-
-    await loadCommunity();
-}
-/* =====================================================
-   VERIFY / UNVERIFY USER — ADMIN ONLY
-===================================================== */
-
-async function toggleVerified(
+async function unbanUser(
     userId,
-    currentlyVerified
+    userName
 ) {
-
-    /* =========================
-       ADMIN CHECK
-    ========================= */
 
     if (!isAdmin) {
 
@@ -3752,9 +3744,79 @@ async function toggleVerified(
     }
 
 
-    /* =========================
-       SAFETY CHECK
-    ========================= */
+    const confirmed =
+        confirm(
+            "هل تريد إلغاء حظر " +
+            (
+                userName ||
+                "هذا المستخدم"
+            ) +
+            "؟"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("banned_users")
+            .delete()
+            .eq(
+                "user_id",
+                userId
+            );
+
+
+    if (error) {
+
+        showError(
+            "تعذر إلغاء حظر المستخدم.",
+            error
+        );
+
+        return;
+
+    }
+
+
+    alert(
+        "✅ تم إلغاء حظر " +
+        (
+            userName ||
+            "هذا المستخدم"
+        )
+    );
+
+
+    await loadCommunity();
+
+}
+
+
+/* =====================================================
+   VERIFY USER
+===================================================== */
+
+async function toggleVerified(
+    userId,
+    currentlyVerified
+) {
+
+    if (!isAdmin) {
+
+        alert(
+            "ليس لديك صلاحية."
+        );
+
+        return;
+
+    }
+
 
     if (!userId) {
 
@@ -3766,10 +3828,6 @@ async function toggleVerified(
 
     }
 
-
-    /* =========================
-       UPDATE PROFILE
-    ========================= */
 
     const {
         data,
@@ -3823,13 +3881,10 @@ async function toggleVerified(
     );
 
 
-    /* =========================
-       RELOAD POSTS
-    ========================= */
-
     await loadCommunity();
 
 }
+
 
 /* =====================================================
    DELETE POST
@@ -3840,7 +3895,13 @@ async function deletePost(
 ) {
 
     if (!currentUser) {
+
+        alert(
+            "لا توجد جلسة مستخدم."
+        );
+
         return;
+
     }
 
 
@@ -3854,10 +3915,6 @@ async function deletePost(
 
     }
 
-
-    /* =========================
-       GET POST IMAGES FIRST
-    ========================= */
 
     const {
         data: post,
@@ -3883,6 +3940,7 @@ async function deletePost(
         );
 
         return;
+
     }
 
 
@@ -3893,20 +3951,14 @@ async function deletePost(
         );
 
         return;
+
     }
 
 
-    /*
-       Admin:
-       Can delete any post.
-
-       Normal user:
-       Can delete only their own post.
-    */
-
     if (
         !isAdmin &&
-        post.user_id !== currentUser.id
+        post.user_id !==
+        currentUser.id
     ) {
 
         alert(
@@ -3914,32 +3966,33 @@ async function deletePost(
         );
 
         return;
+
     }
 
 
-    /* =========================
-       DELETE IMAGES FROM STORAGE
-    ========================= */
+    /* =====================================
+       DELETE IMAGES
+    ===================================== */
 
     if (
-        Array.isArray(post.image_urls) &&
+        Array.isArray(
+            post.image_urls
+        ) &&
         post.image_urls.length > 0
     ) {
+
+        const marker =
+            "/storage/v1/object/public/community-post-images/";
+
 
         const imagePaths =
             post.image_urls
                 .map(url => {
 
-                    /*
-                       Extract the Storage path
-                       from the public URL.
-                    */
-
-                    const marker =
-                        "/storage/v1/object/public/community-post-images/";
-
                     const index =
-                        url.indexOf(marker);
+                        url.indexOf(
+                            marker
+                        );
 
 
                     if (index === -1) {
@@ -3949,7 +4002,8 @@ async function deletePost(
 
                     return decodeURIComponent(
                         url.substring(
-                            index + marker.length
+                            index +
+                            marker.length
                         )
                     );
 
@@ -3975,15 +4029,16 @@ async function deletePost(
             if (storageError) {
 
                 console.error(
-                    "Storage delete error:",
+                    "STORAGE DELETE ERROR:",
                     storageError
                 );
 
                 alert(
-                    "تعذر حذف صور المنشور من التخزين. لم يتم حذف المنشور."
+                    "تعذر حذف صور المنشور."
                 );
 
                 return;
+
             }
 
         }
@@ -3991,9 +4046,9 @@ async function deletePost(
     }
 
 
-    /* =========================
+    /* =====================================
        DELETE POST
-    ========================= */
+    ===================================== */
 
     let query =
         supabaseClient
@@ -4042,7 +4097,7 @@ async function deletePost(
     ) {
 
         alert(
-            "لم يتم حذف المنشور. قد لا تملك صلاحية حذفه."
+            "لم يتم حذف المنشور."
         );
 
         return;
@@ -4062,12 +4117,29 @@ async function deletePost(
 async function comment(
     postId
 ) {
-if (isBanned) {
-    alert(
-        "🚫 لا يمكنك إضافة تعليقات لأن حسابك محظور."
-    );
-    return;
-}
+
+    if (!currentUser) {
+
+        alert(
+            "لا توجد جلسة مستخدم."
+        );
+
+        return;
+
+    }
+
+
+    if (isBanned) {
+
+        alert(
+            "🚫 لا يمكنك إضافة تعليقات لأن حسابك محظور."
+        );
+
+        return;
+
+    }
+
+
     if (!profile?.name) {
 
         openModal();
@@ -4087,9 +4159,7 @@ if (isBanned) {
 
 
     const text =
-        input
-            .value
-            .trim();
+        input.value.trim();
 
 
     if (!text) {
@@ -4148,7 +4218,13 @@ async function deleteComment(
 ) {
 
     if (!currentUser) {
+
+        alert(
+            "لا توجد جلسة مستخدم."
+        );
+
         return;
+
     }
 
 
@@ -4172,14 +4248,6 @@ async function deleteComment(
                 commentId
             );
 
-
-    /*
-       Admin:
-       Can delete any comment.
-
-       Normal user:
-       Can delete only their own comment.
-    */
 
     if (!isAdmin) {
 
@@ -4218,7 +4286,7 @@ async function deleteComment(
     ) {
 
         alert(
-            "لم يتم حذف التعليق. قد لا تملك صلاحية حذفه."
+            "لم يتم حذف التعليق."
         );
 
         return;
@@ -4229,6 +4297,8 @@ async function deleteComment(
     await loadCommunity();
 
 }
+
+
 /* =====================================================
    OPEN PROFILE MODAL
 ===================================================== */
@@ -4317,7 +4387,7 @@ if ($("close")) {
 if ($("name")) {
 
     $("name").oninput =
-        function () {
+        function() {
 
             updateProfileUI();
 
@@ -4414,10 +4484,9 @@ function compressImage(file) {
 
 
                             const ctx =
-                                canvas
-                                    .getContext(
-                                        "2d"
-                                    );
+                                canvas.getContext(
+                                    "2d"
+                                );
 
 
                             ctx.drawImage(
@@ -4464,13 +4533,13 @@ function compressImage(file) {
 
 
 /* =====================================================
-   PHOTO
+   PROFILE PHOTO
 ===================================================== */
 
 if ($("photo")) {
 
     $("photo").onchange =
-        async function (event) {
+        async function(event) {
 
             const file =
                 event.target.files[0];
@@ -4482,8 +4551,9 @@ if ($("photo")) {
 
 
             if (
-                !file.type
-                    .startsWith("image/")
+                !file.type.startsWith(
+                    "image/"
+                )
             ) {
 
                 alert(
@@ -4538,158 +4608,237 @@ if ($("photo")) {
 
         };
 
-}/* =====================================================
+}
+
+
+/* =====================================================
    SAVE PROFILE
 ===================================================== */
 
 if ($("save")) {
 
-    $("save").onclick = async function () {
+    $("save").onclick =
+        async function() {
 
-        /* =========================
-           CHECK CURRENT USER
-        ========================= */
+            try {
 
-        const user = currentUser;
+                /* =====================================
+                   IMPORTANT AUTH CHECK
+                ===================================== */
 
-        if (!user) {
+                if (!currentUser) {
 
-            console.error(
-                "NO CURRENT USER FOUND"
-            );
-
-            alert(
-                "لا توجد جلسة مستخدم حالية."
-            );
-
-            return;
-        }
+                    console.warn(
+                        "No currentUser. Trying to create anonymous session..."
+                    );
 
 
-        /* =========================
-           SYNC GLOBAL USER
-        ========================= */
-
-        currentUser = user;
-
-
-        console.log(
-            "PROFILE SAVING FOR USER:",
-            currentUser.id
-        );
+                    const {
+                        data,
+                        error
+                    } =
+                        await supabaseClient
+                            .auth
+                            .signInAnonymously();
 
 
-        /* =========================
-           GET NAME
-        ========================= */
+                    if (error) {
 
-        const name =
-            $("name")
-                .value
-                .trim();
+                        console.error(
+                            "ANONYMOUS SIGN IN ERROR:",
+                            error
+                        );
 
+                        alert(
+                            "تعذر إنشاء جلسة المستخدم.\n\n" +
+                            error.message
+                        );
 
-        if (!name) {
+                        return;
 
-            alert(
-                "اكتب اسمك."
-            );
-
-            return;
-        }
+                    }
 
 
-        /* =========================
-           AVATAR
-        ========================= */
+                    if (!data?.user) {
 
-        const avatarUrl =
-            pendingPhoto !== null
-                ? pendingPhoto
-                : (
-                    profile?.avatar_url ||
-                    null
+                        alert(
+                            "تعذر إنشاء مستخدم جديد."
+                        );
+
+                        return;
+
+                    }
+
+
+                    currentUser =
+                        data.user;
+
+
+                    console.log(
+                        "NEW USER CREATED FROM SAVE:",
+                        currentUser.id
+                    );
+
+                }
+
+
+                /* =====================================
+                   NAME
+                ===================================== */
+
+                const name =
+                    $("name")
+                        ?.value
+                        ?.trim() ||
+                    "";
+
+
+                if (!name) {
+
+                    alert(
+                        "اكتب اسمك."
+                    );
+
+                    return;
+
+                }
+
+
+                /* =====================================
+                   AVATAR
+                ===================================== */
+
+                const avatarUrl =
+                    pendingPhoto !== null
+                        ? pendingPhoto
+                        : (
+                            profile?.avatar_url ||
+                            null
+                        );
+
+
+                console.log(
+                    "SAVING PROFILE:",
+                    {
+                        userId:
+                            currentUser.id,
+
+                        name:
+                            name
+                    }
                 );
 
 
-        /* =========================
-           SAVE PROFILE
-        ========================= */
+                /* =====================================
+                   UPSERT PROFILE
+                ===================================== */
 
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-                .from("profiles")
-                .upsert(
-                    {
-                        id: currentUser.id,
-                        name: name,
-                        avatar_url: avatarUrl
-                    },
-                    {
-                        onConflict: "id"
-                    }
-                )
-                .select(
-                    "id,name,avatar_url,is_verified"
-                )
-                .single();
+                const {
+                    data,
+                    error
+                } =
+                    await supabaseClient
+                        .from("profiles")
+                        .upsert(
+                            {
+                                id:
+                                    currentUser.id,
 
+                                name:
+                                    name,
 
-        if (error) {
-
-            console.error(
-                "PROFILE SAVE ERROR:",
-                error
-            );
-
-            showError(
-                "تعذر حفظ الملف الشخصي.",
-                error
-            );
-
-            return;
-        }
+                                avatar_url:
+                                    avatarUrl
+                            },
+                            {
+                                onConflict:
+                                    "id"
+                            }
+                        )
+                        .select(
+                            "id,name,avatar_url,is_verified,last_seen"
+                        )
+                        .single();
 
 
-        /* =========================
-           UPDATE LOCAL PROFILE
-        ========================= */
+                if (error) {
 
-        profile = data;
+                    console.error(
+                        "PROFILE SAVE ERROR:",
+                        error
+                    );
 
-        pendingPhoto = null;
+                    showError(
+                        "تعذر حفظ الملف الشخصي.",
+                        error
+                    );
 
+                    return;
 
-        if ($("photo")) {
-
-            $("photo").value = "";
-
-        }
-
-
-        updateProfileUI();
-
-        closeModal();
+                }
 
 
-        /* =========================
-           RELOAD COMMUNITY
-        ========================= */
+                /* =====================================
+                   UPDATE LOCAL PROFILE
+                ===================================== */
 
-        await loadCommunity();
+                profile =
+                    data;
 
 
-        console.log(
-            "PROFILE CREATED SUCCESSFULLY:",
-            data
-        );
+                pendingPhoto =
+                    null;
 
-    };
+
+                if ($("photo")) {
+
+                    $("photo").value =
+                        "";
+
+                }
+
+
+                updateProfileUI();
+
+                closeModal();
+
+
+                /* =====================================
+                   LOAD COMMUNITY
+                ===================================== */
+
+                await loadCommunity();
+
+
+                console.log(
+                    "PROFILE CREATED SUCCESSFULLY:",
+                    data
+                );
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "SAVE PROFILE CRITICAL ERROR:",
+                    error
+                );
+
+                alert(
+                    "حدث خطأ أثناء حفظ الملف الشخصي.\n\n" +
+                    (
+                        error?.message ||
+                        "خطأ غير معروف"
+                    )
+                );
+
+            }
+
+        };
 
 }
+
+
 /* =====================================================
    CHARACTER COUNTER
 ===================================================== */
@@ -4697,7 +4846,7 @@ if ($("save")) {
 if ($("postText")) {
 
     $("postText").oninput =
-        function () {
+        function() {
 
             if ($("count")) {
 
@@ -4722,6 +4871,8 @@ if ($("publish")) {
         publish;
 
 }
+
+
 /* =====================================================
    AUTH STATE LISTENER
 ===================================================== */
@@ -4729,10 +4880,10 @@ if ($("publish")) {
 supabaseClient
     .auth
     .onAuthStateChange(
-        async (
+        function(
             event,
             session
-        ) => {
+        ) {
 
             console.log(
                 "Auth event:",
@@ -4740,19 +4891,28 @@ supabaseClient
             );
 
 
+            /*
+               IMPORTANT:
+
+               We do NOT call getUser()
+               here.
+
+               We simply take the user
+               directly from the session.
+            */
+
             if (
-                session?.user &&
-                session.user.id !==
-                currentUser?.id
+                session?.user
             ) {
 
                 currentUser =
                     session.user;
 
 
-                await loadProfile();
-
-                await loadCommunity();
+                console.log(
+                    "AUTH USER:",
+                    currentUser.id
+                );
 
             }
 
@@ -4761,10 +4921,55 @@ supabaseClient
 
 
 /* =====================================================
+   UPDATE LAST SEEN
+===================================================== */
+
+async function updateLastSeen() {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("profiles")
+            .update({
+
+                last_seen:
+                    new Date().toISOString()
+
+            })
+            .eq(
+                "id",
+                currentUser.id
+            );
+
+
+    if (error) {
+
+        console.error(
+            "LAST SEEN ERROR:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
    INITIALIZE
 ===================================================== */
 
 async function init() {
+
+    console.log(
+        "COMMUNITY INITIALIZING..."
+    );
+
 
     if ($("feed")) {
 
@@ -4781,155 +4986,133 @@ async function init() {
     }
 
 
-    /* =========================
-       CREATE ADMIN BUTTON
-    ========================= */
-
     updateAdminUI();
 
 
-    /* =========================
+    /* =========================================
        AUTHENTICATION
-    ========================= */
+    ========================================= */
 
     const authenticated =
         await initAuth();
 
 
     if (!authenticated) {
-        return;
-    }
 
-
-    /* =========================
-       BAN CHECK
-    ========================= */
-
-    const banned =
-        await checkBanStatus();
-
-
-    if (banned) {
-
-        alert(
-            "🚫 تم حظرك من المجتمع." +
-
-            (
-                banReason
-                    ? "\n\nالسبب: " +
-                      banReason
-                    : ""
-            )
+        console.error(
+            "AUTHENTICATION FAILED"
         );
 
+        return;
+
+    }
+
+
+    /*
+       IMPORTANT:
+
+       initAuth() MUST have created
+       currentUser before continuing.
+    */
+
+    if (!currentUser) {
+
+        console.error(
+            "CRITICAL: currentUser still null after initAuth"
+        );
+
+        alert(
+            "تعذر إنشاء جلسة المستخدم."
+        );
 
         return;
 
     }
 
 
-    /* =========================
-       UPDATE LAST SEEN
-    ========================= */
-
-    async function updateLastSeen() {
-
-        if (!currentUser) {
-            return;
-        }
+    console.log(
+        "INITIAL USER:",
+        currentUser.id
+    );
 
 
-        const {
-            error
-        } =
-            await supabaseClient
-                .from("profiles")
-                .update({
+    /* =========================================
+       BAN
+    ========================================= */
 
-                    last_seen:
-                        new Date().toISOString()
-
-                })
-                .eq(
-                    "id",
-                    currentUser.id
-                );
+    await checkBanStatus();
 
 
-        if (error) {
-
-            console.error(
-                "Last seen update error:",
-                error
-            );
-
-        }
-
-    }
-
-
-    /* =========================
-       LOAD PROFILE
-    ========================= */
+    /* =========================================
+       PROFILE
+    ========================================= */
 
     await loadProfile();
 
 
-    /* =========================
-       LOAD COMMUNITY
-    ========================= */
+    /* =========================================
+       COMMUNITY
+    ========================================= */
 
     await loadCommunity();
 
 
-    /* =========================
-       UPDATE LAST SEEN
-    ========================= */
+    /* =========================================
+       LAST SEEN
+    ========================================= */
 
     await updateLastSeen();
 
 
-    /* =========================
-       UPDATE ADMIN UI
-    ========================= */
+    /* =========================================
+       ADMIN UI
+    ========================================= */
 
     updateAdminUI();
 
 
-    /* =========================
-       OPEN PROFILE IF NEEDED
-    ========================= */
+    /* =========================================
+       NEW USER
+    ========================================= */
 
     if (!profile?.name) {
 
+        console.log(
+            "NEW USER - OPENING PROFILE MODAL"
+        );
+
+
         setTimeout(
-            openModal,
+            function() {
+
+                openModal();
+
+            },
             300
         );
 
     }
 
 
-    /* =========================
-       REFRESH COMMUNITY
-       EVERY 15 SECONDS
-    ========================= */
+    /* =========================================
+       REFRESH EVERY 15 SECONDS
+    ========================================= */
 
     setInterval(
-        async function () {
+        async function() {
 
-            /*
-               Check ban status again.
-               This is useful if an admin
-               bans someone while they are
-               already on the website.
-            */
+            if (!currentUser) {
+                return;
+            }
+
 
             const currentlyBanned =
                 await checkBanStatus();
 
 
-            if (currentlyBanned) {
+            if (
+                currentlyBanned
+            ) {
 
                 alert(
                     "🚫 تم حظرك من المجتمع." +
@@ -4954,17 +5137,45 @@ async function init() {
     );
 
 
-    /* =========================
-       UPDATE LAST SEEN
-       EVERY 2 MINUTES
-    ========================= */
+    /* =========================================
+       LAST SEEN EVERY 2 MINUTES
+    ========================================= */
 
     setInterval(
         updateLastSeen,
         120000
     );
 
+
+    console.log(
+        "COMMUNITY INITIALIZED SUCCESSFULLY"
+    );
+
 }
+
+
+/* =====================================================
+   START APP
+===================================================== */
+
+if (
+    document.readyState ===
+    "loading"
+) {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        init
+    );
+
+}
+
+else {
+
+    init();
+
+}
+
 </script>
 
 
