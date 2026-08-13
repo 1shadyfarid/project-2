@@ -1262,7 +1262,73 @@ const supabaseClient =
         SUPABASE_URL,
         SUPABASE_PUBLISHABLE_KEY
     );
+async function ensureAuthSession() {
 
+    const {
+        data: sessionData,
+        error: sessionError
+    } = await supabaseClient.auth.getSession();
+
+    if (sessionError) {
+        console.error("GET SESSION ERROR:", sessionError);
+        return false;
+    }
+
+    if (sessionData?.session?.user) {
+
+        currentUser = sessionData.session.user;
+
+        console.log(
+            "EXISTING USER:",
+            currentUser.id
+        );
+
+        return true;
+    }
+
+    console.log(
+        "NO SESSION - CREATING ANONYMOUS USER..."
+    );
+
+    const {
+        data: anonymousData,
+        error: anonymousError
+    } = await supabaseClient.auth.signInAnonymously();
+
+    if (anonymousError) {
+
+        console.error(
+            "ANONYMOUS SIGN-IN ERROR:",
+            anonymousError
+        );
+
+        alert(
+            "تعذر إنشاء جلسة مستخدم جديدة.\n\n" +
+            anonymousError.message
+        );
+
+        return false;
+    }
+
+    currentUser =
+        anonymousData?.user || null;
+
+    if (!currentUser) {
+
+        console.error(
+            "ANONYMOUS USER WAS NOT CREATED"
+        );
+
+        return false;
+    }
+
+    console.log(
+        "NEW ANONYMOUS USER:",
+        currentUser.id
+    );
+
+    return true;
+}
 
 /* =====================================================
    DATA
