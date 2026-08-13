@@ -4497,32 +4497,30 @@ if ($("save")) {
     $("save").onclick = async function () {
 
         try {
+/* =========================
+   GET AUTH USER DIRECTLY
+========================= */
 
-            /* =========================
-               GET AUTH USER DIRECTLY
-            ========================= */
-
-            const {
-                data: authData,
-                error: authError
-            } = await supabaseClient.auth.getUser();
+const {
+    data: authData,
+    error: authError
+} = await supabaseClient.auth.getUser();
 
 
-            if (authError) {
+if (authError) {
 
-                console.error(
-                    "GET USER ERROR:",
-                    authError
-                );
+    console.error(
+        "GET USER ERROR:",
+        authError
+    );
 
-                alert(
-                    "تعذر الوصول إلى جلسة المستخدم.\n\n" +
-                    authError.message
-                );
+    alert(
+        "تعذر الوصول إلى جلسة المستخدم.\n\n" +
+        authError.message
+    );
 
-                return;
-            }
-
+    return;
+}
 
             const user =
                 authData?.user;
