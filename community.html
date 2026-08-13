@@ -1425,106 +1425,143 @@ function showError(message, error) {
 ===================================================== */
 async function initAuth() {
 
+    console.log("========== AUTH START ==========");
+
     try {
 
-        console.log("AUTH: starting...");
+        /* =========================
+           CHECK SESSION
+        ========================= */
 
-        // Check whether Supabase already has a session
         const {
             data: sessionData,
             error: sessionError
         } = await supabaseClient.auth.getSession();
 
-        console.log("AUTH: session result:", {
-            sessionData,
-            sessionError
-        });
+
+        console.log(
+            "CURRENT SESSION:",
+            sessionData?.session
+        );
+
 
         if (sessionError) {
+
             console.error(
-                "AUTH SESSION ERROR:",
+                "GET SESSION ERROR:",
                 sessionError
             );
 
-            alert(
-                "خطأ في جلسة المستخدم:\n\n" +
-                sessionError.message
-            );
-
-            return false;
         }
 
-        // Existing session
+
+        /* =========================
+           EXISTING SESSION
+        ========================= */
+
         if (sessionData?.session?.user) {
 
             currentUser =
                 sessionData.session.user;
 
             console.log(
-                "AUTH: existing user:",
+                "EXISTING USER:",
                 currentUser.id
             );
 
             return true;
         }
 
-        // No session → create anonymous user
+
+        /* =========================
+           NO SESSION
+        ========================= */
+
         console.log(
-            "AUTH: no session. Creating anonymous user..."
+            "NO SESSION — TRYING ANONYMOUS LOGIN..."
         );
+
 
         const {
             data: anonymousData,
             error: anonymousError
-        } = await supabaseClient.auth.signInAnonymously();
+        } =
+            await supabaseClient.auth.signInAnonymously();
+
 
         console.log(
-            "AUTH: anonymous result:",
-            {
-                anonymousData,
-                anonymousError
-            }
+            "ANONYMOUS DATA:",
+            anonymousData
         );
+
+        console.log(
+            "ANONYMOUS ERROR:",
+            anonymousError
+        );
+
 
         if (anonymousError) {
 
+            console.error(
+                "ANONYMOUS LOGIN FAILED:",
+                anonymousError
+            );
+
             alert(
-                "تعذر إنشاء المستخدم:\n\n" +
+                "فشل إنشاء جلسة المستخدم.\n\n" +
+                "الكود: " +
+                (anonymousError.code || "غير معروف") +
+                "\n\n" +
+                "الرسالة:\n" +
                 anonymousError.message
             );
 
             return false;
         }
 
+
         if (!anonymousData?.user) {
 
             alert(
-                "تم إنشاء الجلسة ولكن لم يتم العثور على المستخدم."
+                "تم تنفيذ تسجيل الدخول المجهول ولكن لم يتم إنشاء مستخدم."
             );
 
             return false;
         }
-currentUser =
-    anonymousData.user;
 
-console.log(
-    "FINAL CURRENT USER:",
-    currentUser
-);
 
-return true;
+        /* =========================
+           SAVE USER
+        ========================= */
+
+        currentUser =
+            anonymousData.user;
+
+
+        console.log(
+            "NEW ANONYMOUS USER CREATED:",
+            currentUser.id
+        );
+
+
+        console.log(
+            "========== AUTH SUCCESS =========="
+        );
+
+
+        return true;
 
     }
 
     catch (error) {
 
         console.error(
-            "AUTHENTICATION ERROR:",
+            "AUTHENTICATION CRITICAL ERROR:",
             error
         );
 
         alert(
-            "خطأ في المصادقة:\n\n" +
+            "خطأ حرج في المصادقة.\n\n" +
             (
                 error?.message ||
                 "خطأ غير معروف"
@@ -1615,14 +1652,12 @@ async function checkAdmin() {
 /* =====================================================
    ADMIN LOGIN
 ===================================================== */
-
 async function adminLogin() {
 
     const email =
         prompt(
             "أدخل بريد حساب المدير:"
         );
-
 
     if (!email) {
         return;
@@ -1634,16 +1669,23 @@ async function adminLogin() {
             "أدخل كلمة مرور المدير:"
         );
 
-
     if (!password) {
         return;
     }
 
 
+    /* =========================
+       LOG OUT CURRENT USER
+    ========================= */
+
     await supabaseClient
         .auth
         .signOut();
 
+
+    /* =========================
+       LOGIN AS ADMIN
+    ========================= */
 
     const {
         data,
@@ -1657,23 +1699,64 @@ async function adminLogin() {
             });
 
 
+    /* =========================
+       ADMIN LOGIN FAILED
+    ========================= */
+
     if (error) {
 
-        await supabaseClient
-            .auth
-            .signInAnonymously();
+        console.error(
+            "Admin login failed:",
+            error
+        );
 
+
+        /* =========================
+           CREATE ANONYMOUS USER AGAIN
+        ========================= */
 
         const {
-            data: anonymousData
+            data: anonymousData,
+            error: anonymousError
         } =
             await supabaseClient
                 .auth
-                .getUser();
+                .signInAnonymously();
+
+
+        if (anonymousError) {
+
+            console.error(
+                "Anonymous sign-in failed:",
+                anonymousError
+            );
+
+
+            alert(
+                "تعذر إنشاء جلسة مستخدم جديدة.\n\n" +
+                anonymousError.message
+            );
+
+
+            return;
+
+        }
 
 
         currentUser =
             anonymousData?.user || null;
+
+
+        if (!currentUser) {
+
+            alert(
+                "تعذر إنشاء مستخدم جديد."
+            );
+
+
+            return;
+
+        }
 
 
         await checkAdmin();
@@ -1684,10 +1767,15 @@ async function adminLogin() {
             error.message
         );
 
+
         return;
 
     }
 
+
+    /* =========================
+       ADMIN USER
+    ========================= */
 
     currentUser =
         data.user;
@@ -1696,6 +1784,10 @@ async function adminLogin() {
     const admin =
         await checkAdmin();
 
+
+    /* =========================
+       NOT AN ADMIN
+    ========================= */
 
     if (!admin) {
 
@@ -1710,11 +1802,31 @@ async function adminLogin() {
 
 
         const {
-            data: anonymousData
+            data: anonymousData,
+            error: anonymousError
         } =
             await supabaseClient
                 .auth
                 .signInAnonymously();
+
+
+        if (anonymousError) {
+
+            console.error(
+                "Anonymous sign-in failed:",
+                anonymousError
+            );
+
+
+            alert(
+                "تعذر إنشاء جلسة مستخدم جديدة.\n\n" +
+                anonymousError.message
+            );
+
+
+            return;
+
+        }
 
 
         currentUser =
@@ -1723,12 +1835,18 @@ async function adminLogin() {
 
         await checkAdmin();
 
+
         return;
 
     }
 
 
+    /* =========================
+       LOAD ADMIN PROFILE
+    ========================= */
+
     await loadProfile();
+
 
     await loadCommunity();
 
@@ -1738,8 +1856,6 @@ async function adminLogin() {
     );
 
 }
-
-
 /* =====================================================
    ADMIN LOGOUT
 ===================================================== */
