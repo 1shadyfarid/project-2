@@ -1425,30 +1425,32 @@ function showError(message, error) {
 ===================================================== */
 async function initAuth() {
 
-    console.log("========== AUTH START ==========");
-
     try {
 
+        console.log("========== AUTH START ==========");
+
         /* =========================
-           CHECK SESSION
+           CHECK EXISTING SESSION
         ========================= */
 
         const {
             data: sessionData,
             error: sessionError
-        } = await supabaseClient.auth.getSession();
+        } =
+            await supabaseClient.auth.getSession();
 
 
         console.log(
-            "CURRENT SESSION:",
-            sessionData?.session
+            "1. getSession():",
+            sessionData,
+            sessionError
         );
 
 
         if (sessionError) {
 
             console.error(
-                "GET SESSION ERROR:",
+                "Get session error:",
                 sessionError
             );
 
@@ -1456,7 +1458,7 @@ async function initAuth() {
 
 
         /* =========================
-           EXISTING SESSION
+           EXISTING USER
         ========================= */
 
         if (sessionData?.session?.user) {
@@ -1465,8 +1467,12 @@ async function initAuth() {
                 sessionData.session.user;
 
             console.log(
-                "EXISTING USER:",
+                "2. EXISTING SESSION FOUND:",
                 currentUser.id
+            );
+
+            console.log(
+                "========== AUTH SUCCESS =========="
             );
 
             return true;
@@ -1478,9 +1484,17 @@ async function initAuth() {
         ========================= */
 
         console.log(
-            "NO SESSION — TRYING ANONYMOUS LOGIN..."
+            "2. NO SESSION FOUND"
         );
 
+        console.log(
+            "3. TRYING ANONYMOUS SIGN-IN..."
+        );
+
+
+        /* =========================
+           ANONYMOUS SIGN-IN
+        ========================= */
 
         const {
             data: anonymousData,
@@ -1490,12 +1504,8 @@ async function initAuth() {
 
 
         console.log(
-            "ANONYMOUS DATA:",
-            anonymousData
-        );
-
-        console.log(
-            "ANONYMOUS ERROR:",
+            "4. signInAnonymously RESULT:",
+            anonymousData,
             anonymousError
         );
 
@@ -1503,16 +1513,12 @@ async function initAuth() {
         if (anonymousError) {
 
             console.error(
-                "ANONYMOUS LOGIN FAILED:",
+                "ANONYMOUS SIGN-IN ERROR:",
                 anonymousError
             );
 
             alert(
-                "فشل إنشاء جلسة المستخدم.\n\n" +
-                "الكود: " +
-                (anonymousError.code || "غير معروف") +
-                "\n\n" +
-                "الرسالة:\n" +
+                "فشل إنشاء المستخدم المجهول.\n\n" +
                 anonymousError.message
             );
 
@@ -1520,10 +1526,34 @@ async function initAuth() {
         }
 
 
-        if (!anonymousData?.user) {
+        /* =========================
+           VERIFY SESSION
+        ========================= */
+
+        const {
+            data: verifySession,
+            error: verifyError
+        } =
+            await supabaseClient.auth.getSession();
+
+
+        console.log(
+            "5. SESSION AFTER ANONYMOUS LOGIN:",
+            verifySession,
+            verifyError
+        );
+
+
+        if (verifyError) {
+
+            console.error(
+                "SESSION VERIFICATION ERROR:",
+                verifyError
+            );
 
             alert(
-                "تم تنفيذ تسجيل الدخول المجهول ولكن لم يتم إنشاء مستخدم."
+                "تم إنشاء المستخدم ولكن لا توجد جلسة.\n\n" +
+                verifyError.message
             );
 
             return false;
@@ -1531,17 +1561,50 @@ async function initAuth() {
 
 
         /* =========================
-           SAVE USER
+           MAKE SURE SESSION EXISTS
+        ========================= */
+
+        if (!verifySession?.session) {
+
+            console.error(
+                "NO SESSION AFTER ANONYMOUS LOGIN"
+            );
+
+            console.log(
+                "Anonymous data was:",
+                anonymousData
+            );
+
+            alert(
+                "تم إنشاء المستخدم المجهول ولكن جلسة الدخول غير موجودة."
+            );
+
+            return false;
+        }
+
+
+        /* =========================
+           SET CURRENT USER
         ========================= */
 
         currentUser =
-            anonymousData.user;
+            verifySession.session.user;
 
 
         console.log(
-            "NEW ANONYMOUS USER CREATED:",
-            currentUser.id
+            "6. CURRENT USER:",
+            currentUser
         );
+
+
+        if (!currentUser) {
+
+            alert(
+                "تعذر تحديد المستخدم."
+            );
+
+            return false;
+        }
 
 
         console.log(
@@ -1556,17 +1619,19 @@ async function initAuth() {
     catch (error) {
 
         console.error(
-            "AUTHENTICATION CRITICAL ERROR:",
+            "========== AUTHENTICATION CRITICAL ERROR ==========",
             error
         );
 
+
         alert(
-            "خطأ حرج في المصادقة.\n\n" +
+            "حدث خطأ في المصادقة.\n\n" +
             (
                 error?.message ||
                 "خطأ غير معروف"
             )
         );
+
 
         return false;
     }
