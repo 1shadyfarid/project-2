@@ -1504,16 +1504,15 @@ async function initAuth() {
 
             return false;
         }
+currentUser =
+    anonymousData.user;
 
-        currentUser =
-            anonymousData.user;
+console.log(
+    "FINAL CURRENT USER:",
+    currentUser
+);
 
-        console.log(
-            "AUTH: new anonymous user:",
-            currentUser.id
-        );
-
-        return true;
+return true;
 
     }
 
