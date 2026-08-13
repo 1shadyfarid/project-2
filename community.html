@@ -1490,7 +1490,10 @@ async function initAuth() {
             await supabaseClient
                 .auth
                 .signInAnonymously();
-
+console.log("ANONYMOUS RESULT:", {
+    anonymousData,
+    anonymousError
+});
 
         if (anonymousError) {
 
