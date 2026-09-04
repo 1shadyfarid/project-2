@@ -31,21 +31,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
-
 <header class="header">
     <a href="index.html" class="logo-link">
-    <div class="logo-container">
-        
+        <div class="logo-container">
             <img src="logo b.png" alt="Company Logo" class="logo">
+
             <div class="company-text">
                 <h1 style="font-family: cairo;">مؤسسات الفقي العالمية</h1>
                 <p>Al Feki global foundation</p>
             </div>
-        
-    </div>
+        </div>
     </a>
 </header>
-
 
 <div class="graduate-search">
 
@@ -73,8 +70,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 
 
-
-
 <script>
 
 const searchInput = document.getElementById("graduateSearch");
@@ -86,28 +81,39 @@ searchInput.addEventListener("input", function () {
 
     results.innerHTML = "";
 
-    if(value === ""){
+    if (value === "") {
         return;
     }
 
     const cards = document.querySelectorAll(".trainer-card");
 
+    let found = false;
+
     cards.forEach(card => {
 
-        if(card.innerText.toLowerCase().includes(value)){
+        if (card.innerText.toLowerCase().includes(value)) {
 
             const clone = card.cloneNode(true);
 
             results.appendChild(clone);
 
+            found = true;
         }
 
     });
 
+    // No results message
+    if (!found) {
+        results.innerHTML = `
+            <div class="no-results">
+                لم يتم العثور على مدرب بهذا الاسم
+            </div>
+        `;
+    }
+
 });
+
 </script>
-
-
 
 <section class="trainer-section" id="workerss">
 

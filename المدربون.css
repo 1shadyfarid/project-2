@@ -894,3 +894,19 @@ body{
     padding:15px; /* Instead of 20px */
 }
 }
+
+
+
+
+
+
+
+
+.no-results {
+    width: 100%;
+    padding: 25px 10px;
+    text-align: center;
+    font-family: "Cairo", sans-serif;
+    font-size: 18px;
+    color: #777;
+}
